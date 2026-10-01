@@ -2,7 +2,7 @@ import "server-only";
 
 import { z } from "zod";
 
-import { appUrl, databaseUrl } from "./deployment";
+import { appUrl, databaseUrl, demoModeEnabled } from "./deployment";
 
 const bool = z
   .string()
@@ -60,7 +60,12 @@ let cached: Env | null = null;
 /** Validated environment. Missing optional keys switch features to demo/fallback mode. */
 export function env(): Env {
   if (cached) return cached;
-  const parsed = EnvSchema.safeParse({ ...process.env, DATABASE_URL: databaseUrl(), NEXT_PUBLIC_APP_URL: appUrl() });
+  const parsed = EnvSchema.safeParse({
+    ...process.env,
+    DATABASE_URL: databaseUrl(),
+    NEXT_PUBLIC_APP_URL: appUrl(),
+    DEMO_MODE: demoModeEnabled() ? "true" : "false",
+  });
   if (!parsed.success) {
     const msg = parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ");
     throw new Error(`Invalid environment: ${msg}`);

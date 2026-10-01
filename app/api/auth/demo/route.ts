@@ -3,12 +3,13 @@ import { NextResponse } from "next/server";
 import { ensureUser } from "@/lib/auth/session";
 import { DEMO_COOKIE, DEMO_USER } from "@/lib/config/demo";
 import { features } from "@/lib/config/env";
+import { explainDatabaseError } from "@/lib/db/errors";
 
 function safeNext(raw: string | null): string {
   return raw && raw.startsWith("/") && !raw.startsWith("//") ? raw : "/app";
 }
 
-/** Signs in as the shared demo user (only when DEMO_MODE=true). */
+/** Signs in as the shared demo user (when demo mode is on; see demoModeEnabled). */
 export async function POST(req: Request) {
   if (!features.demoMode()) return NextResponse.json({ error: "Demo mode is disabled." }, { status: 403 });
   const form = await req.formData().catch(() => null);
@@ -19,7 +20,7 @@ export async function POST(req: Request) {
     console.error("Demo sign-in failed", err);
     const login = new URL("/login", req.url);
     login.searchParams.set("next", next);
-    login.searchParams.set("error", "the database isn't connected yet. In Vercel, open Storage, connect a Postgres database (Neon is free) and redeploy.");
+    login.searchParams.set("error", explainDatabaseError(err));
     return NextResponse.redirect(login, 303);
   }
   const res = NextResponse.redirect(new URL(next, req.url), 303);

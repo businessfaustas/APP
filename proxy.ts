@@ -1,6 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+import { demoModeEnabled } from "@/lib/config/deployment";
+
 const DEMO_COOKIE = "ap_demo_session";
 const PROTECTED = [/^\/app(\/|$)/, /^\/admin(\/|$)/];
 
@@ -13,7 +15,7 @@ export async function proxy(req: NextRequest) {
   headers.set("x-pathname", `${req.nextUrl.pathname}${req.nextUrl.search}`);
   let res = NextResponse.next({ request: { headers } });
 
-  const demoMode = process.env.DEMO_MODE === "true" || process.env.DEMO_MODE === "1";
+  const demoMode = demoModeEnabled();
   let signedIn = demoMode && req.cookies.get(DEMO_COOKIE)?.value === "1";
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;

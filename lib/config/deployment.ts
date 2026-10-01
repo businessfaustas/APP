@@ -33,6 +33,17 @@ export function directDatabaseUrl(e: EnvLike = process.env): string | undefined 
   return postgresVars(e).find((v) => DIRECT_KEY.test(v.key))?.value ?? databaseUrl(e);
 }
 
+/**
+ * Demo sign-in ("Continue as demo user"). DEMO_MODE wins when set (true/1/yes/on, any case).
+ * When it isn't set, demo sign-in stays on until a real login (Supabase) is configured, so a
+ * fresh deployment is never left without a way in.
+ */
+export function demoModeEnabled(e: EnvLike = process.env): boolean {
+  const raw = e.DEMO_MODE?.trim().toLowerCase();
+  if (raw) return ["true", "1", "yes", "on"].includes(raw);
+  return !(e.NEXT_PUBLIC_SUPABASE_URL?.trim() && e.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim());
+}
+
 /** Public base URL for links in emails and share links: explicit setting, else the Vercel domain. */
 export function appUrl(e: EnvLike = process.env): string {
   const explicit = e.NEXT_PUBLIC_APP_URL?.trim();
