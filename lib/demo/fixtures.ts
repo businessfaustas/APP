@@ -1,0 +1,1003 @@
+/**
+ * Demo-mode fixtures: five sample lots with listing data, vehicle info, history, a vision
+ * result, an itemized repair estimate, market comps and logistics. The Audi A3 lot
+ * reproduces the master-prompt reference case exactly with default settings.
+ */
+import type {
+  Comp,
+  DamageAssessment,
+  HistoryReport,
+  HoursRange,
+  MarketValuation,
+  NormalizedListing,
+  PriceRange,
+  RepairEstimate,
+  RepairLineItem,
+  VehicleInfo,
+} from "@/lib/domain/schemas";
+import { withCheckDigit } from "@/lib/input/vin";
+
+import type { DemoPhotoSpec } from "./photoSvg";
+
+export interface DemoFixture {
+  id: string;
+  source: NormalizedListing["source"];
+  lotNumber: string;
+  listing: (now: Date) => NormalizedListing;
+  vehicle: VehicleInfo;
+  history: HistoryReport;
+  damage: DamageAssessment;
+  repair: RepairEstimate;
+  market: MarketValuation;
+  distanceMiles: number;
+  photos: DemoPhotoSpec[];
+}
+
+const h = (low: number, mid: number, high: number): HoursRange => ({ low, mid, high });
+const pr = (low: number, mid: number, high: number): PriceRange => ({ low, mid, high });
+const Z = h(0, 0, 0);
+
+type LineSpec = Partial<RepairLineItem> & Pick<RepairLineItem, "id" | "partName" | "zone">;
+function line(spec: LineSpec): RepairLineItem {
+  return {
+    kind: "PART",
+    partKey: null,
+    side: "NA",
+    action: "REPLACE",
+    origin: "VISIBLE",
+    probability: 1,
+    confidence: 0.8,
+    photoRefs: [],
+    prices: { OEM_NEW: null, AFTERMARKET: null, USED: null },
+    priceOrigin: "FIXTURE",
+    bodyHours: Z,
+    paintHours: Z,
+    mechHours: Z,
+    included: true,
+    userEdited: false,
+    selectedSource: null,
+    priceOverride: null,
+    reason: null,
+    ...spec,
+  };
+}
+function sublet(spec: LineSpec & { price: PriceRange }): RepairLineItem {
+  const { price, ...rest } = spec;
+  return line({ kind: "SUBLET", action: "REPAIR", origin: "RULE", prices: { OEM_NEW: null, AFTERMARKET: price, USED: null }, ...rest });
+}
+
+function saleIn(now: Date, days: number, hourUtc: number): string {
+  const d = new Date(now);
+  d.setUTCDate(d.getUTCDate() + days);
+  d.setUTCHours(hourUtc, 0, 0, 0);
+  return d.toISOString();
+}
+
+function comps(prices: [number, number, number][], city: string, state: string): Comp[] {
+  // [asking price, mileage, distance]
+  return prices.map(([price, mileage, distance], i) => ({
+    price,
+    adjustedPrice: price,
+    mileage,
+    year: null,
+    trim: null,
+    distanceMiles: distance,
+    sellerType: i % 4 === 3 ? "private" : "dealer",
+    daysOnMarket: 18 + ((i * 7) % 40),
+    url: null,
+    city,
+    state,
+  }));
+}
+
+function baseDamage(partial: Partial<DamageAssessment>): DamageAssessment {
+  return {
+    photo_coverage: { angles_present: [], missing_critical_angles: [], image_quality: "good" },
+    photos: [],
+    impact_zones: [],
+    damaged_parts: [],
+    likely_hidden_damage: [],
+    severity_score: 5,
+    airbag_deployed: false,
+    airbags_deployed_list: [],
+    frame_damage_suspected: false,
+    frame_evidence: "",
+    suspension_damage_suspected: false,
+    engine_bay_intact: true,
+    flood_indicators: [],
+    fire_indicators: [],
+    interior_condition: "good",
+    odometer_reading_visible: null,
+    red_flags: [],
+    overall_confidence: 0.75,
+    summary: "",
+    ...partial,
+  };
+}
+
+function listingBase(partial: Partial<NormalizedListing>): NormalizedListing {
+  return {
+    source: "COPART",
+    sourceUrl: null,
+    lotNumber: null,
+    vin: null,
+    year: null,
+    make: null,
+    model: null,
+    trim: null,
+    odometer: null,
+    odometerUnit: "mi",
+    odometerBrand: "ACTUAL",
+    titleRaw: null,
+    titleState: null,
+    titleCategory: "SALVAGE",
+    primaryDamage: null,
+    secondaryDamage: null,
+    runCondition: "RUNS_AND_DRIVES",
+    hasKeys: true,
+    engine: null,
+    transmission: null,
+    drive: null,
+    fuel: null,
+    color: null,
+    saleDate: null,
+    saleStatus: "PURE_SALE",
+    currentBid: null,
+    buyNowPrice: null,
+    listedRetailValue: null,
+    location: { yardName: null, city: null, state: null, zip: null },
+    sellerType: "Insurance company",
+    photoUrls: [],
+    extractionMethod: "FIXTURE",
+    warnings: [],
+    ...partial,
+  };
+}
+
+function vehicleBase(partial: Partial<VehicleInfo>): VehicleInfo {
+  return {
+    vin: null,
+    year: null,
+    make: null,
+    model: null,
+    trim: null,
+    bodyClass: null,
+    driveType: null,
+    engine: null,
+    fuelType: "Gasoline",
+    transmission: null,
+    turbo: false,
+    vehicleClass: "mainstream",
+    isEv: false,
+    isHybrid: false,
+    hasAdasLikely: true,
+    decodeSource: "Demo fixture",
+    recalls: [],
+    complaints: [],
+    ...partial,
+  };
+}
+
+function photoUrls(id: string, count: number): string[] {
+  return Array.from({ length: count }, (_, i) => `/demo-photos/${id}/${i + 1}`);
+}
+
+// ── 1. 2019 Audi A3 — reference GO deal ──────────────────────────────────────
+
+const AUDI_VIN = withCheckDigit("WAUAUGFF0K1012345");
+const AUDI_PHOTOS: DemoPhotoSpec[] = [
+  { view: "front", damage: [{ region: "center", level: 3 }, { region: "left", level: 2 }], caption: "Front — bumper & grille", color: "#e5e7eb" },
+  { view: "front_left", damage: [{ region: "left", level: 3 }], caption: "Front left — headlamp, fender", color: "#e5e7eb" },
+  { view: "engine_bay", damage: [{ region: "top", level: 2 }], caption: "Engine bay — radiator support, condenser" },
+  { view: "left", damage: [{ region: "right", level: 1 }], caption: "Left side", color: "#e5e7eb" },
+  { view: "right", damage: [], caption: "Right side", color: "#e5e7eb" },
+  { view: "rear", damage: [], caption: "Rear", color: "#e5e7eb" },
+  { view: "interior", damage: [], caption: "Interior — airbags intact" },
+  { view: "roof", damage: [], caption: "Roof", color: "#e5e7eb" },
+];
+
+const audi: DemoFixture = {
+  id: "audi-a3",
+  source: "COPART",
+  lotNumber: "90000001",
+  distanceMiles: 240,
+  photos: AUDI_PHOTOS,
+  listing: (now) =>
+    listingBase({
+      source: "COPART",
+      sourceUrl: "https://www.copart.com/lot/90000001",
+      lotNumber: "90000001",
+      vin: AUDI_VIN,
+      year: 2019,
+      make: "AUDI",
+      model: "A3",
+      trim: "Premium 2.0T quattro",
+      odometer: 61200,
+      titleRaw: "SALVAGE CERTIFICATE (TX)",
+      titleState: "TX",
+      titleCategory: "SALVAGE",
+      primaryDamage: "FRONT END",
+      secondaryDamage: "MINOR DENT/SCRATCHES",
+      runCondition: "RUNS_AND_DRIVES",
+      hasKeys: true,
+      engine: "2.0L I4 Turbo",
+      transmission: "Automatic",
+      drive: "All wheel drive",
+      fuel: "Gasoline",
+      color: "White",
+      saleDate: saleIn(now, 3, 15),
+      saleStatus: "PURE_SALE",
+      currentBid: 2100,
+      listedRetailValue: 21450,
+      location: { yardName: "Copart Dallas", city: "Dallas", state: "TX", zip: "75236" },
+      photoUrls: photoUrls("audi-a3", AUDI_PHOTOS.length),
+    }),
+  vehicle: vehicleBase({
+    vin: AUDI_VIN,
+    year: 2019,
+    make: "AUDI",
+    model: "A3",
+    trim: "Premium 2.0T quattro",
+    bodyClass: "Sedan/Saloon",
+    driveType: "AWD/All-Wheel Drive",
+    engine: "2.0L I4 Turbo",
+    transmission: "7-speed S tronic (DCT)",
+    turbo: true,
+    vehicleClass: "premium",
+    complaints: [
+      { component: "ELECTRICAL SYSTEM", count: 14 },
+      { component: "ENGINE AND ENGINE COOLING", count: 9 },
+      { component: "POWER TRAIN", count: 6 },
+    ],
+  }),
+  history: {
+    provider: "Demo history",
+    isDemo: true,
+    titleRecords: [
+      { date: "2019-05-14", state: "TX", brand: "CLEAN" },
+      { date: "2026-08-21", state: "TX", brand: "SALVAGE" },
+    ],
+    odometerRecords: [
+      { date: "2021-06-02", reading: 22140 },
+      { date: "2023-09-18", reading: 41870 },
+      { date: "2026-08-21", reading: 61200 },
+    ],
+    junkSalvageRecords: [{ date: "2026-08-21", reportingEntity: "Insurance carrier (TX)", disposition: "Sold at auction" }],
+    totalLossEvents: 1,
+    theftRecords: 0,
+    notes: [],
+  },
+  damage: baseDamage({
+    photo_coverage: {
+      angles_present: ["front", "front_left", "engine_bay", "left", "right", "rear", "interior_front", "roof"],
+      missing_critical_angles: ["undercarriage"],
+      image_quality: "good",
+    },
+    photos: [
+      { index: 1, angle: "front", findings: "Bumper cover torn, grille broken, hood buckled at the leading edge." },
+      { index: 2, angle: "front_left", findings: "LH LED headlamp shattered, LH fender dented behind the wheel arch." },
+      { index: 3, angle: "engine_bay", findings: "Radiator support pushed back; condenser and radiator bent." },
+      { index: 4, angle: "left", findings: "Light scuffing on the LH fender; door gaps look even." },
+      { index: 5, angle: "right", findings: "No visible damage." },
+      { index: 6, angle: "rear", findings: "No visible damage." },
+      { index: 7, angle: "interior_front", findings: "Airbags not deployed, interior clean." },
+      { index: 8, angle: "roof", findings: "No visible damage." },
+    ],
+    impact_zones: [
+      { zone: "front", severity: 5, description: "Frontal impact through the bumper into the radiator support." },
+      { zone: "front_left", severity: 4, description: "Headlamp and fender damage on the LH corner." },
+    ],
+    damaged_parts: [
+      { part_name: "Front bumper cover", category: "body_panel", zone: "front", side: "CENTER", action: "REPLACE", photo_refs: [1, 2], confidence: 0.9, body_hours: 2, paint_hours: 2.5, mech_hours: 0 },
+      { part_name: "Front bumper reinforcement", category: "structural", zone: "front", side: "CENTER", action: "REPLACE", photo_refs: [1], confidence: 0.75, body_hours: 1, paint_hours: 0, mech_hours: 0 },
+      { part_name: "Grille", category: "body_panel", zone: "front", side: "CENTER", action: "REPLACE", photo_refs: [1, 2], confidence: 0.9, body_hours: 0.5, paint_hours: 0, mech_hours: 0 },
+      { part_name: "Headlamp assembly LH", category: "lighting", zone: "front_left", side: "LH", action: "REPLACE", photo_refs: [2], confidence: 0.85, body_hours: 1, paint_hours: 0, mech_hours: 0 },
+      { part_name: "Hood panel", category: "body_panel", zone: "front", side: "CENTER", action: "REPLACE", photo_refs: [1, 2, 3], confidence: 0.8, body_hours: 1.5, paint_hours: 2.5, mech_hours: 0 },
+      { part_name: "Fender LH", category: "body_panel", zone: "front_left", side: "LH", action: "REPAIR", photo_refs: [2, 4], confidence: 0.7, body_hours: 3, paint_hours: 2, mech_hours: 0 },
+      { part_name: "Radiator support", category: "structural", zone: "front", side: "CENTER", action: "REPLACE", photo_refs: [3], confidence: 0.7, body_hours: 5, paint_hours: 0, mech_hours: 0 },
+      { part_name: "A/C condenser", category: "cooling", zone: "front", side: "CENTER", action: "REPLACE", photo_refs: [3], confidence: 0.65, body_hours: 1, paint_hours: 0, mech_hours: 0 },
+      { part_name: "Radiator", category: "cooling", zone: "front", side: "CENTER", action: "REPLACE", photo_refs: [3], confidence: 0.6, body_hours: 1, paint_hours: 0, mech_hours: 0 },
+    ],
+    likely_hidden_damage: [
+      { part_name: "Cooling fan assembly", zone: "front", probability: 0.35, reason: "Radiator support pushed back; the fan shroud sits directly behind it." },
+      { part_name: "Four-wheel alignment", zone: "undercarriage", probability: 0.6, reason: "Front impact strong enough to bend the support usually needs an alignment check." },
+      { part_name: "ADAS calibration", zone: "front", probability: 0.3, reason: "Front radar sits behind the bumper cover." },
+    ],
+    severity_score: 5,
+    engine_bay_intact: true,
+    interior_condition: "good",
+    odometer_reading_visible: 61200,
+    overall_confidence: 0.72,
+    summary:
+      "Moderate frontal impact: bolt-on front-end parts, LH headlamp and the radiator support/cooling stack. No airbag deployment and no visible rail kinks, but there are no undercarriage photos.",
+  }),
+  repair: {
+    severity: 5,
+    baseContingencyBps: 1500,
+    notes: ["Fixture estimate (demo mode)."],
+    lineItems: [
+      line({ id: "a1", partKey: "front_bumper_cover", partName: "Front bumper cover", zone: "front", side: "CENTER", photoRefs: [1, 2], confidence: 0.9, prices: { OEM_NEW: null, AFTERMARKET: pr(240, 320, 400), USED: null }, bodyHours: h(1.5, 2, 2.5), paintHours: h(2, 2.5, 3) }),
+      line({ id: "a2", partKey: "front_bumper_reinforcement", partName: "Front bumper reinforcement + absorber", zone: "front", side: "CENTER", photoRefs: [1], confidence: 0.75, prices: { OEM_NEW: null, AFTERMARKET: pr(150, 190, 230), USED: null }, bodyHours: h(1, 1, 1.2) }),
+      line({ id: "a3", partKey: "grille", partName: "Grille", zone: "front", side: "CENTER", photoRefs: [1, 2], confidence: 0.9, prices: { OEM_NEW: null, AFTERMARKET: pr(160, 210, 260), USED: null }, bodyHours: h(0.5, 0.5, 0.5) }),
+      line({ id: "a4", partKey: "headlamp_assembly", partName: "Headlamp assembly LH (LED)", zone: "front_left", side: "LH", photoRefs: [2], confidence: 0.85, prices: { OEM_NEW: null, AFTERMARKET: null, USED: pr(420, 480, 600) }, bodyHours: h(0.8, 1, 1.2) }),
+      line({ id: "a5", partKey: "hood_panel", partName: "Hood panel", zone: "front", side: "CENTER", photoRefs: [1, 2, 3], confidence: 0.8, prices: { OEM_NEW: null, AFTERMARKET: pr(220, 260, 330), USED: null }, bodyHours: h(1.2, 1.5, 1.8), paintHours: h(2, 2.5, 3) }),
+      line({ id: "a6", partKey: "fender", partName: "Fender LH", zone: "front_left", side: "LH", action: "REPAIR", photoRefs: [2, 4], confidence: 0.7, bodyHours: h(2.5, 3, 4), paintHours: h(2, 2, 2) }),
+      line({ id: "a7", partKey: "radiator_support", partName: "Radiator support", zone: "front", side: "CENTER", photoRefs: [3], confidence: 0.7, prices: { OEM_NEW: null, AFTERMARKET: pr(250, 290, 360), USED: null }, bodyHours: h(4.5, 5, 6) }),
+      line({ id: "a8", partKey: "ac_condenser", partName: "A/C condenser", zone: "front", side: "CENTER", photoRefs: [3], confidence: 0.65, prices: { OEM_NEW: null, AFTERMARKET: pr(120, 150, 200), USED: null }, bodyHours: h(1, 1, 1) }),
+      line({ id: "a9", partKey: "radiator", partName: "Radiator", zone: "front", side: "CENTER", photoRefs: [3], confidence: 0.6, prices: { OEM_NEW: null, AFTERMARKET: pr(140, 170, 220), USED: null }, bodyHours: h(1, 1, 1) }),
+      line({ id: "a10", partKey: "cooling_fan", partName: "Cooling fan assembly", zone: "front", side: "CENTER", origin: "HIDDEN_LIKELY", probability: 0.35, confidence: 0.4, prices: { OEM_NEW: null, AFTERMARKET: pr(180, 220, 300), USED: null }, bodyHours: h(0.5, 0.8, 0.8), mechHours: h(1, 1.5, 2), reason: "Sits directly behind the pushed-back radiator support." }),
+      sublet({ id: "a11", partKey: "sublet_ac_recharge", partName: "A/C evacuate & recharge", zone: "engine_bay", price: pr(150, 150, 180), reason: "Condenser replacement opens the refrigerant circuit." }),
+      sublet({ id: "a12", partKey: "sublet_alignment", partName: "Four-wheel alignment", zone: "undercarriage", origin: "HIDDEN_LIKELY", probability: 0.6, price: pr(100, 120, 140), reason: "Front impact — alignment check recommended." }),
+      sublet({ id: "a13", partKey: "sublet_adas_calibration", partName: "ADAS calibration (front radar)", zone: "front", origin: "HIDDEN_LIKELY", probability: 0.3, price: pr(150, 180, 200), reason: "Front radar sits behind the bumper cover." }),
+    ],
+  },
+  market: {
+    provider: "Demo comps",
+    isDemo: true,
+    confidence: 0.75,
+    compsCount: 12,
+    comps: comps(
+      [
+        [19900, 48000, 35],
+        [19450, 55200, 88],
+        [18990, 52100, 120],
+        [18700, 63800, 15],
+        [18400, 59900, 140],
+        [18300, 66000, 62],
+        [18150, 71200, 25],
+        [17900, 69800, 180],
+        [17600, 74500, 95],
+        [17400, 58300, 160],
+        [16950, 78900, 44],
+        [16800, 81500, 110],
+      ],
+      "Houston",
+      "TX",
+    ),
+    mvClean: { best: 18800, expected: 17700, worst: 16600 },
+    medianDaysOnMarket: 34,
+    mileageSlopePerMile: -0.08,
+    notes: ["12 comps within 200 mi, year 2018–2020, adjusted to 61,200 mi and a 96% list-to-sale ratio."],
+  },
+};
+
+// ── 2. 2021 Toyota Camry — flood ─────────────────────────────────────────────
+
+const CAMRY_VIN = withCheckDigit("4T1G11AK0MU512345");
+const CAMRY_PHOTOS: DemoPhotoSpec[] = [
+  { view: "front_left", damage: [], caption: "Front left — no impact damage", color: "#6b7280", water: true },
+  { view: "interior", damage: [{ region: "bottom", level: 3 }], caption: "Interior — silt line on seats", water: true },
+  { view: "interior", damage: [{ region: "left", level: 2 }], caption: "Door panel — water line", water: true },
+  { view: "engine_bay", damage: [{ region: "bottom", level: 1 }], caption: "Engine bay — debris, corrosion" },
+  { view: "left", damage: [], caption: "Left side", color: "#6b7280", water: true },
+  { view: "rear", damage: [], caption: "Rear", color: "#6b7280" },
+];
+
+const camry: DemoFixture = {
+  id: "camry-flood",
+  source: "IAAI",
+  lotNumber: "90000002",
+  distanceMiles: 1190,
+  photos: CAMRY_PHOTOS,
+  listing: (now) =>
+    listingBase({
+      source: "IAAI",
+      sourceUrl: "https://www.iaai.com/VehicleDetail/90000002~US",
+      lotNumber: "90000002",
+      vin: CAMRY_VIN,
+      year: 2021,
+      make: "TOYOTA",
+      model: "CAMRY",
+      trim: "SE",
+      odometer: 38400,
+      titleRaw: "SALVAGE CERTIFICATE (FL)",
+      titleState: "FL",
+      titleCategory: "SALVAGE",
+      primaryDamage: "WATER/FLOOD",
+      runCondition: "STARTS",
+      engine: "2.5L I4",
+      transmission: "Automatic",
+      drive: "Front wheel drive",
+      fuel: "Gasoline",
+      color: "Gray",
+      saleDate: saleIn(now, 2, 14),
+      saleStatus: "MINIMUM_BID",
+      currentBid: 3400,
+      listedRetailValue: 23900,
+      location: { yardName: "IAA Miami North", city: "Miami", state: "FL", zip: "33054" },
+      photoUrls: photoUrls("camry-flood", CAMRY_PHOTOS.length),
+    }),
+  vehicle: vehicleBase({
+    vin: CAMRY_VIN,
+    year: 2021,
+    make: "TOYOTA",
+    model: "CAMRY",
+    trim: "SE",
+    bodyClass: "Sedan/Saloon",
+    driveType: "FWD/Front-Wheel Drive",
+    engine: "2.5L I4",
+    transmission: "8-speed automatic",
+    vehicleClass: "mainstream",
+    recalls: [
+      { campaign: "21V-000", component: "FUEL SYSTEM, GASOLINE", summary: "Fuel pump may fail, causing a stall.", remedy: "Dealers replace the fuel pump free of charge.", reportDate: "2021-02-01" },
+    ],
+    complaints: [
+      { component: "ELECTRICAL SYSTEM", count: 21 },
+      { component: "POWER TRAIN", count: 11 },
+    ],
+  }),
+  history: {
+    provider: "Demo history",
+    isDemo: true,
+    titleRecords: [
+      { date: "2021-03-10", state: "FL", brand: "CLEAN" },
+      { date: "2026-09-02", state: "FL", brand: "SALVAGE" },
+    ],
+    odometerRecords: [
+      { date: "2023-04-11", reading: 18950 },
+      { date: "2026-09-02", reading: 38400 },
+    ],
+    junkSalvageRecords: [{ date: "2026-09-02", reportingEntity: "Insurance carrier (FL)", disposition: "Flood total loss" }],
+    totalLossEvents: 1,
+    theftRecords: 0,
+    notes: [],
+  },
+  damage: baseDamage({
+    photo_coverage: {
+      angles_present: ["front_left", "interior_front", "engine_bay", "left", "rear"],
+      missing_critical_angles: ["undercarriage", "right"],
+      image_quality: "fair",
+    },
+    photos: [
+      { index: 1, angle: "front_left", findings: "No impact damage; fogging inside the headlamp." },
+      { index: 2, angle: "interior_front", findings: "Silt line across the seat cushions, carpet saturated." },
+      { index: 3, angle: "interior_front", findings: "Water line about 30 cm up the door panel." },
+      { index: 4, angle: "engine_bay", findings: "Debris on the subframe, early corrosion on connectors." },
+      { index: 5, angle: "left", findings: "No body damage." },
+      { index: 6, angle: "rear", findings: "No body damage." },
+    ],
+    impact_zones: [{ zone: "interior", severity: 8, description: "Water intrusion up to the seat cushions." }],
+    damaged_parts: [
+      { part_name: "Carpet and padding", category: "interior", zone: "interior", side: "NA", action: "REPLACE", photo_refs: [2, 3], confidence: 0.85, body_hours: 4, paint_hours: 0, mech_hours: 0 },
+      { part_name: "Front seats", category: "interior", zone: "interior", side: "BOTH", action: "REPLACE", photo_refs: [2], confidence: 0.7, body_hours: 2, paint_hours: 0, mech_hours: 0 },
+    ],
+    likely_hidden_damage: [
+      { part_name: "Body control module", zone: "interior", probability: 0.55, reason: "Mounted low under the dash, below the water line." },
+      { part_name: "Engine control module", zone: "engine_bay", probability: 0.35, reason: "Corrosion visible on engine-bay connectors." },
+      { part_name: "Wiring harness repair", zone: "interior", probability: 0.4, reason: "Floor harness sat in water." },
+    ],
+    severity_score: 8,
+    flood_indicators: ["Silt line on seat cushions", "Water line on door panels", "Moisture inside headlamps", "Corrosion on connectors"],
+    interior_condition: "poor",
+    red_flags: [{ code: "FLOOD_SUSPECTED", message: "Clear flood indicators inside the cabin.", level: "high" }],
+    overall_confidence: 0.68,
+    summary: "Flood vehicle: water reached the seat cushions. Body is straight, but electronics and interior are the big unknowns.",
+  }),
+  repair: {
+    severity: 8,
+    baseContingencyBps: 2500,
+    notes: ["Fixture estimate (demo mode)."],
+    lineItems: [
+      line({ id: "c1", partName: "Carpet & padding", zone: "interior", photoRefs: [2, 3], confidence: 0.85, prices: { OEM_NEW: pr(900, 1100, 1300), AFTERMARKET: pr(450, 600, 800), USED: null }, bodyHours: h(3, 4, 5) }),
+      line({ id: "c2", partName: "Front seats (pair)", zone: "interior", side: "BOTH", photoRefs: [2], confidence: 0.7, prices: { OEM_NEW: null, AFTERMARKET: null, USED: pr(300, 500, 900) }, bodyHours: h(1.5, 2, 3) }),
+      line({ id: "c3", partKey: "battery_12v", partName: "12V battery", zone: "engine_bay", origin: "RULE", prices: { OEM_NEW: null, AFTERMARKET: pr(130, 160, 220), USED: null }, mechHours: h(0.3, 0.3, 0.5), reason: "Standard on flood cars." }),
+      line({ id: "c4", partName: "Body control module", zone: "interior", origin: "HIDDEN_LIKELY", probability: 0.55, confidence: 0.4, prices: { OEM_NEW: pr(350, 450, 600), AFTERMARKET: null, USED: pr(150, 220, 300) }, mechHours: h(1, 1.5, 2), reason: "Below the water line." }),
+      line({ id: "c5", partName: "Engine control module", zone: "engine_bay", origin: "HIDDEN_LIKELY", probability: 0.35, confidence: 0.35, prices: { OEM_NEW: pr(400, 550, 750), AFTERMARKET: null, USED: pr(180, 260, 350) }, mechHours: h(1, 1.5, 2) }),
+      sublet({ id: "c6", partName: "Wiring harness repair", zone: "interior", origin: "HIDDEN_LIKELY", probability: 0.4, price: pr(300, 600, 1200), reason: "Floor harness sat in water." }),
+      sublet({ id: "c7", partName: "Interior cleaning & sanitizing", zone: "interior", price: pr(300, 400, 600) }),
+      sublet({ id: "c8", partKey: "sublet_coolant", partName: "Fluid flush (oil, transmission, brake)", zone: "engine_bay", price: pr(200, 300, 400) }),
+      sublet({ id: "c9", partKey: "sublet_diagnostic", partName: "Diagnostic scan", zone: "engine_bay", price: pr(100, 150, 200) }),
+    ],
+  },
+  market: {
+    provider: "Demo comps",
+    isDemo: true,
+    confidence: 0.7,
+    compsCount: 10,
+    comps: comps(
+      [
+        [24900, 31000, 40],
+        [24300, 36500, 75],
+        [23800, 41000, 12],
+        [23500, 29800, 130],
+        [23200, 44500, 66],
+        [22900, 39200, 90],
+        [22500, 47800, 150],
+        [22100, 51000, 30],
+        [21800, 49500, 175],
+        [21400, 55800, 58],
+      ],
+      "Houston",
+      "TX",
+    ),
+    mvClean: { best: 24000, expected: 22800, worst: 21500 },
+    medianDaysOnMarket: 27,
+    mileageSlopePerMile: -0.09,
+    notes: ["Clean-title comps. Flood-branded resale is typically weaker than other rebuilds — consider lowering the rebuilt factor."],
+  },
+};
+
+// ── 3. 2020 Ford F-150 — rear end (via Bid.cars) ─────────────────────────────
+
+const F150_VIN = withCheckDigit("1FTEW1EP0LFA12345");
+const F150_PHOTOS: DemoPhotoSpec[] = [
+  { view: "rear", damage: [{ region: "center", level: 3 }, { region: "bottom", level: 2 }], caption: "Rear — bumper, tailgate", color: "#1d4ed8" },
+  { view: "rear_left", damage: [{ region: "left", level: 2 }], caption: "Rear left — bed side, tail lamp", color: "#1d4ed8" },
+  { view: "left", damage: [{ region: "right", level: 1 }], caption: "Left side", color: "#1d4ed8" },
+  { view: "front", damage: [], caption: "Front — no damage", color: "#1d4ed8" },
+  { view: "right", damage: [], caption: "Right side", color: "#1d4ed8" },
+  { view: "interior", damage: [], caption: "Interior" },
+  { view: "engine_bay", damage: [], caption: "Engine bay" },
+];
+
+const f150: DemoFixture = {
+  id: "f150-rear",
+  source: "BIDCARS",
+  lotNumber: "1-90000003",
+  distanceMiles: 22,
+  photos: F150_PHOTOS,
+  listing: (now) =>
+    listingBase({
+      source: "BIDCARS",
+      sourceUrl: "https://bid.cars/en/lot/1-90000003/2020-Ford-F-150",
+      lotNumber: "1-90000003",
+      vin: F150_VIN,
+      year: 2020,
+      make: "FORD",
+      model: "F-150",
+      trim: "XLT SuperCrew 4x4",
+      odometer: 72350,
+      titleRaw: "SALVAGE CERTIFICATE (TX)",
+      titleState: "TX",
+      titleCategory: "SALVAGE",
+      primaryDamage: "REAR END",
+      runCondition: "RUNS_AND_DRIVES",
+      engine: "2.7L V6 Turbo",
+      transmission: "Automatic",
+      drive: "4x4",
+      fuel: "Gasoline",
+      color: "Blue",
+      saleDate: saleIn(now, 4, 16),
+      currentBid: 6500,
+      listedRetailValue: 33800,
+      location: { yardName: "Copart Houston", city: "Houston", state: "TX", zip: "77073" },
+      photoUrls: photoUrls("f150-rear", F150_PHOTOS.length),
+    }),
+  vehicle: vehicleBase({
+    vin: F150_VIN,
+    year: 2020,
+    make: "FORD",
+    model: "F-150",
+    trim: "XLT",
+    bodyClass: "Pickup",
+    driveType: "4WD/4-Wheel Drive/4x4",
+    engine: "2.7L V6 Turbo",
+    transmission: "10-speed automatic",
+    turbo: true,
+    vehicleClass: "truck_suv",
+    complaints: [
+      { component: "POWER TRAIN", count: 33 },
+      { component: "ELECTRICAL SYSTEM", count: 18 },
+    ],
+  }),
+  history: {
+    provider: "Demo history",
+    isDemo: true,
+    titleRecords: [
+      { date: "2020-02-03", state: "TX", brand: "CLEAN" },
+      { date: "2026-09-10", state: "TX", brand: "SALVAGE" },
+    ],
+    odometerRecords: [
+      { date: "2022-01-20", reading: 30110 },
+      { date: "2026-09-10", reading: 72350 },
+    ],
+    junkSalvageRecords: [{ date: "2026-09-10", reportingEntity: "Insurance carrier (TX)", disposition: "Sold at auction" }],
+    totalLossEvents: 1,
+    theftRecords: 0,
+    notes: [],
+  },
+  damage: baseDamage({
+    photo_coverage: {
+      angles_present: ["rear", "rear_left", "left", "front", "right", "interior_front", "engine_bay"],
+      missing_critical_angles: ["undercarriage"],
+      image_quality: "good",
+    },
+    photos: [
+      { index: 1, angle: "rear", findings: "Rear step bumper folded, tailgate caved in." },
+      { index: 2, angle: "rear_left", findings: "LH bed side dented at the corner, LH tail lamp broken." },
+      { index: 3, angle: "left", findings: "Minor scuffs on the LH bed side." },
+      { index: 4, angle: "front", findings: "No damage." },
+      { index: 5, angle: "right", findings: "No damage; RH tail lamp cracked." },
+      { index: 6, angle: "interior_front", findings: "Clean, no airbags deployed." },
+      { index: 7, angle: "engine_bay", findings: "Intact." },
+    ],
+    impact_zones: [
+      { zone: "rear", severity: 5, description: "Rear impact into the bumper and tailgate." },
+      { zone: "rear_left", severity: 4, description: "LH bed corner." },
+    ],
+    damaged_parts: [
+      { part_name: "Rear bumper", category: "body_panel", zone: "rear", side: "CENTER", action: "REPLACE", photo_refs: [1], confidence: 0.9, body_hours: 1.5, paint_hours: 0, mech_hours: 0 },
+      { part_name: "Tailgate", category: "body_panel", zone: "rear", side: "CENTER", action: "REPLACE", photo_refs: [1], confidence: 0.85, body_hours: 1.5, paint_hours: 3, mech_hours: 0 },
+      { part_name: "Tail lamp LH", category: "lighting", zone: "rear_left", side: "LH", action: "REPLACE", photo_refs: [2], confidence: 0.9, body_hours: 0.4, paint_hours: 0, mech_hours: 0 },
+      { part_name: "Tail lamp RH", category: "lighting", zone: "rear_right", side: "RH", action: "REPLACE", photo_refs: [5], confidence: 0.7, body_hours: 0.4, paint_hours: 0, mech_hours: 0 },
+      { part_name: "Bed side LH", category: "body_panel", zone: "rear_left", side: "LH", action: "REPAIR", photo_refs: [2, 3], confidence: 0.75, body_hours: 4, paint_hours: 3, mech_hours: 0 },
+    ],
+    likely_hidden_damage: [
+      { part_name: "Trailer hitch receiver", zone: "rear", probability: 0.5, reason: "Bumper pushed into the hitch area." },
+      { part_name: "Rear camera", zone: "rear", probability: 0.45, reason: "Mounted in the tailgate handle." },
+      { part_name: "Rear frame crossmember", zone: "undercarriage", probability: 0.15, reason: "No undercarriage photos; the bumper took most of the hit." },
+    ],
+    severity_score: 5,
+    overall_confidence: 0.78,
+    summary: "Rear-end hit on a body-on-frame truck: bumper, tailgate, both tail lamps and a repairable LH bed side.",
+  }),
+  repair: {
+    severity: 5,
+    baseContingencyBps: 1500,
+    notes: ["Fixture estimate (demo mode)."],
+    lineItems: [
+      line({ id: "f1", partName: "Rear step bumper", zone: "rear", side: "CENTER", photoRefs: [1], confidence: 0.9, prices: { OEM_NEW: pr(620, 700, 780), AFTERMARKET: pr(320, 400, 480), USED: pr(250, 330, 420) }, bodyHours: h(1.2, 1.5, 2) }),
+      line({ id: "f2", partKey: "trunk_lid", partName: "Tailgate", zone: "rear", side: "CENTER", photoRefs: [1], confidence: 0.85, prices: { OEM_NEW: pr(1150, 1250, 1350), AFTERMARKET: pr(650, 800, 950), USED: pr(450, 600, 800) }, bodyHours: h(1.2, 1.5, 2), paintHours: h(2.5, 3, 3.5) }),
+      line({ id: "f3", partKey: "tail_lamp", partName: "Tail lamp LH", zone: "rear_left", side: "LH", photoRefs: [2], confidence: 0.9, prices: { OEM_NEW: pr(280, 320, 360), AFTERMARKET: pr(90, 120, 160), USED: null }, bodyHours: h(0.3, 0.4, 0.5) }),
+      line({ id: "f4", partKey: "tail_lamp", partName: "Tail lamp RH", zone: "rear_right", side: "RH", photoRefs: [5], confidence: 0.7, prices: { OEM_NEW: pr(280, 320, 360), AFTERMARKET: pr(90, 120, 160), USED: null }, bodyHours: h(0.3, 0.4, 0.5) }),
+      line({ id: "f5", partKey: "truck_bed", partName: "Bed side LH", zone: "rear_left", side: "LH", action: "REPAIR", photoRefs: [2, 3], confidence: 0.75, bodyHours: h(3, 4, 6), paintHours: h(2.5, 3, 3.5) }),
+      line({ id: "f6", partName: "Trailer hitch receiver", zone: "rear", origin: "HIDDEN_LIKELY", probability: 0.5, confidence: 0.45, prices: { OEM_NEW: pr(380, 450, 520), AFTERMARKET: pr(180, 220, 280), USED: null }, bodyHours: h(0.8, 1, 1.2) }),
+      line({ id: "f7", partName: "Rear camera", zone: "rear", origin: "HIDDEN_LIKELY", probability: 0.45, confidence: 0.4, prices: { OEM_NEW: pr(260, 310, 360), AFTERMARKET: pr(60, 90, 120), USED: null }, bodyHours: h(0.3, 0.4, 0.5) }),
+      line({ id: "f8", partName: "Rear frame crossmember", zone: "undercarriage", origin: "HIDDEN_LIKELY", probability: 0.15, confidence: 0.3, prices: { OEM_NEW: pr(350, 450, 600), AFTERMARKET: null, USED: null }, bodyHours: h(3, 4, 6) }),
+      sublet({ id: "f9", partKey: "sublet_frame_measure", partName: "Frame measuring", zone: "undercarriage", origin: "HIDDEN_LIKELY", probability: 0.15, price: pr(350, 450, 600) }),
+    ],
+  },
+  market: {
+    provider: "Demo comps",
+    isDemo: true,
+    confidence: 0.8,
+    compsCount: 14,
+    comps: comps(
+      [
+        [35900, 61000, 20],
+        [35200, 66800, 45],
+        [34800, 70100, 90],
+        [34400, 58200, 160],
+        [33900, 74900, 30],
+        [33500, 77300, 110],
+        [33200, 69000, 75],
+        [32900, 81200, 15],
+        [32500, 84600, 140],
+        [32100, 79900, 60],
+        [31800, 88400, 185],
+        [31400, 91000, 25],
+        [30900, 86200, 120],
+        [30500, 95100, 70],
+      ],
+      "Houston",
+      "TX",
+    ),
+    mvClean: { best: 34500, expected: 33000, worst: 31500 },
+    medianDaysOnMarket: 22,
+    mileageSlopePerMile: -0.11,
+    notes: ["Trucks hold value well; rebuilt-title discount may be smaller than the 30% default."],
+  },
+};
+
+// ── 4. 2022 Tesla Model 3 — LH side impact ───────────────────────────────────
+
+const TESLA_VIN = withCheckDigit("5YJ3E1EB0NF123456");
+const TESLA_PHOTOS: DemoPhotoSpec[] = [
+  { view: "left", damage: [{ region: "center", level: 3 }, { region: "bottom", level: 3 }], caption: "Left side — doors, B-pillar, rocker", color: "#f8fafc" },
+  { view: "front_left", damage: [{ region: "left", level: 1 }], caption: "Front left", color: "#f8fafc" },
+  { view: "rear_left", damage: [{ region: "left", level: 2 }], caption: "Rear left — quarter panel", color: "#f8fafc" },
+  { view: "interior", damage: [{ region: "left", level: 3 }], caption: "Interior — curtain airbag deployed" },
+  { view: "right", damage: [], caption: "Right side", color: "#f8fafc" },
+  { view: "undercarriage", damage: [{ region: "left", level: 2 }], caption: "Underbody — LH sill near battery" },
+];
+
+const tesla: DemoFixture = {
+  id: "model3-side",
+  source: "COPART",
+  lotNumber: "90000004",
+  distanceMiles: 240,
+  photos: TESLA_PHOTOS,
+  listing: (now) =>
+    listingBase({
+      source: "COPART",
+      sourceUrl: "https://www.copart.com/lot/90000004",
+      lotNumber: "90000004",
+      vin: TESLA_VIN,
+      year: 2022,
+      make: "TESLA",
+      model: "MODEL 3",
+      trim: "Long Range AWD",
+      odometer: 28100,
+      titleRaw: "SALVAGE CERTIFICATE (TX)",
+      titleState: "TX",
+      titleCategory: "SALVAGE",
+      primaryDamage: "LEFT SIDE",
+      secondaryDamage: "UNDERCARRIAGE",
+      runCondition: "STARTS",
+      engine: "Dual motor electric",
+      transmission: "Single-speed",
+      drive: "All wheel drive",
+      fuel: "Electric",
+      color: "White",
+      saleDate: saleIn(now, 1, 18),
+      currentBid: 3200,
+      listedRetailValue: 31000,
+      location: { yardName: "Copart Dallas", city: "Dallas", state: "TX", zip: "75236" },
+      photoUrls: photoUrls("model3-side", TESLA_PHOTOS.length),
+    }),
+  vehicle: vehicleBase({
+    vin: TESLA_VIN,
+    year: 2022,
+    make: "TESLA",
+    model: "MODEL 3",
+    trim: "Long Range",
+    bodyClass: "Sedan/Saloon",
+    driveType: "AWD/All-Wheel Drive",
+    engine: "Dual motor",
+    fuelType: "Electric",
+    transmission: "1-speed",
+    vehicleClass: "ev",
+    isEv: true,
+    recalls: [
+      { campaign: "23V-085", component: "ELECTRICAL SYSTEM: SOFTWARE", summary: "Driver-assistance software update.", remedy: "Over-the-air software update, free of charge.", reportDate: "2023-02-15" },
+    ],
+    complaints: [
+      { component: "FORWARD COLLISION AVOIDANCE", count: 48 },
+      { component: "SUSPENSION", count: 22 },
+    ],
+  }),
+  history: {
+    provider: "Demo history",
+    isDemo: true,
+    titleRecords: [
+      { date: "2022-04-01", state: "TX", brand: "CLEAN" },
+      { date: "2026-09-15", state: "TX", brand: "SALVAGE" },
+    ],
+    odometerRecords: [{ date: "2026-09-15", reading: 28100 }],
+    junkSalvageRecords: [{ date: "2026-09-15", reportingEntity: "Insurance carrier (TX)", disposition: "Sold at auction" }],
+    totalLossEvents: 1,
+    theftRecords: 0,
+    notes: [],
+  },
+  damage: baseDamage({
+    photo_coverage: {
+      angles_present: ["left", "front_left", "rear_left", "interior_front", "right", "undercarriage"],
+      missing_critical_angles: [],
+      image_quality: "good",
+    },
+    photos: [
+      { index: 1, angle: "left", findings: "Both LH doors crushed; B-pillar pushed inward; rocker buckled." },
+      { index: 2, angle: "front_left", findings: "LH fender scuffed behind the wheel." },
+      { index: 3, angle: "rear_left", findings: "LH quarter panel dented ahead of the wheel arch." },
+      { index: 4, angle: "interior_front", findings: "LH curtain and seat airbags deployed." },
+      { index: 5, angle: "right", findings: "No damage." },
+      { index: 6, angle: "undercarriage", findings: "LH sill deformed close to the high-voltage battery enclosure." },
+    ],
+    impact_zones: [
+      { zone: "left_side", severity: 7, description: "Side impact centered on the B-pillar." },
+      { zone: "undercarriage", severity: 5, description: "LH sill deformation near the battery pack." },
+    ],
+    damaged_parts: [
+      { part_name: "Front door shell LH", category: "body_panel", zone: "left_side", side: "LH", action: "REPLACE", photo_refs: [1], confidence: 0.9, body_hours: 3, paint_hours: 2.5, mech_hours: 0 },
+      { part_name: "Rear door shell LH", category: "body_panel", zone: "left_side", side: "LH", action: "REPLACE", photo_refs: [1], confidence: 0.9, body_hours: 3, paint_hours: 2.5, mech_hours: 0 },
+      { part_name: "B-pillar LH", category: "structural", zone: "left_side", side: "LH", action: "REPAIR", photo_refs: [1], confidence: 0.6, body_hours: 10, paint_hours: 2, mech_hours: 0 },
+      { part_name: "Rocker panel LH", category: "structural", zone: "left_side", side: "LH", action: "REPLACE", photo_refs: [1, 6], confidence: 0.7, body_hours: 6, paint_hours: 2, mech_hours: 0 },
+      { part_name: "Curtain airbag LH", category: "airbag_srs", zone: "interior", side: "LH", action: "REPLACE", photo_refs: [4], confidence: 0.9, body_hours: 2, paint_hours: 0, mech_hours: 0 },
+      { part_name: "Seat side airbag LH", category: "airbag_srs", zone: "interior", side: "LH", action: "REPLACE", photo_refs: [4], confidence: 0.8, body_hours: 1.5, paint_hours: 0, mech_hours: 0 },
+      { part_name: "Quarter panel LH", category: "structural", zone: "rear_left", side: "LH", action: "REPAIR", photo_refs: [3], confidence: 0.7, body_hours: 3, paint_hours: 2, mech_hours: 0 },
+    ],
+    likely_hidden_damage: [
+      { part_name: "High-voltage battery inspection", zone: "undercarriage", probability: 0.7, reason: "Sill deformation next to the battery enclosure." },
+      { part_name: "Seat belt pretensioner LH", zone: "interior", probability: 0.8, reason: "Side airbags deployed." },
+      { part_name: "SRS control module", zone: "interior", probability: 0.6, reason: "Airbag deployment." },
+    ],
+    severity_score: 7,
+    airbag_deployed: true,
+    airbags_deployed_list: ["Curtain airbag LH", "Seat side airbag LH"],
+    frame_damage_suspected: true,
+    frame_evidence: "B-pillar intrusion and rocker buckling; LH door gaps closed at the top.",
+    overall_confidence: 0.6,
+    red_flags: [{ code: "EV_HV_BATTERY_RISK", message: "Underbody deformation next to the high-voltage battery.", level: "high" }],
+    summary: "Serious LH side impact on an EV: structural (B-pillar, rocker), two airbags, and a real risk to the battery pack.",
+  }),
+  repair: {
+    severity: 7,
+    baseContingencyBps: 2500,
+    notes: ["Fixture estimate (demo mode)."],
+    lineItems: [
+      line({ id: "t1", partKey: "front_door_shell", partName: "Front door shell LH", zone: "left_side", side: "LH", photoRefs: [1], confidence: 0.9, prices: { OEM_NEW: pr(900, 1050, 1200), AFTERMARKET: null, USED: pr(450, 600, 800) }, bodyHours: h(2.5, 3, 4), paintHours: h(2, 2.5, 3) }),
+      line({ id: "t2", partKey: "rear_door_shell", partName: "Rear door shell LH", zone: "left_side", side: "LH", photoRefs: [1], confidence: 0.9, prices: { OEM_NEW: pr(850, 1000, 1150), AFTERMARKET: null, USED: pr(400, 550, 750) }, bodyHours: h(2.5, 3, 4), paintHours: h(2, 2.5, 3) }),
+      line({ id: "t3", partKey: "b_pillar", partName: "B-pillar LH (section)", zone: "left_side", side: "LH", action: "REPAIR", photoRefs: [1], confidence: 0.6, prices: { OEM_NEW: pr(250, 320, 420), AFTERMARKET: null, USED: null }, bodyHours: h(8, 10, 14), paintHours: h(1.5, 2, 2.5) }),
+      line({ id: "t4", partKey: "rocker_panel", partName: "Rocker panel LH", zone: "left_side", side: "LH", photoRefs: [1, 6], confidence: 0.7, prices: { OEM_NEW: pr(300, 380, 480), AFTERMARKET: null, USED: null }, bodyHours: h(5, 6, 8), paintHours: h(1.5, 2, 2.5) }),
+      line({ id: "t5", partKey: "curtain_airbag", partName: "Curtain airbag LH", zone: "interior", side: "LH", photoRefs: [4], confidence: 0.9, prices: { OEM_NEW: pr(450, 520, 600), AFTERMARKET: null, USED: pr(220, 280, 350) }, bodyHours: h(1.5, 2, 3) }),
+      line({ id: "t6", partKey: "seat_airbag", partName: "Seat side airbag LH", zone: "interior", side: "LH", photoRefs: [4], confidence: 0.8, prices: { OEM_NEW: pr(380, 440, 500), AFTERMARKET: null, USED: pr(180, 230, 300) }, bodyHours: h(1, 1.5, 2) }),
+      line({ id: "t7", partKey: "quarter_panel", partName: "Quarter panel LH", zone: "rear_left", side: "LH", action: "REPAIR", photoRefs: [3], confidence: 0.7, bodyHours: h(2.5, 3, 5), paintHours: h(1.5, 2, 2.5) }),
+      line({ id: "t8", partKey: "seat_belt_pretensioner", partName: "Seat belt pretensioner LH", zone: "interior", side: "LH", origin: "HIDDEN_LIKELY", probability: 0.8, confidence: 0.6, prices: { OEM_NEW: pr(250, 300, 360), AFTERMARKET: null, USED: pr(100, 140, 180) }, bodyHours: h(0.5, 0.8, 1) }),
+      line({ id: "t9", partKey: "srs_module", partName: "SRS control module", zone: "interior", origin: "HIDDEN_LIKELY", probability: 0.6, confidence: 0.5, prices: { OEM_NEW: pr(400, 500, 600), AFTERMARKET: null, USED: pr(150, 200, 260) }, bodyHours: h(0.5, 0.8, 1) }),
+      sublet({ id: "t10", partKey: "sublet_hv_battery_inspection", partName: "High-voltage battery inspection", zone: "undercarriage", origin: "HIDDEN_LIKELY", probability: 0.7, price: pr(400, 600, 900), reason: "Sill deformation next to the battery." }),
+      sublet({ id: "t11", partKey: "sublet_frame_measure", partName: "Frame measuring & pull", zone: "undercarriage", price: pr(450, 650, 900) }),
+      sublet({ id: "t12", partKey: "sublet_srs_diag", partName: "SRS diagnostic & reset", zone: "interior", price: pr(120, 150, 200) }),
+    ],
+  },
+  market: {
+    provider: "Demo comps",
+    isDemo: true,
+    confidence: 0.72,
+    compsCount: 11,
+    comps: comps(
+      [
+        [31500, 18200, 30],
+        [30900, 22600, 80],
+        [30200, 25900, 150],
+        [29800, 24100, 15],
+        [29100, 31800, 60],
+        [28700, 28400, 110],
+        [28300, 34900, 25],
+        [27900, 37000, 170],
+        [27400, 41200, 90],
+        [26900, 39900, 45],
+        [26500, 45600, 135],
+      ],
+      "Houston",
+      "TX",
+    ),
+    mvClean: { best: 30000, expected: 28500, worst: 27000 },
+    medianDaysOnMarket: 31,
+    mileageSlopePerMile: -0.12,
+    notes: ["EV resale with a salvage history is sensitive to battery health — get a battery report."],
+  },
+};
+
+// ── 5. 2017 Honda Civic — certificate of destruction ─────────────────────────
+
+const CIVIC_VIN = withCheckDigit("19XFC2F50HE012345");
+const CIVIC_PHOTOS: DemoPhotoSpec[] = [
+  { view: "roof", damage: [{ region: "all", level: 3 }], caption: "Roof crushed", color: "#991b1b" },
+  { view: "left", damage: [{ region: "top", level: 3 }, { region: "center", level: 2 }], caption: "Left side — pillars", color: "#991b1b" },
+  { view: "front", damage: [{ region: "top", level: 3 }], caption: "Front — windshield", color: "#991b1b" },
+  { view: "interior", damage: [{ region: "top", level: 3 }], caption: "Interior — curtain airbags" },
+];
+
+const civic: DemoFixture = {
+  id: "civic-cod",
+  source: "COPART",
+  lotNumber: "90000005",
+  distanceMiles: 970,
+  photos: CIVIC_PHOTOS,
+  listing: (now) =>
+    listingBase({
+      source: "COPART",
+      sourceUrl: "https://www.copart.com/lot/90000005",
+      lotNumber: "90000005",
+      vin: CIVIC_VIN,
+      year: 2017,
+      make: "HONDA",
+      model: "CIVIC",
+      trim: "LX",
+      odometer: 98700,
+      titleRaw: "CERTIFICATE OF DESTRUCTION (FL)",
+      titleState: "FL",
+      titleCategory: "NON_REPAIRABLE",
+      primaryDamage: "ROLLOVER",
+      secondaryDamage: "TOP/ROOF",
+      runCondition: "WONT_START",
+      hasKeys: false,
+      engine: "2.0L I4",
+      transmission: "CVT",
+      drive: "Front wheel drive",
+      fuel: "Gasoline",
+      color: "Red",
+      saleDate: saleIn(now, 5, 14),
+      currentBid: 600,
+      listedRetailValue: 13900,
+      location: { yardName: "Copart Orlando South", city: "Orlando", state: "FL", zip: "32824" },
+      photoUrls: photoUrls("civic-cod", CIVIC_PHOTOS.length),
+    }),
+  vehicle: vehicleBase({
+    vin: CIVIC_VIN,
+    year: 2017,
+    make: "HONDA",
+    model: "CIVIC",
+    trim: "LX",
+    bodyClass: "Sedan/Saloon",
+    driveType: "FWD/Front-Wheel Drive",
+    engine: "2.0L I4",
+    transmission: "CVT",
+    vehicleClass: "mainstream",
+  }),
+  history: {
+    provider: "Demo history",
+    isDemo: true,
+    titleRecords: [
+      { date: "2017-01-20", state: "FL", brand: "CLEAN" },
+      { date: "2026-09-20", state: "FL", brand: "CERTIFICATE OF DESTRUCTION" },
+    ],
+    odometerRecords: [{ date: "2026-09-20", reading: 98700 }],
+    junkSalvageRecords: [{ date: "2026-09-20", reportingEntity: "Insurance carrier (FL)", disposition: "Destruction certificate issued" }],
+    totalLossEvents: 1,
+    theftRecords: 0,
+    notes: [],
+  },
+  damage: baseDamage({
+    photo_coverage: {
+      angles_present: ["roof", "left", "front", "interior_front"],
+      missing_critical_angles: ["engine_bay", "undercarriage", "rear", "right"],
+      image_quality: "fair",
+    },
+    photos: [
+      { index: 1, angle: "roof", findings: "Roof caved in along its full length." },
+      { index: 2, angle: "left", findings: "A- and B-pillars bent; doors no longer close." },
+      { index: 3, angle: "front", findings: "Windshield shattered." },
+      { index: 4, angle: "interior_front", findings: "Both curtain airbags deployed." },
+    ],
+    impact_zones: [
+      { zone: "roof", severity: 10, description: "Rollover crush." },
+      { zone: "left_side", severity: 8, description: "Pillar deformation." },
+    ],
+    damaged_parts: [
+      { part_name: "Roof panel", category: "structural", zone: "roof", side: "CENTER", action: "REPLACE", photo_refs: [1], confidence: 0.9, body_hours: 12, paint_hours: 3.5, mech_hours: 0 },
+      { part_name: "Windshield", category: "glass", zone: "front", side: "CENTER", action: "REPLACE", photo_refs: [3], confidence: 0.95, body_hours: 1.2, paint_hours: 0, mech_hours: 0 },
+      { part_name: "Curtain airbag LH", category: "airbag_srs", zone: "interior", side: "LH", action: "REPLACE", photo_refs: [4], confidence: 0.9, body_hours: 2, paint_hours: 0, mech_hours: 0 },
+    ],
+    severity_score: 9,
+    airbag_deployed: true,
+    airbags_deployed_list: ["Curtain airbag LH", "Curtain airbag RH"],
+    frame_damage_suspected: true,
+    frame_evidence: "Roof and pillars crushed in a rollover.",
+    engine_bay_intact: null,
+    overall_confidence: 0.7,
+    summary: "Rollover with roof and pillar crush. The title is a certificate of destruction, so it can't be returned to the road.",
+  }),
+  repair: {
+    severity: 9,
+    baseContingencyBps: 3500,
+    notes: ["Fixture estimate (demo mode)."],
+    lineItems: [
+      line({ id: "h1", partKey: "roof_panel", partName: "Roof panel", zone: "roof", photoRefs: [1], prices: { OEM_NEW: pr(500, 600, 700), AFTERMARKET: null, USED: pr(200, 300, 400) }, bodyHours: h(10, 12, 16), paintHours: h(3, 3.5, 4) }),
+      line({ id: "h2", partKey: "windshield", partName: "Windshield", zone: "front", photoRefs: [3], prices: { OEM_NEW: pr(400, 450, 520), AFTERMARKET: pr(220, 260, 300), USED: null }, bodyHours: h(1, 1.2, 1.5) }),
+      line({ id: "h3", partKey: "curtain_airbag", partName: "Curtain airbags (pair)", zone: "interior", side: "BOTH", photoRefs: [4], prices: { OEM_NEW: pr(700, 800, 900), AFTERMARKET: null, USED: pr(300, 380, 450) }, bodyHours: h(3, 4, 5) }),
+      sublet({ id: "h4", partKey: "sublet_frame_measure", partName: "Frame measuring & pull", zone: "undercarriage", price: pr(600, 800, 1100) }),
+      sublet({ id: "h5", partKey: "sublet_key_programming", partName: "Key programming / new key", zone: "interior", price: pr(200, 250, 350) }),
+    ],
+  },
+  market: {
+    provider: "Demo comps",
+    isDemo: true,
+    confidence: 0.7,
+    compsCount: 9,
+    comps: comps(
+      [
+        [15200, 82000, 30],
+        [14800, 88500, 65],
+        [14300, 91000, 110],
+        [13900, 95400, 20],
+        [13600, 99800, 140],
+        [13300, 104000, 55],
+        [12900, 108500, 90],
+        [12600, 111000, 160],
+        [12200, 118000, 35],
+      ],
+      "Houston",
+      "TX",
+    ),
+    mvClean: { best: 14500, expected: 13500, worst: 12500 },
+    medianDaysOnMarket: 25,
+    mileageSlopePerMile: -0.06,
+    notes: [],
+  },
+};
+
+export const DEMO_FIXTURES: DemoFixture[] = [audi, camry, f150, tesla, civic];
+
+export function findDemoFixture(source: string | null | undefined, lotNumber: string | null | undefined): DemoFixture | null {
+  if (!lotNumber) return null;
+  return DEMO_FIXTURES.find((f) => f.lotNumber === lotNumber && (source ? f.source === source : true)) ?? null;
+}
+
+export function findDemoFixtureById(id: string): DemoFixture | null {
+  return DEMO_FIXTURES.find((f) => f.id === id) ?? null;
+}
+
+export function findDemoFixtureByVin(vin: string): DemoFixture | null {
+  return DEMO_FIXTURES.find((f) => f.vehicle.vin === vin) ?? null;
+}

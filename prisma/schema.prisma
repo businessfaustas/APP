@@ -1,0 +1,419 @@
+// AuctionPulse AI — database schema (Prisma 7, PostgreSQL)
+// Connection URLs live in prisma.config.ts (migrations) and lib/db/prisma.ts (runtime adapter).
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Plan {
+  FREE
+  PRO
+  BUSINESS
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum AuctionSource {
+  COPART
+  IAAI
+  BIDCARS
+  AUTOBIDMASTER
+  OTHER
+  MANUAL
+}
+
+enum InputType {
+  URL
+  VIN
+  TEXT
+  MANUAL
+  EXTENSION
+}
+
+enum AnalysisStatus {
+  QUEUED
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+enum Verdict {
+  GO
+  BE_CAUTIOUS
+  WALK_AWAY
+}
+
+enum TitleCategory {
+  CLEAN
+  SALVAGE
+  REBUILT
+  NON_REPAIRABLE
+  PARTS_ONLY
+  FLOOD
+  OTHER
+  UNKNOWN
+}
+
+enum RunCondition {
+  RUNS_AND_DRIVES
+  STARTS
+  WONT_START
+  UNKNOWN
+}
+
+enum BuyerType {
+  LICENSED_DEALER
+  PUBLIC_VIA_BROKER
+}
+
+enum PartSource {
+  OEM_NEW
+  AFTERMARKET
+  USED
+}
+
+enum ExitStrategy {
+  RETAIL_REBUILT
+  EXPORT
+}
+
+model User {
+  id               String             @id // Supabase auth user id (or the demo user id)
+  email            String             @unique
+  name             String?
+  role             Role               @default(USER)
+  plan             Plan               @default(FREE)
+  stripeCustomerId String?            @unique
+  creditsRemaining Int                @default(3)
+  creditsResetAt   DateTime?
+  apiTokenHash     String?            @unique // sha256 of the browser-extension token
+  createdAt        DateTime           @default(now())
+  settings         UserSettings?
+  analyses         Analysis[]
+  batches          Batch[]
+  watchlist        WatchlistItem[]
+  deals            DealJournalEntry[]
+  ledger           CreditLedger[]
+}
+
+model UserSettings {
+  userId                 String       @id
+  user                   User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  homeZip                String       @default("77002")
+  currency               String       @default("USD")
+  buyerType              BuyerType    @default(LICENSED_DEALER)
+  laborRate              Int          @default(70)
+  paintMaterialsPerHour  Int          @default(40)
+  partsSourcePreference  PartSource   @default(AFTERMARKET)
+  partsDiscountBps       Int          @default(0)
+  rebuiltFactorBps       Int          @default(7000)
+  listToSaleBps          Int          @default(9600)
+  targetProfitBps        Int          @default(1500)
+  targetProfitMin        Int          @default(2500)
+  transportCentsPerMile  Int          @default(150)
+  transportMin           Int          @default(150)
+  titleRegInspection     Int          @default(300)
+  storageDays            Int          @default(0)
+  storagePerDay          Int          @default(0)
+  holdingCostPerDay      Int          @default(8)
+  holdingDaysExpected    Int          @default(30)
+  sellingCostBps         Int          @default(200)
+  sellingCostFixed       Int          @default(0)
+  salesTaxBps            Int          @default(0)
+  brokerFee              Int          @default(0)
+  contingencyOverrideBps Int?
+  exitStrategy           ExitStrategy @default(RETAIL_REBUILT)
+  exportProfileId        String?
+  vatRecoverable         Boolean      @default(false)
+  updatedAt              DateTime     @updatedAt
+}
+
+model Vehicle {
+  vin               String    @id
+  year              Int?
+  make              String?
+  model             String?
+  trim              String?
+  bodyClass         String?
+  driveType         String?
+  engine            String?
+  fuelType          String?
+  transmission      String?
+  vehicleClass      String? // economy|mainstream|premium|luxury|truck_suv|ev
+  decoded           Json?
+  decodedAt         DateTime?
+  recalls           Json?
+  complaintsSummary Json?
+  checksFetchedAt   DateTime?
+  history           Json?
+  historyProvider   String?
+  historyFetchedAt  DateTime?
+  listings          Listing[]
+}
+
+model Listing {
+  id                String          @id @default(cuid())
+  source            AuctionSource
+  sourceUrl         String?
+  lotNumber         String?
+  vin               String?
+  vehicle           Vehicle?        @relation(fields: [vin], references: [vin])
+  year              Int?
+  make              String?
+  model             String?
+  trim              String?
+  odometer          Int?
+  odometerUnit      String          @default("mi")
+  odometerBrand     String? // ACTUAL | NOT_ACTUAL | EXEMPT | EXCEEDS_MECHANICAL_LIMITS | UNKNOWN
+  titleCategory     TitleCategory   @default(UNKNOWN)
+  titleRaw          String?
+  titleState        String?
+  primaryDamage     String?
+  secondaryDamage   String?
+  runCondition      RunCondition    @default(UNKNOWN)
+  hasKeys           Boolean?
+  saleDate          DateTime?
+  saleStatus        String? // PURE_SALE | MINIMUM_BID | ON_APPROVAL | BUY_NOW | UNKNOWN
+  currentBid        Int?
+  buyNowPrice       Int?
+  listedRetailValue Int? // Copart "Est. Retail Value" / IAAI "ACV" — low trust
+  yardName          String?
+  yardCity          String?
+  yardState         String?
+  yardZip           String?
+  sellerType        String?
+  extractionMethod  String // FIXTURE | PARSER | LLM | EXTENSION | MANUAL
+  rawData           Json?
+  fetchedAt         DateTime        @default(now())
+  photos            ListingPhoto[]
+  analyses          Analysis[]
+  watchlist         WatchlistItem[]
+
+  @@unique([source, lotNumber])
+  @@index([vin])
+}
+
+model ListingPhoto {
+  id          String  @id @default(cuid())
+  listingId   String
+  listing     Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  position    Int
+  originalUrl String?
+  storagePath String?
+  width       Int?
+  height      Int?
+  sha256      String?
+  createdAt   DateTime @default(now())
+
+  @@index([listingId])
+}
+
+model Analysis {
+  id               String             @id @default(cuid())
+  userId           String
+  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listingId        String?
+  listing          Listing?           @relation(fields: [listingId], references: [id])
+  batchId          String?
+  batch            Batch?             @relation(fields: [batchId], references: [id])
+  inputType        InputType
+  inputValue       String
+  inputPayload     Json? // pasted text, manual form, extension capture, uploaded photo paths
+  status           AnalysisStatus     @default(QUEUED)
+  currentStep      String?
+  progress         Int                @default(0)
+  error            String?
+  settingsSnapshot Json
+  listingSnapshot  Json? // NormalizedListing at analysis time
+  vehicleInfo      Json? // VehicleInfo
+  history          Json? // HistoryReport
+  damage           Json?
+  damageFromPhotos Boolean            @default(false)
+  repairEstimate   Json?
+  market           Json?
+  logistics        Json?
+  calcInput        Json?
+  calc             Json?
+  flags            Json?
+  checklist        Json?
+  narrative        String?
+  verdict          Verdict?
+  maxBid           Int?
+  comfortBid       Int?
+  breakEvenBid     Int?
+  expectedProfit   Int?
+  dealScore        Int?
+  userOverrides    Json?
+  dataSources      Json?
+  aiModel          String?
+  aiCostUsd        Float?
+  shareToken       String?            @unique
+  createdAt        DateTime           @default(now())
+  completedAt      DateTime?
+  journal          DealJournalEntry[]
+
+  @@index([userId, createdAt])
+  @@index([batchId])
+}
+
+model Batch {
+  id        String     @id @default(cuid())
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String?
+  createdAt DateTime   @default(now())
+  analyses  Analysis[]
+}
+
+model WatchlistItem {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listingId  String
+  listing    Listing   @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  analysisId String?
+  notes      String?
+  myMaxBid   Int?
+  remindAt   DateTime?
+  remindedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@unique([userId, listingId])
+  @@index([remindAt])
+}
+
+model DealJournalEntry {
+  id                String    @id @default(cuid())
+  userId            String
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  analysisId        String?
+  analysis          Analysis? @relation(fields: [analysisId], references: [id], onDelete: SetNull)
+  vin               String?
+  title             String
+  estimatedRepair   Int?
+  estimatedProfit   Int?
+  purchasePrice     Int?
+  auctionFeesActual Int?
+  transportActual   Int?
+  partsActual       Int?
+  laborActual       Int?
+  otherCostsActual  Int?
+  salePrice         Int?
+  purchasedAt       DateTime?
+  soldAt            DateTime?
+  notes             String?
+  createdAt         DateTime  @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model FeeSchedule {
+  id                String        @id @default(cuid())
+  source            AuctionSource
+  buyerType         BuyerType
+  name              String
+  buyerFeeTiers     Json // FeeTier[]
+  onlineBidFeeTiers Json // FeeTier[]
+  fixedFees         Json // { label, amount }[]
+  isPlaceholder     Boolean       @default(true)
+  sourceUrl         String?
+  verifiedAt        DateTime?
+  active            Boolean       @default(true)
+  updatedAt         DateTime      @updatedAt
+
+  @@index([source, buyerType, active])
+}
+
+model PartPriceReference {
+  id            String     @id @default(cuid())
+  partKey       String
+  vehicleClass  String
+  source        PartSource
+  priceLow      Int
+  priceHigh     Int
+  isPlaceholder Boolean    @default(true)
+  updatedAt     DateTime   @updatedAt
+
+  @@unique([partKey, vehicleClass, source])
+}
+
+model LaborReference {
+  partKey        String @id
+  displayName    String
+  zone           String
+  category       String @default("body_panel")
+  bodyHoursLow   Float
+  bodyHoursHigh  Float
+  paintHoursLow  Float
+  paintHoursHigh Float
+  mechHoursLow   Float  @default(0)
+  mechHoursHigh  Float  @default(0)
+}
+
+model ExportProfile {
+  id                       String  @id @default(cuid())
+  name                     String
+  countryCode              String
+  currency                 String
+  departurePortZip         String
+  inlandToPortCentsPerMile Int
+  portAndLoading           Int
+  oceanFreight             Int
+  marineInsuranceBps       Int
+  destinationPortFees      Int
+  customsBrokerFee         Int
+  dutyBps                  Int
+  vatBps                   Int
+  vatRecoverableDefault    Boolean @default(false)
+  registrationTax          Int
+  complianceConversion     Int
+  deliveryFromPort         Int
+  isPlaceholder            Boolean @default(true)
+}
+
+model CreditLedger {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  delta      Int
+  reason     String // ANALYSIS | REFUND | MONTHLY_RESET | PURCHASE | ADMIN | SIGNUP
+  analysisId String?
+  createdAt  DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model ApiCache {
+  key       String   @id
+  value     Json
+  expiresAt DateTime
+}
+
+model AiUsage {
+  id           String   @id @default(cuid())
+  analysisId   String?
+  purpose      String // VISION | EXTRACT | PARTS_PRICE | MARKET_ESTIMATE | NARRATIVE | TITLE
+  model        String
+  inputTokens  Int
+  outputTokens Int
+  costUsd      Float
+  createdAt    DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+model RateLimitHit {
+  id        String   @id @default(cuid())
+  key       String
+  createdAt DateTime @default(now())
+
+  @@index([key, createdAt])
+}
