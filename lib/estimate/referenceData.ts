@@ -48,31 +48,55 @@ const S = (partKey: string, displayName: string, zone: DamageZone, basePrice: [n
 
 export const LABOR_REFERENCE: LaborRef[] = [
   // Front
-  P("front_bumper_cover", "Front bumper cover", "front", "body_panel", [1.2, 2.5], [2.0, 3.0], [0, 0], [180, 380], { synonyms: ["front bumper", "bumper cover front", "front fascia"] }),
-  P("front_bumper_reinforcement", "Front bumper reinforcement", "front", "structural", [0.8, 1.5], [0, 0], [0, 0], [120, 260], { synonyms: ["bumper reinforcement", "impact bar", "rebar", "bumper reinforcement + absorber"] }),
-  P("bumper_energy_absorber", "Bumper energy absorber", "front", "body_panel", [0.3, 0.6], [0, 0], [0, 0], [30, 90], { synonyms: ["absorber", "energy absorber", "foam absorber"] }),
+  P("front_bumper_cover", "Front bumper cover", "front", "body_panel", [1.2, 2.5], [2.0, 3.0], [0, 0], [180, 380], {
+    synonyms: ["front bumper", "bumper cover front", "front fascia"],
+  }),
+  P("front_bumper_reinforcement", "Front bumper reinforcement", "front", "structural", [0.8, 1.5], [0, 0], [0, 0], [120, 260], {
+    synonyms: ["bumper reinforcement", "impact bar", "rebar", "bumper reinforcement + absorber"],
+  }),
+  P("bumper_energy_absorber", "Bumper energy absorber", "front", "body_panel", [0.3, 0.6], [0, 0], [0, 0], [30, 90], {
+    synonyms: ["absorber", "energy absorber", "foam absorber"],
+  }),
   P("grille", "Grille", "front", "body_panel", [0.3, 0.8], [0, 0], [0, 0], [120, 280], { synonyms: ["front grille", "radiator grille"] }),
-  P("headlamp_assembly", "Headlamp assembly", "front", "lighting", [0.5, 1.5], [0, 0], [0, 0], [180, 450], { synonyms: ["headlight", "headlamp", "head lamp", "led headlamp"] }),
+  P("headlamp_assembly", "Headlamp assembly", "front", "lighting", [0.5, 1.5], [0, 0], [0, 0], [180, 450], {
+    synonyms: ["headlight", "headlamp", "head lamp", "led headlamp"],
+  }),
   P("fog_lamp", "Fog lamp", "front", "lighting", [0.3, 0.6], [0, 0], [0, 0], [40, 120], { synonyms: ["fog light"] }),
   P("hood_panel", "Hood panel", "front", "body_panel", [1.0, 2.0], [2.0, 3.2], [0, 0], [200, 420], { synonyms: ["hood", "bonnet"] }),
   P("hood_hinge", "Hood hinge", "front", "body_panel", [0.4, 0.8], [0, 0], [0, 0], [25, 70]),
   P("fender", "Fender", "front_left", "body_panel", [1.5, 3.0], [1.8, 2.6], [0, 0], [90, 240], { synonyms: ["front fender", "wing"] }),
-  P("fender_liner", "Fender liner", "front_left", "body_panel", [0.3, 0.5], [0, 0], [0, 0], [20, 60], { synonyms: ["wheelhouse liner", "inner fender liner", "splash shield"] }),
-  P("radiator_support", "Radiator support", "front", "structural", [3.5, 6.5], [0, 1.5], [0, 0], [200, 380], { synonyms: ["core support", "radiator core support", "front end carrier"] }),
-  P("ac_condenser", "A/C condenser", "front", "cooling", [0.8, 1.5], [0, 0], [0, 0.5], [110, 230], { synonyms: ["condenser", "a/c condenser", "ac condenser"] }),
+  P("fender_liner", "Fender liner", "front_left", "body_panel", [0.3, 0.5], [0, 0], [0, 0], [20, 60], {
+    synonyms: ["wheelhouse liner", "inner fender liner", "splash shield"],
+  }),
+  P("radiator_support", "Radiator support", "front", "structural", [3.5, 6.5], [0, 1.5], [0, 0], [200, 380], {
+    synonyms: ["core support", "radiator core support", "front end carrier"],
+  }),
+  P("ac_condenser", "A/C condenser", "front", "cooling", [0.8, 1.5], [0, 0], [0, 0.5], [110, 230], {
+    synonyms: ["condenser", "a/c condenser", "ac condenser"],
+  }),
   P("radiator", "Radiator", "front", "cooling", [0.8, 1.5], [0, 0], [0, 0.5], [120, 260], { synonyms: ["engine radiator"] }),
   P("intercooler", "Intercooler", "front", "cooling", [0.8, 1.5], [0, 0], [0, 0.5], [150, 350], { synonyms: ["charge air cooler"] }),
-  P("cooling_fan", "Cooling fan assembly", "front", "cooling", [0.5, 1.0], [0, 0], [0.5, 1.5], [150, 320], { synonyms: ["radiator fan", "fan assembly", "cooling fan"] }),
+  P("cooling_fan", "Cooling fan assembly", "front", "cooling", [0.5, 1.0], [0, 0], [0.5, 1.5], [150, 320], {
+    synonyms: ["radiator fan", "fan assembly", "cooling fan"],
+  }),
   P("front_rail", "Front frame rail", "front", "structural", [6.0, 12.0], [1.0, 2.5], [0, 0], [250, 650], { synonyms: ["frame rail", "front rail", "rail"] }),
   P("apron", "Fender apron", "front", "structural", [3.0, 7.0], [1.0, 2.0], [0, 0], [150, 400], { synonyms: ["apron", "inner structure", "strut tower"] }),
   P("windshield", "Windshield", "front", "glass", [1.0, 1.5], [0, 0], [0, 0], [250, 500], { synonyms: ["front glass", "windscreen"] }),
-  P("front_radar_sensor", "Front radar sensor", "front", "electrical_adas", [0.3, 0.6], [0, 0], [0, 0], [400, 900], { aftermarket: false, synonyms: ["radar", "acc sensor", "distance sensor"] }),
-  P("windshield_camera", "Windshield camera", "front", "electrical_adas", [0.3, 0.6], [0, 0], [0, 0], [500, 1100], { aftermarket: false, synonyms: ["lane camera", "front camera"] }),
+  P("front_radar_sensor", "Front radar sensor", "front", "electrical_adas", [0.3, 0.6], [0, 0], [0, 0], [400, 900], {
+    aftermarket: false,
+    synonyms: ["radar", "acc sensor", "distance sensor"],
+  }),
+  P("windshield_camera", "Windshield camera", "front", "electrical_adas", [0.3, 0.6], [0, 0], [0, 0], [500, 1100], {
+    aftermarket: false,
+    synonyms: ["lane camera", "front camera"],
+  }),
   P("parking_sensor", "Parking sensor", "front", "electrical_adas", [0.2, 0.4], [0.3, 0.5], [0, 0], [40, 120], { synonyms: ["park sensor", "pdc sensor"] }),
   // Sides
   P("front_door_shell", "Front door shell", "left_side", "body_panel", [2.5, 4.0], [2.0, 3.0], [0, 0], [300, 650], { synonyms: ["front door", "door shell"] }),
   P("rear_door_shell", "Rear door shell", "left_side", "body_panel", [2.5, 4.0], [2.0, 3.0], [0, 0], [300, 620], { synonyms: ["rear door"] }),
-  P("door_mirror", "Door mirror", "left_side", "body_panel", [0.4, 0.8], [0.5, 1.0], [0, 0], [80, 250], { synonyms: ["side mirror", "mirror", "outside mirror"] }),
+  P("door_mirror", "Door mirror", "left_side", "body_panel", [0.4, 0.8], [0.5, 1.0], [0, 0], [80, 250], {
+    synonyms: ["side mirror", "mirror", "outside mirror"],
+  }),
   P("rocker_panel", "Rocker panel", "left_side", "structural", [4.0, 8.0], [1.5, 2.5], [0, 0], [80, 220], { synonyms: ["sill", "rocker"] }),
   P("b_pillar", "B-pillar", "left_side", "structural", [8.0, 16.0], [1.5, 3.0], [0, 0], [150, 400], { synonyms: ["center pillar", "b pillar"] }),
   P("quarter_panel", "Quarter panel", "rear_left", "structural", [6.0, 12.0], [2.5, 3.5], [0, 0], [250, 600], { synonyms: ["rear quarter", "quarter"] }),
@@ -89,21 +113,41 @@ export const LABOR_REFERENCE: LaborRef[] = [
   // Roof / glass
   P("roof_panel", "Roof panel", "roof", "structural", [8.0, 14.0], [3.0, 4.0], [0, 0], [300, 700], { synonyms: ["roof"] }),
   // Suspension / wheels
-  P("control_arm", "Front lower control arm", "front_left", "suspension_steering", [0, 0], [0, 0], [0.8, 1.5], [60, 220], { synonyms: ["control arm", "lower control arm", "lca"] }),
+  P("control_arm", "Front lower control arm", "front_left", "suspension_steering", [0, 0], [0, 0], [0.8, 1.5], [60, 220], {
+    synonyms: ["control arm", "lower control arm", "lca"],
+  }),
   P("steering_knuckle", "Steering knuckle", "front_left", "suspension_steering", [0, 0], [0, 0], [1.5, 2.5], [120, 320], { synonyms: ["knuckle", "spindle"] }),
   P("tie_rod", "Tie rod", "front_left", "suspension_steering", [0, 0], [0, 0], [0.6, 1.2], [30, 90], { synonyms: ["tie rod end", "outer tie rod"] }),
   P("strut_assembly", "Strut assembly", "front_left", "suspension_steering", [0, 0], [0, 0], [1.0, 2.0], [90, 260], { synonyms: ["strut", "shock absorber"] }),
   P("wheel", "Wheel", "front_left", "wheels_tires", [0, 0], [0, 0], [0.3, 0.5], [100, 320], { synonyms: ["rim", "alloy wheel"] }),
   P("tire", "Tire", "front_left", "wheels_tires", [0, 0], [0, 0], [0.3, 0.5], [90, 220], { synonyms: ["tyre"] }),
   // Airbags / SRS
-  P("driver_airbag", "Driver frontal airbag", "interior", "airbag_srs", [0.5, 1.0], [0, 0], [0, 0], [250, 600], { aftermarket: false, synonyms: ["steering wheel airbag", "driver airbag"] }),
-  P("passenger_airbag", "Passenger frontal airbag", "interior", "airbag_srs", [1.0, 2.0], [0, 0], [0, 0], [300, 700], { aftermarket: false, synonyms: ["passenger airbag", "dash airbag"] }),
+  P("driver_airbag", "Driver frontal airbag", "interior", "airbag_srs", [0.5, 1.0], [0, 0], [0, 0], [250, 600], {
+    aftermarket: false,
+    synonyms: ["steering wheel airbag", "driver airbag"],
+  }),
+  P("passenger_airbag", "Passenger frontal airbag", "interior", "airbag_srs", [1.0, 2.0], [0, 0], [0, 0], [300, 700], {
+    aftermarket: false,
+    synonyms: ["passenger airbag", "dash airbag"],
+  }),
   P("knee_airbag", "Knee airbag", "interior", "airbag_srs", [0.5, 1.0], [0, 0], [0, 0], [200, 450], { aftermarket: false, synonyms: ["knee bag"] }),
-  P("curtain_airbag", "Curtain airbag", "interior", "airbag_srs", [1.5, 3.0], [0, 0], [0, 0], [250, 600], { aftermarket: false, synonyms: ["side curtain", "curtain bag", "roof rail airbag"] }),
+  P("curtain_airbag", "Curtain airbag", "interior", "airbag_srs", [1.5, 3.0], [0, 0], [0, 0], [250, 600], {
+    aftermarket: false,
+    synonyms: ["side curtain", "curtain bag", "roof rail airbag"],
+  }),
   P("seat_airbag", "Seat side airbag", "interior", "airbag_srs", [1.0, 2.0], [0, 0], [0, 0], [200, 450], { aftermarket: false }),
-  P("seat_belt_pretensioner", "Seat belt pretensioner", "interior", "airbag_srs", [0.5, 1.0], [0, 0], [0, 0], [120, 320], { aftermarket: false, synonyms: ["seat belt", "pretensioner", "belt retractor"] }),
-  P("srs_module", "SRS control module", "interior", "airbag_srs", [0.5, 1.0], [0, 0], [0, 0], [200, 550], { aftermarket: false, synonyms: ["airbag module", "srs module", "acm"] }),
-  P("dashboard_panel", "Dashboard panel", "interior", "interior", [3.0, 7.0], [0, 0], [0, 0], [300, 900], { aftermarket: false, synonyms: ["dash", "instrument panel", "dashboard"] }),
+  P("seat_belt_pretensioner", "Seat belt pretensioner", "interior", "airbag_srs", [0.5, 1.0], [0, 0], [0, 0], [120, 320], {
+    aftermarket: false,
+    synonyms: ["seat belt", "pretensioner", "belt retractor"],
+  }),
+  P("srs_module", "SRS control module", "interior", "airbag_srs", [0.5, 1.0], [0, 0], [0, 0], [200, 550], {
+    aftermarket: false,
+    synonyms: ["airbag module", "srs module", "acm"],
+  }),
+  P("dashboard_panel", "Dashboard panel", "interior", "interior", [3.0, 7.0], [0, 0], [0, 0], [300, 900], {
+    aftermarket: false,
+    synonyms: ["dash", "instrument panel", "dashboard"],
+  }),
   P("clock_spring", "Clock spring", "interior", "airbag_srs", [0.5, 1.0], [0, 0], [0, 0], [60, 200], { synonyms: ["spiral cable"] }),
   // Mechanical
   P("ac_compressor", "A/C compressor", "engine_bay", "mechanical", [0, 0], [0, 0], [1.5, 3.0], [200, 500], { synonyms: ["compressor"] }),

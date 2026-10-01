@@ -59,7 +59,16 @@ describe("buildRepairEstimate", () => {
   it("prices the Audi vision result from reference data and adds rule lines", async () => {
     const est = await buildRepairEstimate({ damage: audi.damage, vehicle: audi.vehicle, listing: audi.listing(NOW), lookup });
     const keys = est.lineItems.map((l) => l.partKey);
-    expect(keys).toEqual(expect.arrayContaining(["front_bumper_cover", "headlamp_assembly", "radiator_support", "sublet_alignment", "sublet_adas_calibration", "sublet_ac_recharge"]));
+    expect(keys).toEqual(
+      expect.arrayContaining([
+        "front_bumper_cover",
+        "headlamp_assembly",
+        "radiator_support",
+        "sublet_alignment",
+        "sublet_adas_calibration",
+        "sublet_ac_recharge",
+      ]),
+    );
     expect(est.severity).toBe(5);
     expect(est.baseContingencyBps).toBe(1500);
     const bumper = est.lineItems.find((l) => l.partKey === "front_bumper_cover")!;
@@ -101,7 +110,9 @@ describe("rules", () => {
   it("airbags + EV side impact", () => {
     const rules = applyRules(tesla.damage, tesla.vehicle, tesla.listing(NOW));
     const keys = rules.map((r) => r.partKey);
-    expect(keys).toEqual(expect.arrayContaining(["srs_module", "seat_belt_pretensioner", "sublet_srs_diag", "sublet_frame_measure", "sublet_hv_battery_inspection"]));
+    expect(keys).toEqual(
+      expect.arrayContaining(["srs_module", "seat_belt_pretensioner", "sublet_srs_diag", "sublet_frame_measure", "sublet_hv_battery_inspection"]),
+    );
   });
   it("flood adds cleaning, battery, fluids and diagnostics", () => {
     const rules = applyRules(camry.damage, camry.vehicle, camry.listing(NOW));

@@ -36,9 +36,7 @@ export function parseInput(raw: string): ParsedInput {
 
   const compact = normalizeVin(s);
   if (compact.length === 17 && isVinFormat(compact) && !/\s{2,}/.test(s) && s.length <= 25) {
-    const warnings = isCheckDigitValid(compact)
-      ? []
-      : ["The VIN check digit doesn't match. That's normal for some non-US vehicles — double-check the VIN."];
+    const warnings = isCheckDigitValid(compact) ? [] : ["The VIN check digit doesn't match. That's normal for some non-US vehicles — double-check the VIN."];
     return { type: "VIN", vin: compact, label: `VIN ${compact} detected`, warnings };
   }
 

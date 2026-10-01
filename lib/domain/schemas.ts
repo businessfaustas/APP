@@ -11,16 +11,7 @@ export const AUCTION_SOURCES = ["COPART", "IAAI", "BIDCARS", "AUTOBIDMASTER", "O
 export const AuctionSourceSchema = z.enum(AUCTION_SOURCES);
 export type AuctionSource = z.infer<typeof AuctionSourceSchema>;
 
-export const TITLE_CATEGORIES = [
-  "CLEAN",
-  "SALVAGE",
-  "REBUILT",
-  "NON_REPAIRABLE",
-  "PARTS_ONLY",
-  "FLOOD",
-  "OTHER",
-  "UNKNOWN",
-] as const;
+export const TITLE_CATEGORIES = ["CLEAN", "SALVAGE", "REBUILT", "NON_REPAIRABLE", "PARTS_ONLY", "FLOOD", "OTHER", "UNKNOWN"] as const;
 export const TitleCategorySchema = z.enum(TITLE_CATEGORIES);
 export type TitleCategory = z.infer<typeof TitleCategorySchema>;
 
@@ -235,9 +226,7 @@ export const DamageAssessmentSchema = z.object({
     image_quality: z.enum(["good", "fair", "poor"]),
   }),
   photos: z.array(z.object({ index: z.number().int(), angle: z.string(), findings: z.string() })),
-  impact_zones: z.array(
-    z.object({ zone: DamageZoneSchema, severity: z.number().int().min(0).max(10), description: z.string() }),
-  ),
+  impact_zones: z.array(z.object({ zone: DamageZoneSchema, severity: z.number().int().min(0).max(10), description: z.string() })),
   damaged_parts: z.array(
     z.object({
       part_name: z.string(),
@@ -353,9 +342,7 @@ export const HistoryReportSchema = z.object({
   isDemo: z.boolean(),
   titleRecords: z.array(z.object({ date: z.string().nullable(), state: z.string().nullable(), brand: z.string() })),
   odometerRecords: z.array(z.object({ date: z.string().nullable(), reading: z.number().int() })),
-  junkSalvageRecords: z.array(
-    z.object({ date: z.string().nullable(), reportingEntity: z.string(), disposition: z.string().nullable() }),
-  ),
+  junkSalvageRecords: z.array(z.object({ date: z.string().nullable(), reportingEntity: z.string(), disposition: z.string().nullable() })),
   totalLossEvents: z.number().int(),
   theftRecords: z.number().int(),
   notes: z.array(z.string()),

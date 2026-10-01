@@ -10,7 +10,9 @@ import type { CalculationResult } from "@/lib/calc/types";
 // Built-in Helvetica only supports WinAnsi, so use ASCII minus signs.
 function usd(n: number | null | undefined): string {
   if (n === null || n === undefined) return "-";
-  const s = Math.abs(Math.round(n)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  const s = Math.abs(Math.round(n))
+    .toString()
+    .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   return `${n < 0 ? "-" : ""}$${s}`;
 }
 function pct(bps: number | null | undefined): string {
@@ -33,7 +35,11 @@ const s = StyleSheet.create({
   footer: { position: "absolute", bottom: 20, left: 32, right: 32, fontSize: 7, color: c.muted },
 });
 
-const VERDICT = { GO: { label: "GO", color: c.go }, BE_CAUTIOUS: { label: "BE CAUTIOUS", color: c.caution }, WALK_AWAY: { label: "WALK AWAY", color: c.stop } } as const;
+const VERDICT = {
+  GO: { label: "GO", color: c.go },
+  BE_CAUTIOUS: { label: "BE CAUTIOUS", color: c.caution },
+  WALK_AWAY: { label: "WALK AWAY", color: c.stop },
+} as const;
 
 export function ReportPdf({ view, calc, assumptions }: { view: AnalysisView; calc: CalculationResult; assumptions: Assumptions }) {
   const l = view.listing!;
@@ -59,7 +65,12 @@ export function ReportPdf({ view, calc, assumptions }: { view: AnalysisView; cal
         </Text>
         <Text style={s.h1}>{title || "Vehicle"}</Text>
         <Text style={s.muted}>
-          {[l.odometer !== null ? `${l.odometer.toLocaleString("en-US")} ${l.odometerUnit}` : null, l.titleRaw ?? l.titleCategory, l.primaryDamage, l.location.yardName]
+          {[
+            l.odometer !== null ? `${l.odometer.toLocaleString("en-US")} ${l.odometerUnit}` : null,
+            l.titleRaw ?? l.titleCategory,
+            l.primaryDamage,
+            l.location.yardName,
+          ]
             .filter(Boolean)
             .join("  |  ")}
         </Text>
@@ -70,7 +81,8 @@ export function ReportPdf({ view, calc, assumptions }: { view: AnalysisView; cal
             <Text style={[s.muted, { marginTop: 6 }]}>Do not bid above</Text>
             <Text style={s.big}>{calc.maxBid !== null ? usd(calc.maxBid) : "No profitable bid"}</Text>
             <Text style={s.muted}>
-              Comfort {usd(calc.comfortBid)} | Break-even {usd(calc.breakEvenBid)} | Current {usd(assumptions.currentBidOverride ?? view.base?.currentBid ?? null)}
+              Comfort {usd(calc.comfortBid)} | Break-even {usd(calc.breakEvenBid)} | Current{" "}
+              {usd(assumptions.currentBidOverride ?? view.base?.currentBid ?? null)}
             </Text>
           </View>
           <View style={{ width: 200 }}>

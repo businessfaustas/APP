@@ -17,7 +17,7 @@ export function PricingTable() {
           const p = PLANS[id];
           const featured = id === "PRO";
           return (
-            <Card key={id} className={cn("relative flex flex-col", featured && "ring-2 ring-primary")}>
+            <Card key={id} className={cn("relative flex flex-col", featured && "ring-primary ring-2")}>
               {featured && <Badge className="absolute -top-2.5 left-6">Most popular</Badge>}
               <CardHeader>
                 <CardTitle className="text-lg">{p.name}</CardTitle>
@@ -26,13 +26,13 @@ export function PricingTable() {
               <CardContent className="flex flex-1 flex-col gap-5">
                 <div>
                   <span className="text-4xl font-semibold tracking-tight">${p.priceMonthly}</span>
-                  <span className="text-sm text-muted-foreground"> / month</span>
-                  <div className="mt-1 text-sm text-muted-foreground">{p.monthlyCredits} reports included</div>
+                  <span className="text-muted-foreground text-sm"> / month</span>
+                  <div className="text-muted-foreground mt-1 text-sm">{p.monthlyCredits} reports included</div>
                 </div>
                 <ul className="flex-1 space-y-2 text-sm">
                   {p.features.map((f) => (
                     <li key={f} className="flex gap-2">
-                      <CheckIcon className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
+                      <CheckIcon className="text-primary mt-0.5 size-4 shrink-0" aria-hidden="true" />
                       {f}
                     </li>
                   ))}
@@ -45,7 +45,7 @@ export function PricingTable() {
           );
         })}
       </div>
-      <p className="text-center text-sm text-muted-foreground">
+      <p className="text-muted-foreground text-center text-sm">
         Need a few more? Top up any plan with {CREDIT_PACK.credits} reports for ${CREDIT_PACK.price}. One report = one lot analyzed; re-running the what-if
         sliders on a report is free.
       </p>

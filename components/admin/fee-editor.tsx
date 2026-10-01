@@ -27,7 +27,7 @@ function TierTable({ title, tiers, onChange }: { title: string; tiers: FeeTier[]
   return (
     <div className="space-y-2">
       <div className="text-sm font-medium">{title}</div>
-      <div className="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-1.5 text-[11px] text-muted-foreground">
+      <div className="text-muted-foreground grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-1.5 text-[11px]">
         <span>From $</span>
         <span>To $ (blank = ∞)</span>
         <span>Flat fee $</span>
@@ -37,7 +37,13 @@ function TierTable({ title, tiers, onChange }: { title: string; tiers: FeeTier[]
       {tiers.map((t, i) => (
         <div key={i} className="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-1.5">
           <Input className="h-8" inputMode="numeric" value={t.min} onChange={(e) => update(i, { min: Number(e.target.value) || 0 })} aria-label="From" />
-          <Input className="h-8" inputMode="numeric" value={t.max ?? ""} onChange={(e) => update(i, { max: e.target.value.trim() === "" ? null : Number(e.target.value) })} aria-label="To" />
+          <Input
+            className="h-8"
+            inputMode="numeric"
+            value={t.max ?? ""}
+            onChange={(e) => update(i, { max: e.target.value.trim() === "" ? null : Number(e.target.value) })}
+            aria-label="To"
+          />
           <Input
             className="h-8"
             inputMode="decimal"
@@ -140,7 +146,12 @@ function ScheduleCard({ initial }: { initial: FeeScheduleRow }) {
           <div className="text-sm font-medium">Fixed fees</div>
           {s.fixedFees.map((f, i) => (
             <div key={i} className="flex gap-1.5">
-              <Input className="h-8" value={f.label} onChange={(e) => setS({ ...s, fixedFees: s.fixedFees.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)) })} aria-label="Fee name" />
+              <Input
+                className="h-8"
+                value={f.label}
+                onChange={(e) => setS({ ...s, fixedFees: s.fixedFees.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)) })}
+                aria-label="Fee name"
+              />
               <Input
                 className="h-8 w-28"
                 inputMode="decimal"
@@ -148,7 +159,13 @@ function ScheduleCard({ initial }: { initial: FeeScheduleRow }) {
                 onChange={(e) => setS({ ...s, fixedFees: s.fixedFees.map((x, j) => (j === i ? { ...x, amount: Number(e.target.value) || 0 } : x)) })}
                 aria-label="Amount"
               />
-              <Button size="icon" variant="ghost" className="size-8" aria-label="Remove fee" onClick={() => setS({ ...s, fixedFees: s.fixedFees.filter((_, j) => j !== i) })}>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="size-8"
+                aria-label="Remove fee"
+                onClick={() => setS({ ...s, fixedFees: s.fixedFees.filter((_, j) => j !== i) })}
+              >
                 <Trash2Icon className="size-3.5" />
               </Button>
             </div>
@@ -160,13 +177,13 @@ function ScheduleCard({ initial }: { initial: FeeScheduleRow }) {
         {validation.ok ? (
           <div className="flex flex-wrap gap-2 text-xs">
             {preview.map((p) => (
-              <span key={p.bid} className="rounded-md bg-muted px-2 py-1">
+              <span key={p.bid} className="bg-muted rounded-md px-2 py-1">
                 {formatUsd(p.bid)} → <b>{formatUsd(p.fees)}</b>
               </span>
             ))}
           </div>
         ) : (
-          <p className="text-sm text-stop">{validation.errors.join(" · ")}</p>
+          <p className="text-stop text-sm">{validation.errors.join(" · ")}</p>
         )}
         <Button onClick={() => void save()} disabled={busy || !validation.ok}>
           Save fee table

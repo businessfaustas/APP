@@ -72,14 +72,23 @@ function GridInput({ value, onCommit, label, step }: { value: number; onCommit: 
   );
 }
 
-export function CalculatorClient({ defaults, feeSchedules }: { defaults: Assumptions; feeSchedules: Record<"COPART" | "IAAI", Record<BuyerType, FeeSchedule>> }) {
+export function CalculatorClient({
+  defaults,
+  feeSchedules,
+}: {
+  defaults: Assumptions;
+  feeSchedules: Record<"COPART" | "IAAI", Record<BuyerType, FeeSchedule>>;
+}) {
   const [grid, setGrid] = useState<Grid>(EXAMPLE);
   const [severity, setSeverity] = useState(5);
   const [auction, setAuction] = useState<"COPART" | "IAAI">("COPART");
   const [currentBid, setCurrentBid] = useState<number | null>(2100);
   const [distance, setDistance] = useState(240);
   const [a, setA] = useState<Assumptions>(defaults);
-  const set = <K extends keyof Assumptions>(k: K) => (v: Assumptions[K]) => setA((x) => ({ ...x, [k]: v }));
+  const set =
+    <K extends keyof Assumptions>(k: K) =>
+    (v: Assumptions[K]) =>
+      setA((x) => ({ ...x, [k]: v }));
 
   const calc = useMemo(() => {
     const base = a.contingencyOverrideBps ?? contingencyForSeverity(severity);
@@ -165,7 +174,7 @@ export function CalculatorClient({ defaults, feeSchedules }: { defaults: Assumpt
             </Table>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <div className="space-y-1.5">
-                <Label className="text-xs font-normal text-muted-foreground">Auction fee table</Label>
+                <Label className="text-muted-foreground text-xs font-normal">Auction fee table</Label>
                 <SegmentedControl
                   ariaLabel="Auction"
                   value={auction}
@@ -178,7 +187,15 @@ export function CalculatorClient({ defaults, feeSchedules }: { defaults: Assumpt
               </div>
               <MoneyInput label="Current bid ($)" value={currentBid} onCommit={setCurrentBid} />
               <MoneyInput label="Distance to you (mi)" value={distance} onCommit={(v) => setDistance(v ?? 0)} />
-              <SliderRow label="Severity → contingency" value={severity} min={1} max={10} step={1} format={(v) => `${v}/10 → ${formatBps(contingencyForSeverity(v), 0)}`} onChange={setSeverity} />
+              <SliderRow
+                label="Severity → contingency"
+                value={severity}
+                min={1}
+                max={10}
+                step={1}
+                format={(v) => `${v}/10 → ${formatBps(contingencyForSeverity(v), 0)}`}
+                onChange={setSeverity}
+              />
             </div>
           </CardContent>
         </Card>
@@ -188,7 +205,7 @@ export function CalculatorClient({ defaults, feeSchedules }: { defaults: Assumpt
           </CardHeader>
           <CardContent>
             <CostWaterfall rows={calc.waterfall} />
-            <p className="mt-2 text-xs text-muted-foreground">
+            <p className="text-muted-foreground mt-2 text-xs">
               Repair (expected) {formatUsd(calc.scenarios.expected.repair)} · fees at max bid {formatUsd(calc.feesAtMaxBid?.total ?? null)} · resale{" "}
               {formatUsd(calc.scenarios.expected.resale)}
             </p>
@@ -200,17 +217,73 @@ export function CalculatorClient({ defaults, feeSchedules }: { defaults: Assumpt
           <CardContent className="space-y-5">
             <h2 className="font-semibold">Assumptions</h2>
             <SliderRow label="Labor rate" value={a.laborRate} min={40} max={150} step={5} format={(v) => `$${v}/h`} onChange={set("laborRate")} />
-            <SliderRow label="Paint materials" value={a.paintMaterialsPerHour} min={20} max={80} step={5} format={(v) => `$${v}/paint h`} onChange={set("paintMaterialsPerHour")} />
-            <SliderRow label="Parts discount" value={a.partsDiscountBps} min={0} max={4000} step={100} format={(v) => formatBps(v, 0)} onChange={set("partsDiscountBps")} />
+            <SliderRow
+              label="Paint materials"
+              value={a.paintMaterialsPerHour}
+              min={20}
+              max={80}
+              step={5}
+              format={(v) => `$${v}/paint h`}
+              onChange={set("paintMaterialsPerHour")}
+            />
+            <SliderRow
+              label="Parts discount"
+              value={a.partsDiscountBps}
+              min={0}
+              max={4000}
+              step={100}
+              format={(v) => formatBps(v, 0)}
+              onChange={set("partsDiscountBps")}
+            />
             <Separator />
-            <SliderRow label="Target profit (% of resale)" value={a.targetProfitBps} min={0} max={4000} step={100} format={(v) => formatBps(v, 0)} onChange={set("targetProfitBps")} />
-            <SliderRow label="Minimum profit" value={a.targetProfitMin} min={0} max={10000} step={250} format={(v) => formatUsd(v)} onChange={set("targetProfitMin")} />
-            <SliderRow label="Rebuilt-title value (× clean)" value={a.rebuiltFactorBps} min={5000} max={10000} step={100} format={(v) => formatBps(v, 0)} onChange={set("rebuiltFactorBps")} />
+            <SliderRow
+              label="Target profit (% of resale)"
+              value={a.targetProfitBps}
+              min={0}
+              max={4000}
+              step={100}
+              format={(v) => formatBps(v, 0)}
+              onChange={set("targetProfitBps")}
+            />
+            <SliderRow
+              label="Minimum profit"
+              value={a.targetProfitMin}
+              min={0}
+              max={10000}
+              step={250}
+              format={(v) => formatUsd(v)}
+              onChange={set("targetProfitMin")}
+            />
+            <SliderRow
+              label="Rebuilt-title value (× clean)"
+              value={a.rebuiltFactorBps}
+              min={5000}
+              max={10000}
+              step={100}
+              format={(v) => formatBps(v, 0)}
+              onChange={set("rebuiltFactorBps")}
+            />
             <Separator />
-            <SliderRow label="Transport" value={a.transportCentsPerMile} min={50} max={400} step={5} format={(v) => `$${(v / 100).toFixed(2)}/mi`} onChange={set("transportCentsPerMile")} />
-            <SliderRow label="Holding time" value={a.holdingDaysExpected} min={0} max={120} step={5} format={(v) => `${v} days`} onChange={set("holdingDaysExpected")} />
+            <SliderRow
+              label="Transport"
+              value={a.transportCentsPerMile}
+              min={50}
+              max={400}
+              step={5}
+              format={(v) => `$${(v / 100).toFixed(2)}/mi`}
+              onChange={set("transportCentsPerMile")}
+            />
+            <SliderRow
+              label="Holding time"
+              value={a.holdingDaysExpected}
+              min={0}
+              max={120}
+              step={5}
+              format={(v) => `${v} days`}
+              onChange={set("holdingDaysExpected")}
+            />
             <div className="space-y-2">
-              <Label className="text-xs font-normal text-muted-foreground">Buyer type</Label>
+              <Label className="text-muted-foreground text-xs font-normal">Buyer type</Label>
               <SegmentedControl
                 ariaLabel="Buyer type"
                 value={a.buyerType}

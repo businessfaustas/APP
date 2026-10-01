@@ -7,7 +7,16 @@ import type { DamageAssessment, DamageZone, NormalizedListing } from "@/lib/doma
 
 type Part = DamageAssessment["damaged_parts"][number];
 
-const P = (part_name: string, category: Part["category"], zone: DamageZone, action: Part["action"], body: number, paint: number, mech = 0, side: Part["side"] = "CENTER"): Part => ({
+const P = (
+  part_name: string,
+  category: Part["category"],
+  zone: DamageZone,
+  action: Part["action"],
+  body: number,
+  paint: number,
+  mech = 0,
+  side: Part["side"] = "CENTER",
+): Part => ({
   part_name,
   category,
   zone,
@@ -29,8 +38,14 @@ const ZONE_PARTS: Partial<Record<DamageZone, Part[]>> = {
     P("Hood panel", "body_panel", "front", "REPAIR", 2, 2.5),
     P("Radiator support", "structural", "front", "REPLACE", 4.5, 0),
   ],
-  front_left: [P("Fender LH", "body_panel", "front_left", "REPAIR", 2.5, 2, 0, "LH"), P("Headlamp assembly LH", "lighting", "front_left", "REPLACE", 0.8, 0, 0, "LH")],
-  front_right: [P("Fender RH", "body_panel", "front_right", "REPAIR", 2.5, 2, 0, "RH"), P("Headlamp assembly RH", "lighting", "front_right", "REPLACE", 0.8, 0, 0, "RH")],
+  front_left: [
+    P("Fender LH", "body_panel", "front_left", "REPAIR", 2.5, 2, 0, "LH"),
+    P("Headlamp assembly LH", "lighting", "front_left", "REPLACE", 0.8, 0, 0, "LH"),
+  ],
+  front_right: [
+    P("Fender RH", "body_panel", "front_right", "REPAIR", 2.5, 2, 0, "RH"),
+    P("Headlamp assembly RH", "lighting", "front_right", "REPLACE", 0.8, 0, 0, "RH"),
+  ],
   rear: [
     P("Rear bumper cover", "body_panel", "rear", "REPLACE", 2, 2.5),
     P("Rear bumper reinforcement", "structural", "rear", "REPLACE", 1, 0),
@@ -40,8 +55,14 @@ const ZONE_PARTS: Partial<Record<DamageZone, Part[]>> = {
   ],
   rear_left: [P("Quarter panel LH", "structural", "rear_left", "REPAIR", 4, 2.5, 0, "LH")],
   rear_right: [P("Quarter panel RH", "structural", "rear_right", "REPAIR", 4, 2.5, 0, "RH")],
-  left_side: [P("Front door shell LH", "body_panel", "left_side", "REPLACE", 3, 2.5, 0, "LH"), P("Rear door shell LH", "body_panel", "left_side", "REPAIR", 2.5, 2.5, 0, "LH")],
-  right_side: [P("Front door shell RH", "body_panel", "right_side", "REPLACE", 3, 2.5, 0, "RH"), P("Rear door shell RH", "body_panel", "right_side", "REPAIR", 2.5, 2.5, 0, "RH")],
+  left_side: [
+    P("Front door shell LH", "body_panel", "left_side", "REPLACE", 3, 2.5, 0, "LH"),
+    P("Rear door shell LH", "body_panel", "left_side", "REPAIR", 2.5, 2.5, 0, "LH"),
+  ],
+  right_side: [
+    P("Front door shell RH", "body_panel", "right_side", "REPLACE", 3, 2.5, 0, "RH"),
+    P("Rear door shell RH", "body_panel", "right_side", "REPAIR", 2.5, 2.5, 0, "RH"),
+  ],
   roof: [P("Roof panel", "structural", "roof", "REPAIR", 6, 3)],
   undercarriage: [P("Front lower control arm LH", "suspension_steering", "undercarriage", "REPLACE", 0, 0, 1.2, "LH")],
 };
@@ -71,7 +92,8 @@ export function heuristicDamage(l: NormalizedListing, reason: string): DamageAss
   if (flags.has("MECHANICAL")) parts.push(P("Engine / transmission inspection", "mechanical", "engine_bay", "INSPECT", 0, 0, 2));
 
   const hidden: DamageAssessment["likely_hidden_damage"] = [];
-  if (flags.has("MECHANICAL")) hidden.push({ part_name: "Engine or transmission repair", zone: "engine_bay", probability: 0.5, reason: "Listing reports mechanical damage." });
+  if (flags.has("MECHANICAL"))
+    hidden.push({ part_name: "Engine or transmission repair", zone: "engine_bay", probability: 0.5, reason: "Listing reports mechanical damage." });
 
   return {
     photo_coverage: {
@@ -80,7 +102,11 @@ export function heuristicDamage(l: NormalizedListing, reason: string): DamageAss
       image_quality: "poor",
     },
     photos: [],
-    impact_zones: zones.map((z, i) => ({ zone: z, severity: i === 0 ? severity : Math.max(1, severity - 2), description: "From the listing's damage description." })),
+    impact_zones: zones.map((z, i) => ({
+      zone: z,
+      severity: i === 0 ? severity : Math.max(1, severity - 2),
+      description: "From the listing's damage description.",
+    })),
     damaged_parts: parts,
     likely_hidden_damage: hidden,
     severity_score: Math.max(1, Math.min(10, severity)),

@@ -11,7 +11,8 @@ import { parseMoney } from "@/lib/domain/titles";
 import { heuristicExtract, parseLocation } from "./heuristicExtract";
 import { mergeRaw, type RawListing } from "./normalize";
 
-const PHOTO_HOSTS = /(cs\.copart\.com|copart\.com\/.*\.(jpe?g|webp)|vis\.iaai\.com|iaai\.com\/.*image|resizer|bid\.cars\/.*\.(jpe?g|webp)|cdn\.bid\.cars|imgs?\.)/i;
+const PHOTO_HOSTS =
+  /(cs\.copart\.com|copart\.com\/.*\.(jpe?g|webp)|vis\.iaai\.com|iaai\.com\/.*image|resizer|bid\.cars\/.*\.(jpe?g|webp)|cdn\.bid\.cars|imgs?\.)/i;
 
 function str(v: unknown): string | null {
   if (v === null || v === undefined) return null;
@@ -47,7 +48,7 @@ export function parseJsonLd(blocks: string[]): RawListing {
         out,
         mergeRaw(out, {
           vin: str(o.vehicleIdentificationNumber),
-          make: typeof brand === "string" ? brand : str(brand?.name) ?? str(o.manufacturer),
+          make: typeof brand === "string" ? brand : (str(brand?.name) ?? str(o.manufacturer)),
           model: str(o.model),
           year: num(o.vehicleModelDate) ?? num(o.productionDate),
           odometer: odo ? num(odo.value) : null,
@@ -124,11 +125,23 @@ export function extractFromHtml(html: string, source: AuctionSource, pageUrl: st
   const pairLines: string[] = [];
   $("dt").each((_, el) => {
     const v = $(el).next("dd").text().trim();
-    if (v) pairLines.push(`${$(el).text().trim().replace(/[:：]$/, "")}: ${v}`);
+    if (v)
+      pairLines.push(
+        `${$(el)
+          .text()
+          .trim()
+          .replace(/[:：]$/, "")}: ${v}`,
+      );
   });
   $("tr").each((_, el) => {
     const cells = $(el).find("th,td");
-    if (cells.length === 2) pairLines.push(`${$(cells[0]).text().trim().replace(/[:：]$/, "")}: ${$(cells[1]).text().trim()}`);
+    if (cells.length === 2)
+      pairLines.push(
+        `${$(cells[0])
+          .text()
+          .trim()
+          .replace(/[:：]$/, "")}: ${$(cells[1]).text().trim()}`,
+      );
   });
   $("[class*='label'], [class*='Label'], [class*='title'], [data-uname*='label']").each((_, el) => {
     const label = $(el).text().trim();
@@ -137,7 +150,11 @@ export function extractFromHtml(html: string, source: AuctionSource, pageUrl: st
   });
 
   $("script,style,noscript,svg").remove();
-  const pageText = $("body").text().replace(/[ \t]+/g, " ").replace(/\n\s*\n+/g, "\n").trim();
+  const pageText = $("body")
+    .text()
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n\s*\n+/g, "\n")
+    .trim();
   const fromPairs = heuristicExtract(`${pairLines.join("\n")}\n${pageText.slice(0, 20000)}`);
 
   const imgs = new Set<string>();

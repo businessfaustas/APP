@@ -39,7 +39,7 @@ export function CostsTab() {
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Where the money goes</CardTitle>
-          <p className="text-xs text-muted-foreground">Expected case, if you win at your max bid of {formatUsd(calc.maxBid ?? 0)}.</p>
+          <p className="text-muted-foreground text-xs">Expected case, if you win at your max bid of {formatUsd(calc.maxBid ?? 0)}.</p>
         </CardHeader>
         <CardContent>
           <CostWaterfall rows={calc.waterfall} />
@@ -88,7 +88,7 @@ export function CostsTab() {
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Auction fees at {formatUsd(calc.maxBid ?? 0)}</CardTitle>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             {input.feeSchedule.name}
             {input.feeSchedule.isPlaceholder ? " — approximate placeholder table, verify on the auction's fee page." : ""}
           </p>
@@ -106,9 +106,9 @@ export function CostsTab() {
               <dd>{formatUsd(acq.fees.total)}</dd>
             </div>
           </dl>
-          <p className="mt-3 text-xs text-muted-foreground">
-            Bids: comfort {formatUsd(calc.comfortBid)} (worst case breaks even) · max {formatUsd(calc.maxBid)} (hits your {formatUsd(calc.targetProfit)} target) ·
-            break-even {formatUsd(calc.breakEvenBid)} (expected case breaks even).
+          <p className="text-muted-foreground mt-3 text-xs">
+            Bids: comfort {formatUsd(calc.comfortBid)} (worst case breaks even) · max {formatUsd(calc.maxBid)} (hits your {formatUsd(calc.targetProfit)} target)
+            · break-even {formatUsd(calc.breakEvenBid)} (expected case breaks even).
           </p>
         </CardContent>
       </Card>

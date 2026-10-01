@@ -8,7 +8,12 @@ const AddSchema = z.object({
   analysisId: z.string().min(1).max(40),
   notes: z.string().max(1000).nullish(),
   myMaxBid: z.number().int().min(0).max(10_000_000).nullish(),
-  remindMinutesBefore: z.number().int().min(0).max(60 * 24 * 7).nullish(),
+  remindMinutesBefore: z
+    .number()
+    .int()
+    .min(0)
+    .max(60 * 24 * 7)
+    .nullish(),
 });
 
 export async function POST(req: Request) {

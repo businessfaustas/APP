@@ -1,8 +1,4 @@
-import {
-  NormalizedListingSchema,
-  type AuctionSource,
-  type NormalizedListing,
-} from "@/lib/domain/schemas";
+import { NormalizedListingSchema, type AuctionSource, type NormalizedListing } from "@/lib/domain/schemas";
 import { normalizeOdometerBrand, normalizeRunCondition, normalizeSaleStatus, normalizeTitle } from "@/lib/domain/titles";
 import { isVinFormat, normalizeVin } from "@/lib/input/vin";
 
@@ -86,11 +82,7 @@ function toIsoDate(raw: string | null | undefined): string | null {
 }
 
 /** Produces a schema-valid NormalizedListing from loose fields. */
-export function finalizeListing(
-  raw: RawListing,
-  method: NormalizedListing["extractionMethod"],
-  warnings: string[] = [],
-): NormalizedListing {
+export function finalizeListing(raw: RawListing, method: NormalizedListing["extractionMethod"], warnings: string[] = []): NormalizedListing {
   const vinRaw = raw.vin ? normalizeVin(raw.vin) : null;
   const vin = vinRaw && isVinFormat(vinRaw) ? vinRaw : null;
   const w = [...warnings];

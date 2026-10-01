@@ -38,10 +38,7 @@ export interface DistanceResult {
 }
 
 /** Road-distance estimate between a yard and the buyer (haversine × 1.18). */
-export function estimateDistance(
-  from: { zip?: string | null; city?: string | null; state?: string | null },
-  toZip: string | null,
-): DistanceResult {
+export function estimateDistance(from: { zip?: string | null; city?: string | null; state?: string | null }, toZip: string | null): DistanceResult {
   const to = zipPoint(toZip);
   const fromZip = zipPoint(from.zip);
   const fromCity = fromZip ? null : cityStatePoint(from.city, from.state);

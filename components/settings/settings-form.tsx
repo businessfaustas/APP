@@ -67,7 +67,7 @@ function NumField({
     <div className="space-y-1.5">
       <Label htmlFor={id}>{label}</Label>
       <div className="relative">
-        {suffix === "$" && <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm text-muted-foreground">$</span>}
+        {suffix === "$" && <span className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm">$</span>}
         <Input
           id={id}
           inputMode="decimal"
@@ -81,9 +81,9 @@ function NumField({
             setText(null);
           }}
         />
-        {suffix === "%" && <span className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-sm text-muted-foreground">%</span>}
+        {suffix === "%" && <span className="text-muted-foreground pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-sm">%</span>}
       </div>
-      {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+      {hint && <p className="text-muted-foreground text-xs">{hint}</p>}
     </div>
   );
 }
@@ -118,7 +118,11 @@ export function SettingsForm({
   }
 
   async function createToken() {
-    const res = await fetch("/api/settings", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: "create-token" }) });
+    const res = await fetch("/api/settings", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ action: "create-token" }),
+    });
     const body = (await res.json()) as { token?: string };
     if (body.token) {
       setToken(body.token);
@@ -151,7 +155,7 @@ export function SettingsForm({
           <div className="space-y-1.5">
             <Label htmlFor="s-zip">Your ZIP code</Label>
             <Input id="s-zip" inputMode="numeric" maxLength={5} value={v.homeZip} onChange={(e) => set("homeZip", e.target.value.replace(/\D/g, ""))} />
-            <p className="text-xs text-muted-foreground">Used for transport distance and local comps.</p>
+            <p className="text-muted-foreground text-xs">Used for transport distance and local comps.</p>
           </div>
           <div className="space-y-1.5 sm:col-span-2">
             <Label>Buyer type</Label>
@@ -164,7 +168,7 @@ export function SettingsForm({
                 { value: "PUBLIC_VIA_BROKER", label: "Public buyer (via broker)" },
               ]}
             />
-            <p className="text-xs text-muted-foreground">Public buyers usually pay a broker fee and sales tax — set them below.</p>
+            <p className="text-muted-foreground text-xs">Public buyers usually pay a broker fee and sales tax — set them below.</p>
           </div>
         </CardContent>
       </Card>
@@ -198,7 +202,7 @@ export function SettingsForm({
             {v.contingencyOverrideBps !== null ? (
               <NumField id="s-cont-v" label="Contingency" kind="bps" value={v.contingencyOverrideBps} onChange={(x) => set("contingencyOverrideBps", x)} />
             ) : (
-              <p className="text-xs text-muted-foreground">Off: 10–35% by damage severity.</p>
+              <p className="text-muted-foreground text-xs">Off: 10–35% by damage severity.</p>
             )}
           </div>
         </CardContent>
@@ -289,17 +293,22 @@ export function SettingsForm({
             <KeyRoundIcon className="size-4" /> Browser extension
           </CardTitle>
           <CardDescription>
-            The Chrome extension adds an &ldquo;Analyze with AuctionPulse&rdquo; button to Copart, IAAI and Bid.cars lot pages. Create a token and paste it into the
-            extension&apos;s settings. See <code>extension/README.md</code> to install it.
+            The Chrome extension adds an &ldquo;Analyze with AuctionPulse&rdquo; button to Copart, IAAI and Bid.cars lot pages. Create a token and paste it into
+            the extension&apos;s settings. See <code>extension/README.md</code> to install it.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           {token && (
-            <div className="space-y-2 rounded-md bg-muted p-3">
+            <div className="bg-muted space-y-2 rounded-md p-3">
               <p className="text-xs">Copy this token now — it won&apos;t be shown again.</p>
               <div className="flex gap-2">
                 <Input readOnly value={token} className="font-mono text-xs" onFocus={(e) => e.currentTarget.select()} />
-                <Button size="icon" variant="outline" aria-label="Copy token" onClick={() => void navigator.clipboard.writeText(token).then(() => toast.success("Copied"))}>
+                <Button
+                  size="icon"
+                  variant="outline"
+                  aria-label="Copy token"
+                  onClick={() => void navigator.clipboard.writeText(token).then(() => toast.success("Copied"))}
+                >
                   <CopyIcon />
                 </Button>
               </div>
@@ -327,12 +336,16 @@ export function SettingsForm({
           <ul className="grid gap-2 sm:grid-cols-2">
             {integrations.map((i) => (
               <li key={i.key} className="flex items-start gap-2 text-sm">
-                {i.enabled ? <CheckCircle2Icon className="mt-0.5 size-4 shrink-0 text-go" /> : <XCircleIcon className="mt-0.5 size-4 shrink-0 text-muted-foreground" />}
+                {i.enabled ? (
+                  <CheckCircle2Icon className="text-go mt-0.5 size-4 shrink-0" />
+                ) : (
+                  <XCircleIcon className="text-muted-foreground mt-0.5 size-4 shrink-0" />
+                )}
                 <div>
                   <div className="font-medium">
                     {i.label} {i.key === "demo" && i.enabled && <Badge variant="info">on</Badge>}
                   </div>
-                  <div className="text-xs text-muted-foreground">{i.note}</div>
+                  <div className="text-muted-foreground text-xs">{i.note}</div>
                 </div>
               </li>
             ))}

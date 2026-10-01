@@ -59,7 +59,7 @@ function Item({ item }: { item: WatchItemView }) {
           // eslint-disable-next-line @next/next/no-img-element
           <img src={item.photo} alt="" className="h-20 w-full shrink-0 rounded-md object-cover sm:w-32" />
         ) : (
-          <div className="hidden h-20 w-32 shrink-0 rounded-md bg-muted sm:block" />
+          <div className="bg-muted hidden h-20 w-32 shrink-0 rounded-md sm:block" />
         )}
         <div className="min-w-0 flex-1 space-y-1">
           <div className="flex flex-wrap items-center gap-2">
@@ -72,10 +72,11 @@ function Item({ item }: { item: WatchItemView }) {
             )}
             {item.verdict && <VerdictBadge verdict={item.verdict} />}
           </div>
-          <div className="text-xs text-muted-foreground">
-            {item.source} {item.lotNumber ? `lot ${item.lotNumber}` : ""} · {item.saleDate ? `sale ${formatCountdown(item.saleDate)} (${formatDateTime(item.saleDate)})` : "sale date unknown"}
+          <div className="text-muted-foreground text-xs">
+            {item.source} {item.lotNumber ? `lot ${item.lotNumber}` : ""} ·{" "}
+            {item.saleDate ? `sale ${formatCountdown(item.saleDate)} (${formatDateTime(item.saleDate)})` : "sale date unknown"}
           </div>
-          <div className="text-xs text-muted-foreground">
+          <div className="text-muted-foreground text-xs">
             Current bid {formatUsd(item.currentBid)} · report max {formatUsd(item.maxBid)}
             {item.remindAt && (
               <span className="ml-2 inline-flex items-center gap-1">
@@ -86,13 +87,20 @@ function Item({ item }: { item: WatchItemView }) {
         </div>
         <div className="flex flex-wrap items-end gap-2">
           <div className="w-28">
-            <label className="text-[11px] text-muted-foreground" htmlFor={`max-${item.id}`}>
+            <label className="text-muted-foreground text-[11px]" htmlFor={`max-${item.id}`}>
               My max bid
             </label>
-            <Input id={`max-${item.id}`} inputMode="numeric" value={myMax} onChange={(e) => setMyMax(e.target.value)} onBlur={() => void save()} className="h-8" />
+            <Input
+              id={`max-${item.id}`}
+              inputMode="numeric"
+              value={myMax}
+              onChange={(e) => setMyMax(e.target.value)}
+              onBlur={() => void save()}
+              className="h-8"
+            />
           </div>
           <div className="w-48">
-            <label className="text-[11px] text-muted-foreground" htmlFor={`notes-${item.id}`}>
+            <label className="text-muted-foreground text-[11px]" htmlFor={`notes-${item.id}`}>
               Notes
             </label>
             <Input id={`notes-${item.id}`} value={notes} onChange={(e) => setNotes(e.target.value)} onBlur={() => void save()} className="h-8" />

@@ -54,7 +54,10 @@ export function VehicleTab() {
         </CardHeader>
         <CardContent>
           <dl className="divide-y">
-            <Row k="Odometer" v={l.odometer !== null ? `${formatNumber(l.odometer)} ${l.odometerUnit} (${l.odometerBrand.toLowerCase().replace(/_/g, " ")})` : "—"} />
+            <Row
+              k="Odometer"
+              v={l.odometer !== null ? `${formatNumber(l.odometer)} ${l.odometerUnit} (${l.odometerBrand.toLowerCase().replace(/_/g, " ")})` : "—"}
+            />
             <Row k="Title" v={`${TITLE_LABELS[l.titleCategory]}${l.titleRaw ? ` — ${l.titleRaw}` : ""}`} />
             <Row k="Primary damage" v={l.primaryDamage} />
             <Row k="Secondary damage" v={l.secondaryDamage} />
@@ -77,19 +80,21 @@ export function VehicleTab() {
               {v.recalls.map((r) => (
                 <li key={r.campaign}>
                   <div className="font-medium">
-                    {r.component} <span className="text-xs font-normal text-muted-foreground">#{r.campaign}</span>
+                    {r.component} <span className="text-muted-foreground text-xs font-normal">#{r.campaign}</span>
                   </div>
-                  <div className="text-xs text-muted-foreground">{r.summary}</div>
+                  <div className="text-muted-foreground text-xs">{r.summary}</div>
                 </li>
               ))}
-              <li className="text-xs text-muted-foreground">Recalls listed for this model year — dealers repair open recalls free. Check the VIN-specific status.</li>
+              <li className="text-muted-foreground text-xs">
+                Recalls listed for this model year — dealers repair open recalls free. Check the VIN-specific status.
+              </li>
             </ul>
           ) : (
-            <p className="text-sm text-muted-foreground">No recalls found for this model year.</p>
+            <p className="text-muted-foreground text-sm">No recalls found for this model year.</p>
           )}
           {v && v.complaints.length > 0 && (
             <div>
-              <div className="mb-1.5 text-xs font-medium text-muted-foreground">Most-reported problems (NHTSA complaints)</div>
+              <div className="text-muted-foreground mb-1.5 text-xs font-medium">Most-reported problems (NHTSA complaints)</div>
               <div className="flex flex-wrap gap-1.5">
                 {v.complaints.map((c) => (
                   <Badge key={c.component} variant="outline">
@@ -100,7 +105,12 @@ export function VehicleTab() {
             </div>
           )}
           {l.vin && (
-            <a href="https://www.nicb.org/vincheck" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm text-primary underline-offset-4 hover:underline">
+            <a
+              href="https://www.nicb.org/vincheck"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary inline-flex items-center gap-1 text-sm underline-offset-4 hover:underline"
+            >
               Free theft / total-loss check (NICB VINCheck) <ExternalLinkIcon className="size-3.5" />
             </a>
           )}
@@ -148,14 +158,14 @@ export function VehicleTab() {
                   ))}
                 </TableBody>
               </Table>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 Source: {h.provider}.{" "}
                 {!h.isDemo &&
                   "NMVTIS data comes from state titling agencies, insurers and salvage/junk yards. It may not include every event, and it isn't a substitute for an inspection."}
               </p>
             </>
           ) : (
-            <p className="text-sm text-muted-foreground">No history provider is configured. Add a VinAudit key for NMVTIS title and odometer history.</p>
+            <p className="text-muted-foreground text-sm">No history provider is configured. Add a VinAudit key for NMVTIS title and odometer history.</p>
           )}
         </CardContent>
       </Card>
@@ -192,7 +202,7 @@ export function LogisticsTab() {
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Export — {base.exportProfile.name}</CardTitle>
-            {base.exportProfile.isPlaceholder && <p className="text-xs text-caution">Placeholder profile — edit the real costs in Admin → Export profiles.</p>}
+            {base.exportProfile.isPlaceholder && <p className="text-caution text-xs">Placeholder profile — edit the real costs in Admin → Export profiles.</p>}
           </CardHeader>
           <CardContent>
             <dl className="divide-y">

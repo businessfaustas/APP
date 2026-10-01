@@ -28,9 +28,4 @@ export const VERDICT_WEIGHTS = {
 } as const;
 
 /** Flag codes whose effect is already counted by a dedicated deal-score penalty. */
-export const PENALIZED_FLAG_CODES: ReadonlySet<string> = new Set([
-  "FRAME_DAMAGE_SUSPECTED",
-  "FLOOD_SUSPECTED",
-  "AIRBAGS_DEPLOYED",
-  "LOW_AI_CONFIDENCE",
-]);
+export const PENALIZED_FLAG_CODES: ReadonlySet<string> = new Set(["FRAME_DAMAGE_SUSPECTED", "FLOOD_SUSPECTED", "AIRBAGS_DEPLOYED", "LOW_AI_CONFIDENCE"]);

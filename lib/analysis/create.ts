@@ -130,7 +130,11 @@ export async function createAnalysis(user: SessionUser, req: CreateAnalysisInput
 }
 
 /** Continues an analysis that paused for listing details (pasted text / manual / photos). */
-export async function resumeAnalysis(user: SessionUser, analysisId: string, add: { text?: string | null; manual?: ManualListing | null; photos?: string[] }): Promise<void> {
+export async function resumeAnalysis(
+  user: SessionUser,
+  analysisId: string,
+  add: { text?: string | null; manual?: ManualListing | null; photos?: string[] },
+): Promise<void> {
   const a = await prisma.analysis.findFirst({ where: { id: analysisId, userId: user.id } });
   if (!a) throw new InputError("Analysis not found.");
   if (a.currentStep !== "NEEDS_INPUT") throw new InputError("This analysis isn't waiting for input.");

@@ -21,9 +21,18 @@ export default function TermsPage() {
 
       <h2>2. Estimates, not advice</h2>
       <ul>
-        <li>Reports are estimates only. They are not an appraisal, a body-shop quote, an insurance estimate, a vehicle inspection, or financial, legal or tax advice.</li>
-        <li>Photos and listings can be incomplete or wrong. Hidden damage, title and registration rules, auction fees and market prices change and differ by state and country.</li>
-        <li>You are solely responsible for your bids, purchases, repairs, compliance with title, registration, import and export rules, and resale. Verify everything before you bid.</li>
+        <li>
+          Reports are estimates only. They are not an appraisal, a body-shop quote, an insurance estimate, a vehicle inspection, or financial, legal or tax
+          advice.
+        </li>
+        <li>
+          Photos and listings can be incomplete or wrong. Hidden damage, title and registration rules, auction fees and market prices change and differ by state
+          and country.
+        </li>
+        <li>
+          You are solely responsible for your bids, purchases, repairs, compliance with title, registration, import and export rules, and resale. Verify
+          everything before you bid.
+        </li>
       </ul>
 
       <h2>3. Accounts</h2>
@@ -41,9 +50,9 @@ export default function TermsPage() {
 
       <h2>5. Plans, credits and billing</h2>
       <p>
-        Paid plans renew monthly until cancelled and are billed in advance through our payment processor. Each analyzed lot uses one report credit; credits
-        for analyses that fail are returned automatically. Except where the law requires otherwise, payments are non-refundable. We may change prices with at
-        least 30 days&apos; notice before your next renewal.
+        Paid plans renew monthly until cancelled and are billed in advance through our payment processor. Each analyzed lot uses one report credit; credits for
+        analyses that fail are returned automatically. Except where the law requires otherwise, payments are non-refundable. We may change prices with at least
+        30 days&apos; notice before your next renewal.
       </p>
 
       <h2>6. Your content</h2>

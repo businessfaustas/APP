@@ -145,14 +145,17 @@ export function JournalClient({ entries, prefill }: { entries: JournalEntryView[
           {
             label: "Repair estimate accuracy",
             value: summary.medianRepairErrorBps !== null ? `±${formatBps(summary.medianRepairErrorBps, 0)}` : "—",
-            sub: summary.avgRepairBiasBps !== null ? `repairs ran ${summary.avgRepairBiasBps >= 0 ? "over" : "under"} by ${formatBps(Math.abs(summary.avgRepairBiasBps), 0)} on average` : "median error vs. actual",
+            sub:
+              summary.avgRepairBiasBps !== null
+                ? `repairs ran ${summary.avgRepairBiasBps >= 0 ? "over" : "under"} by ${formatBps(Math.abs(summary.avgRepairBiasBps), 0)} on average`
+                : "median error vs. actual",
           },
         ].map((t) => (
           <Card key={t.label}>
             <CardContent>
-              <div className="text-xs text-muted-foreground">{t.label}</div>
+              <div className="text-muted-foreground text-xs">{t.label}</div>
               <div className="text-2xl font-semibold">{t.value}</div>
-              <div className="text-xs text-muted-foreground">{t.sub}</div>
+              <div className="text-muted-foreground text-xs">{t.sub}</div>
             </CardContent>
           </Card>
         ))}
@@ -167,7 +170,7 @@ export function JournalClient({ entries, prefill }: { entries: JournalEntryView[
         </CardHeader>
         <CardContent>
           {entries.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               After you buy a car, log what you actually paid and sold it for. Comparing estimates with reality is how your future max bids get sharper.
             </p>
           ) : (
@@ -198,7 +201,9 @@ export function JournalClient({ entries, prefill }: { entries: JournalEntryView[
                             e.title
                           )}
                         </div>
-                        <div className="text-xs text-muted-foreground">{e.soldAt ? `Sold ${formatDate(e.soldAt)}` : e.purchasedAt ? `Bought ${formatDate(e.purchasedAt)}` : ""}</div>
+                        <div className="text-muted-foreground text-xs">
+                          {e.soldAt ? `Sold ${formatDate(e.soldAt)}` : e.purchasedAt ? `Bought ${formatDate(e.purchasedAt)}` : ""}
+                        </div>
                       </TableCell>
                       <TableCell className="text-right">{formatUsd(p.totalCost)}</TableCell>
                       <TableCell className="text-right">{formatUsd(e.salePrice)}</TableCell>
@@ -230,7 +235,7 @@ export function JournalClient({ entries, prefill }: { entries: JournalEntryView[
             <CardTitle className="text-base">Estimated vs. actual repair cost</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="mb-2 flex gap-4 text-xs text-muted-foreground">
+            <div className="text-muted-foreground mb-2 flex gap-4 text-xs">
               <span className="flex items-center gap-1.5">
                 <span className="size-2.5 rounded-sm" style={{ background: "var(--series-1)" }} /> Estimated
               </span>
@@ -243,12 +248,18 @@ export function JournalClient({ entries, prefill }: { entries: JournalEntryView[
                 <BarChart data={chart} margin={{ top: 4, right: 8, bottom: 4, left: 0 }} barGap={2}>
                   <CartesianGrid vertical={false} stroke="var(--chart-grid)" />
                   <XAxis dataKey="name" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} axisLine={{ stroke: "var(--chart-axis)" }} tickLine={false} />
-                  <YAxis tickFormatter={(v: number) => `$${Math.round(v / 1000)}k`} tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} width={44} />
+                  <YAxis
+                    tickFormatter={(v: number) => `$${Math.round(v / 1000)}k`}
+                    tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+                    axisLine={false}
+                    tickLine={false}
+                    width={44}
+                  />
                   <Tooltip
                     cursor={{ fill: "var(--muted)", opacity: 0.5 }}
                     content={({ active, payload, label }) =>
                       active && payload?.length ? (
-                        <div className="rounded-md border bg-popover px-3 py-2 text-xs shadow-md">
+                        <div className="bg-popover rounded-md border px-3 py-2 text-xs shadow-md">
                           <div className="font-medium">{String(label)}</div>
                           {payload.map((p) => (
                             <div key={String(p.dataKey)}>

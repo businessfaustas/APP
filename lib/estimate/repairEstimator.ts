@@ -37,7 +37,12 @@ export interface PriceLookup {
 }
 
 export type AiPriceFn = (parts: { index: number; name: string; kind: "PART" | "SUBLET" }[]) => Promise<
-  { index: number; OEM_NEW: { low: number; high: number } | null; AFTERMARKET: { low: number; high: number } | null; USED: { low: number; high: number } | null }[]
+  {
+    index: number;
+    OEM_NEW: { low: number; high: number } | null;
+    AFTERMARKET: { low: number; high: number } | null;
+    USED: { low: number; high: number } | null;
+  }[]
 >;
 
 const r1 = (n: number) => Math.round(n * 10) / 10;
@@ -167,7 +172,11 @@ export async function buildRepairEstimate(args: {
   // 3. rules
   const ruleLines: RuleLine[] = applyRules(d, v, args.listing);
   for (const r of ruleLines) {
-    const dup = lines.find((x) => (r.partKey !== null && x.partKey === r.partKey && (r.kind === "SUBLET" || x.partName === r.partName)) || x.partName.toLowerCase() === r.partName.toLowerCase());
+    const dup = lines.find(
+      (x) =>
+        (r.partKey !== null && x.partKey === r.partKey && (r.kind === "SUBLET" || x.partName === r.partName)) ||
+        x.partName.toLowerCase() === r.partName.toLowerCase(),
+    );
     if (dup) {
       // a rule can only raise the probability of an existing hidden line
       if (dup.origin === "HIDDEN_LIKELY" && r.probability > dup.probability) {

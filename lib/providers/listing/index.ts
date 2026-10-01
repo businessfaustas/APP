@@ -122,8 +122,7 @@ export async function fetchListing(req: ListingRequest, now: Date = new Date()):
     raw.lotNumber = raw.lotNumber ?? req.lotNumber ?? null;
     if (req.vin && !raw.vin) raw.vin = req.vin;
     const listing = finalizeListing(raw, t.method);
-    if (!hasVehicleIdentity(listing))
-      throw new NeedsInputError("We couldn't find the VIN or year/make/model in that text. Add them in the form below.");
+    if (!hasVehicleIdentity(listing)) throw new NeedsInputError("We couldn't find the VIN or year/make/model in that text. Add them in the form below.");
     return { data: listing, provider: t.provider, isDemo: false };
   }
 

@@ -43,7 +43,10 @@ export default function PrivacyPage() {
       <ul>
         <li>Supabase (authentication and photo storage) and our database and hosting providers.</li>
         <li>AI providers (Anthropic or OpenAI) — listing text and vehicle photos, to extract details and assess damage. Your email is not sent.</li>
-        <li>Vehicle data providers — VIN decoding (NHTSA vPIC), history and market data (for example VinAudit and Marketcheck) — the VIN, ZIP code and vehicle details.</li>
+        <li>
+          Vehicle data providers — VIN decoding (NHTSA vPIC), history and market data (for example VinAudit and Marketcheck) — the VIN, ZIP code and vehicle
+          details.
+        </li>
         <li>Page-fetching services (for example ScrapingBee or Apify) — the auction link.</li>
         <li>Stripe (payments), Resend (email reminders) and Inngest (background jobs).</li>
       </ul>
@@ -62,7 +65,10 @@ export default function PrivacyPage() {
       <ul>
         <li>Download a copy of your data or permanently delete your account and everything in it from Settings.</li>
         <li>Revoke share links and extension tokens at any time.</li>
-        <li>Depending on where you live (for example under the GDPR or CCPA) you may have rights to access, correct, delete or port your data and to object to processing. Contact us to use them.</li>
+        <li>
+          Depending on where you live (for example under the GDPR or CCPA) you may have rights to access, correct, delete or port your data and to object to
+          processing. Contact us to use them.
+        </li>
       </ul>
 
       <h2>Security</h2>

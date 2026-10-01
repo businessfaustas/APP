@@ -1,19 +1,6 @@
 "use client";
 
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  LabelList,
-  ReferenceLine,
-  ResponsiveContainer,
-  Scatter,
-  ScatterChart,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { Bar, BarChart, CartesianGrid, Cell, LabelList, ReferenceLine, ResponsiveContainer, Scatter, ScatterChart, Tooltip, XAxis, YAxis } from "recharts";
 
 import type { Comp } from "@/lib/domain/schemas";
 import { formatNumber, formatUsd } from "@/lib/utils";
@@ -28,7 +15,7 @@ function compactUsd(v: number): string {
 }
 
 function TooltipBox({ children }: { children: React.ReactNode }) {
-  return <div className="rounded-md border bg-popover px-3 py-2 text-xs text-popover-foreground shadow-md">{children}</div>;
+  return <div className="bg-popover text-popover-foreground rounded-md border px-3 py-2 text-xs shadow-md">{children}</div>;
 }
 
 interface WaterfallRow {
@@ -64,7 +51,7 @@ export function CostWaterfall({ rows }: { rows: { key: string; label: string; am
   const height = data.length * 30 + 36;
   return (
     <figure className="space-y-3" aria-label="Cost waterfall from resale value to net profit">
-      <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
+      <div className="text-muted-foreground flex flex-wrap gap-4 text-xs">
         <span className="flex items-center gap-1.5">
           <span className="size-2.5 rounded-sm" style={{ background: "var(--series-1)" }} /> Resale value
         </span>
@@ -98,10 +85,7 @@ export function CostWaterfall({ rows }: { rows: { key: string; label: string; am
             />
             <Bar dataKey="range" barSize={16} radius={4} isAnimationActive={false}>
               {data.map((d) => (
-                <Cell
-                  key={d.key}
-                  fill={d.kind === "profit" ? (d.amount >= 0 ? "var(--status-good)" : "var(--status-critical)") : KIND_COLOR[d.kind]}
-                />
+                <Cell key={d.key} fill={d.kind === "profit" ? (d.amount >= 0 ? "var(--status-good)" : "var(--status-critical)") : KIND_COLOR[d.kind]} />
               ))}
               <LabelList
                 dataKey="amount"
@@ -130,7 +114,7 @@ export function CompsScatter({ comps, subjectMileage, medianAsking }: { comps: C
   if (data.length === 0) return null;
   return (
     <figure className="space-y-2" aria-label="Comparable listings: asking price versus mileage">
-      <figcaption className="text-xs text-muted-foreground">Asking price vs. mileage — each dot is a comparable listing</figcaption>
+      <figcaption className="text-muted-foreground text-xs">Asking price vs. mileage — each dot is a comparable listing</figcaption>
       <div className="h-64 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <ScatterChart margin={{ top: 22, right: 16, bottom: 8, left: 0 }}>
@@ -145,12 +129,32 @@ export function CompsScatter({ comps, subjectMileage, medianAsking }: { comps: C
               tickLine={false}
               domain={["dataMin - 5000", "dataMax + 5000"]}
             />
-            <YAxis type="number" dataKey="y" name="Price" tickFormatter={compactUsd} tick={AXIS_TICK} axisLine={false} tickLine={false} width={52} domain={["auto", "auto"]} />
+            <YAxis
+              type="number"
+              dataKey="y"
+              name="Price"
+              tickFormatter={compactUsd}
+              tick={AXIS_TICK}
+              axisLine={false}
+              tickLine={false}
+              width={52}
+              domain={["auto", "auto"]}
+            />
             {medianAsking !== null && (
-              <ReferenceLine y={medianAsking} stroke="var(--muted-foreground)" strokeWidth={1} label={{ value: `Median ${compactUsd(medianAsking)}`, position: "insideTopRight", fontSize: 11, fill: "var(--muted-foreground)" }} />
+              <ReferenceLine
+                y={medianAsking}
+                stroke="var(--muted-foreground)"
+                strokeWidth={1}
+                label={{ value: `Median ${compactUsd(medianAsking)}`, position: "insideTopRight", fontSize: 11, fill: "var(--muted-foreground)" }}
+              />
             )}
             {subjectMileage !== null && (
-              <ReferenceLine x={subjectMileage} stroke="var(--foreground)" strokeWidth={1.5} label={{ value: "This car", position: "top", fontSize: 11, fill: "var(--foreground)" }} />
+              <ReferenceLine
+                x={subjectMileage}
+                stroke="var(--foreground)"
+                strokeWidth={1.5}
+                label={{ value: "This car", position: "top", fontSize: 11, fill: "var(--foreground)" }}
+              />
             )}
             <Tooltip
               cursor={false}
@@ -161,7 +165,9 @@ export function CompsScatter({ comps, subjectMileage, medianAsking }: { comps: C
                 return (
                   <TooltipBox>
                     <div className="num font-medium">{formatUsd(c.price)}</div>
-                    <div>{formatNumber(c.mileage)} mi{c.year ? ` · ${c.year}` : ""}</div>
+                    <div>
+                      {formatNumber(c.mileage)} mi{c.year ? ` · ${c.year}` : ""}
+                    </div>
                     <div className="text-muted-foreground">
                       {[c.city, c.state].filter(Boolean).join(", ")}
                       {c.distanceMiles !== null ? ` · ${c.distanceMiles} mi away` : ""}

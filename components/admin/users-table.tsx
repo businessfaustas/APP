@@ -45,7 +45,7 @@ export function UsersTable({ users }: { users: AdminUserRow[] }) {
           <TableRow key={u.id}>
             <TableCell>
               <div className="font-medium">{u.email}</div>
-              {u.name && <div className="text-xs text-muted-foreground">{u.name}</div>}
+              {u.name && <div className="text-muted-foreground text-xs">{u.name}</div>}
             </TableCell>
             <TableCell>
               <Select value={u.plan} onValueChange={(v) => void patch(u.id, { plan: v })}>
@@ -82,7 +82,7 @@ export function UsersTable({ users }: { users: AdminUserRow[] }) {
               </div>
             </TableCell>
             <TableCell className="num text-right">{u.analyses}</TableCell>
-            <TableCell className="text-right text-xs text-muted-foreground">{formatDate(u.createdAt)}</TableCell>
+            <TableCell className="text-muted-foreground text-right text-xs">{formatDate(u.createdAt)}</TableCell>
           </TableRow>
         ))}
       </TableBody>

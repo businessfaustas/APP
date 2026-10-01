@@ -24,12 +24,12 @@ The token is stored only in this browser (`chrome.storage.local`). You can revok
 
 ## How it works
 
-| File | Role |
-|---|---|
-| `src/content.ts` | Runs on auction sites. It shows the floating button only on lot pages (it watches for SPA navigation) and captures the page. The button lives in a closed shadow root, so site CSS can't affect it. |
-| `src/lot.ts` | Pure helpers, unit-tested in `tests/extension.test.ts`. Lot detection reuses `lib/input/urls.ts`. Photo selection keeps auction-CDN photos and drops logos and icons. It also upgrades Copart thumbnails to full size. |
-| `src/background.ts` | Service worker. It sends the capture to `POST /api/extension/ingest` with `Authorization: Bearer <token>` and opens the report. `GET` on the same endpoint backs **Test connection**. |
-| `src/options.ts`, `src/popup.ts` | Settings page (app URL and token) and the toolbar popup ("Analyze this lot"). |
+| File                             | Role                                                                                                                                                                                                                   |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/content.ts`                 | Runs on auction sites. It shows the floating button only on lot pages (it watches for SPA navigation) and captures the page. The button lives in a closed shadow root, so site CSS can't affect it.                    |
+| `src/lot.ts`                     | Pure helpers, unit-tested in `tests/extension.test.ts`. Lot detection reuses `lib/input/urls.ts`. Photo selection keeps auction-CDN photos and drops logos and icons. It also upgrades Copart thumbnails to full size. |
+| `src/background.ts`              | Service worker. It sends the capture to `POST /api/extension/ingest` with `Authorization: Bearer <token>` and opens the report. `GET` on the same endpoint backs **Test connection**.                                  |
+| `src/options.ts`, `src/popup.ts` | Settings page (app URL and token) and the toolbar popup ("Analyze this lot").                                                                                                                                          |
 
 Limits match the server schema: page text up to 200k characters, HTML up to 2 MB (left out when larger), up to 20 JSON-LD blocks, and up to 80 photos.
 

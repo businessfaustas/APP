@@ -63,7 +63,7 @@ export function CompareTable({ batchId, initial }: { batchId: string; initial: C
             <TableHead key={c.key} className="text-right">
               <button
                 type="button"
-                className={cn("inline-flex items-center gap-1 hover:text-foreground", sort === c.key && "text-foreground")}
+                className={cn("hover:text-foreground inline-flex items-center gap-1", sort === c.key && "text-foreground")}
                 onClick={() => {
                   if (sort === c.key) setDesc(!desc);
                   else {
@@ -88,14 +88,14 @@ export function CompareTable({ batchId, initial }: { batchId: string; initial: C
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={r.photo} alt="" className="h-10 w-16 shrink-0 rounded object-cover" />
                 ) : (
-                  <div className="h-10 w-16 shrink-0 rounded bg-muted" />
+                  <div className="bg-muted h-10 w-16 shrink-0 rounded" />
                 )}
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5 font-medium">
                     {r.status === "COMPLETED" && i === 0 && sort === "dealScore" && desc && <Badge variant="go">Best</Badge>}
                     <span className="max-w-48 truncate">{r.title}</span>
                   </div>
-                  <div className="text-xs text-muted-foreground">
+                  <div className="text-muted-foreground text-xs">
                     {[r.damage?.toLowerCase(), r.title_?.toLowerCase().replace(/_/g, " ")].filter(Boolean).join(" · ")}
                   </div>
                 </div>
@@ -120,7 +120,7 @@ export function CompareTable({ batchId, initial }: { batchId: string; initial: C
                 </TableCell>
               </>
             ) : (
-              <TableCell colSpan={COLS.length + 2} className="text-sm text-muted-foreground">
+              <TableCell colSpan={COLS.length + 2} className="text-muted-foreground text-sm">
                 {r.status === "FAILED" ? (
                   <Badge variant="stop">Failed</Badge>
                 ) : r.needsInput ? (

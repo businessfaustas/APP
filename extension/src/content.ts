@@ -11,7 +11,13 @@ function collectImages(): ImageCandidate[] {
     const width = img.naturalWidth || img.width || 0;
     const sources = [img.currentSrc, img.src, img.getAttribute("data-src"), img.getAttribute("data-original"), img.getAttribute("data-lazy")];
     const srcset = img.getAttribute("srcset") ?? img.getAttribute("data-srcset");
-    if (srcset) sources.push(srcset.split(",").map((s) => s.trim().split(/\s+/)[0]).pop() ?? null);
+    if (srcset)
+      sources.push(
+        srcset
+          .split(",")
+          .map((s) => s.trim().split(/\s+/)[0])
+          .pop() ?? null,
+      );
     for (const s of sources) if (s && !s.startsWith("data:")) out.push({ url: s, width });
   }
   for (const a of Array.from(document.querySelectorAll<HTMLAnchorElement>("a[href]"))) {

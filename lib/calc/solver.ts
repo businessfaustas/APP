@@ -4,12 +4,7 @@
  * acquisition must be non-decreasing in B, which makes binary search exact.
  * Returns null when even a $0 bid exceeds the budget.
  */
-export function solveBid(
-  budget: number,
-  acquisition: (bid: number) => number,
-  increment: number,
-  ceiling: number,
-): number | null {
+export function solveBid(budget: number, acquisition: (bid: number) => number, increment: number, ceiling: number): number | null {
   if (increment <= 0) throw new Error("Bid increment must be positive");
   if (acquisition(0) > budget) return null;
   let lo = 0;

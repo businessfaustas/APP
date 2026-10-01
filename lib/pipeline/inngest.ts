@@ -35,9 +35,8 @@ export const remindersCron = inngest.createFunction(
   async ({ step }) => step.run("send-reminders", () => sendDueReminders()),
 );
 
-export const maintenanceCron = inngest.createFunction(
-  { id: "maintenance", name: "Daily maintenance", triggers: [{ cron: "0 4 * * *" }] },
-  async ({ step }) => step.run("maintenance", () => runMaintenance()),
+export const maintenanceCron = inngest.createFunction({ id: "maintenance", name: "Daily maintenance", triggers: [{ cron: "0 4 * * *" }] }, async ({ step }) =>
+  step.run("maintenance", () => runMaintenance()),
 );
 
 export const inngestFunctions = [analysisRequested, remindersCron, maintenanceCron];

@@ -121,7 +121,9 @@ export async function valueMarket(req: MarketRequest): Promise<MarketValuation> 
         const adjusted = adjustComps(comps, req.mileage, slope);
         const dom = adjusted.map((c) => c.daysOnMarket).filter((d): d is number => d !== null);
         if (widened) notes.push("Few local comps — the search was widened to ±2 years and 500 miles.");
-        notes.push(`${comps.length} comps adjusted to ${req.mileage ?? "—"} mi at ${slope.toFixed(3)} $/mi and a ${(req.listToSaleBps / 100).toFixed(0)}% list-to-sale ratio.`);
+        notes.push(
+          `${comps.length} comps adjusted to ${req.mileage ?? "—"} mi at ${slope.toFixed(3)} $/mi and a ${(req.listToSaleBps / 100).toFixed(0)}% list-to-sale ratio.`,
+        );
         return {
           provider: "Marketcheck",
           isDemo: false,

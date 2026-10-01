@@ -31,9 +31,7 @@ describe("Audi A3 reference case (master prompt §13.6)", () => {
   });
 
   it("computes profit, ROI and headroom", () => {
-    expect([r.scenarios.best.profitAtMaxBid, r.scenarios.expected.profitAtMaxBid, r.scenarios.worst.profitAtMaxBid]).toEqual([
-      4379, 2518, -791,
-    ]);
+    expect([r.scenarios.best.profitAtMaxBid, r.scenarios.expected.profitAtMaxBid, r.scenarios.worst.profitAtMaxBid]).toEqual([4379, 2518, -791]);
     expect(r.scenarios.expected.totalCostAtMaxBid).toBe(9872);
     expect(r.scenarios.expected.roiAtMaxBidBps).toBe(2551);
     expect(r.scenarios.expected.profitAtCurrentBid).toBe(3588);

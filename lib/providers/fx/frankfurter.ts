@@ -12,10 +12,9 @@ export async function usdRate(currency: string): Promise<{ rate: number; source:
   const hit = cache.get(currency);
   if (hit && Date.now() - hit.at < TTL) return { rate: hit.rate, source: "ECB" };
   try {
-    const json = await fetchJson<{ rates?: Record<string, number> }>(
-      `https://api.frankfurter.app/latest?from=USD&to=${encodeURIComponent(currency)}`,
-      { timeoutMs: 8000 },
-    );
+    const json = await fetchJson<{ rates?: Record<string, number> }>(`https://api.frankfurter.app/latest?from=USD&to=${encodeURIComponent(currency)}`, {
+      timeoutMs: 8000,
+    });
     const rate = json.rates?.[currency];
     if (rate && rate > 0) {
       cache.set(currency, { rate, at: Date.now() });

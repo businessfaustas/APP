@@ -147,10 +147,14 @@ export function heuristicExtract(text: string): RawListing {
     odometerUnit: odoRaw && /\bkm\b/i.test(odoRaw) ? "km" : "mi",
     odometerBrandRaw: odoRaw,
     titleRaw,
-    titleState: titleRaw?.match(/\(([A-Z]{2})\)|\b([A-Z]{2})\s*-/)?.slice(1).find(Boolean) ?? null,
+    titleState:
+      titleRaw
+        ?.match(/\(([A-Z]{2})\)|\b([A-Z]{2})\s*-/)
+        ?.slice(1)
+        .find(Boolean) ?? null,
     primaryDamage: get("primaryDamage"),
     secondaryDamage: get("secondaryDamage"),
-    runConditionRaw: get("run") ?? (text.match(/run\s*(and|&)\s*drive|engine\s*start(s)?|won'?t\s*start|stationary/i)?.[0] ?? null),
+    runConditionRaw: get("run") ?? text.match(/run\s*(and|&)\s*drive|engine\s*start(s)?|won'?t\s*start|stationary/i)?.[0] ?? null,
     hasKeys: get("keys") ? parseKeys(get("keys")!) : null,
     engine: get("engine"),
     transmission: get("transmission"),
@@ -158,7 +162,7 @@ export function heuristicExtract(text: string): RawListing {
     fuel: get("fuel"),
     color: get("color"),
     saleDate: get("saleDate"),
-    saleStatusRaw: get("saleStatus") ?? (text.match(/on\s*approval|pure\s*sale|minimum\s*bid/i)?.[0] ?? null),
+    saleStatusRaw: get("saleStatus") ?? text.match(/on\s*approval|pure\s*sale|minimum\s*bid/i)?.[0] ?? null,
     currentBid: parseMoney(get("currentBid")),
     buyNowPrice: parseMoney(get("buyNow")),
     listedRetailValue: parseMoney(get("acv")),

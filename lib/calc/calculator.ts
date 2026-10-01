@@ -2,20 +2,14 @@ import { dealScore } from "./dealScore";
 import { auctionFees } from "./fees";
 import { applyBps, hoursCost, ratioBps, sum } from "./money";
 import { solveBid } from "./solver";
-import type {
-  AcquisitionBreakdown,
-  CalcInput,
-  CalcSettings,
-  CalculationResult,
-  RepairBreakdown,
-  RepairInputs,
-  ScenarioKey,
-  ScenarioResult,
-} from "./types";
+import type { AcquisitionBreakdown, CalcInput, CalcSettings, CalculationResult, RepairBreakdown, RepairInputs, ScenarioKey, ScenarioResult } from "./types";
 import { SCENARIO_KEYS } from "./types";
 import { decideVerdict } from "./verdict";
 
-export function computeRepair(r: RepairInputs, s: Pick<CalcSettings, "partsDiscountBps" | "laborRate" | "paintMaterialsPerHour">): {
+export function computeRepair(
+  r: RepairInputs,
+  s: Pick<CalcSettings, "partsDiscountBps" | "laborRate" | "paintMaterialsPerHour">,
+): {
   total: number;
   breakdown: RepairBreakdown;
 } {
@@ -126,8 +120,7 @@ export function calculate(input: CalcInput, s: CalcSettings): CalculationResult 
     };
   }
 
-  const headroomBps =
-    input.currentBid !== null && maxBid !== null && maxBid > 0 ? ratioBps(maxBid - input.currentBid, maxBid) : null;
+  const headroomBps = input.currentBid !== null && maxBid !== null && maxBid > 0 ? ratioBps(maxBid - input.currentBid, maxBid) : null;
 
   const { verdict, reasons } = decideVerdict({
     maxBid,

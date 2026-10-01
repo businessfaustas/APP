@@ -54,9 +54,21 @@ describe("fees", () => {
 
   it("validates schedules", () => {
     expect(validateFeeSchedule(schedule).ok).toBe(true);
-    const gap = validateFeeSchedule({ ...schedule, buyerFeeTiers: [{ min: 0, max: 100, amount: 10 }, { min: 200, max: null, amount: 20 }] });
+    const gap = validateFeeSchedule({
+      ...schedule,
+      buyerFeeTiers: [
+        { min: 0, max: 100, amount: 10 },
+        { min: 200, max: null, amount: 20 },
+      ],
+    });
     expect(gap.ok).toBe(false);
-    const decreasing = validateFeeSchedule({ ...schedule, buyerFeeTiers: [{ min: 0, max: 1000, amount: 300 }, { min: 1000, max: null, amount: 50 }] });
+    const decreasing = validateFeeSchedule({
+      ...schedule,
+      buyerFeeTiers: [
+        { min: 0, max: 1000, amount: 300 },
+        { min: 1000, max: null, amount: 50 },
+      ],
+    });
     expect(decreasing.ok).toBe(false);
     expect(decreasing.errors[0]).toMatch(/decrease/);
     const noStart = validateFeeSchedule({ ...schedule, onlineBidFeeTiers: [{ min: 10, max: null, amount: 5 }] });
@@ -146,7 +158,10 @@ describe("verdicts", () => {
   it("deal score penalties", () => {
     const input = referenceInput();
     input.signals = { ...input.signals, frameSuspected: true, floodSuspected: true, airbagsDeployed: true, overallConfidence: 0.55 };
-    input.signals.flags = [{ code: "FRAME_DAMAGE_SUSPECTED", level: "HIGH" }, { code: "OTHER_HIGH", level: "HIGH" }];
+    input.signals.flags = [
+      { code: "FRAME_DAMAGE_SUSPECTED", level: "HIGH" },
+      { code: "OTHER_HIGH", level: "HIGH" },
+    ];
     const r = calculate(input, REFERENCE_SETTINGS);
     // 100 − 15 − 20 − 25 − 8 − 10 − 15 (worst < 0) − 5 (OTHER_HIGH) + 5 (ROI) = 7
     expect(r.dealScore).toBe(7);

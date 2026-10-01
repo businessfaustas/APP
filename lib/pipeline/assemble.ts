@@ -4,7 +4,18 @@
  */
 import type { AnalysisBase, ExportProfileData } from "@/lib/calc/build";
 import type { FeeSchedule } from "@/lib/calc/types";
-import type { BuyerType, DamageAssessment, HistoryReport, LogisticsInfo, MarketValuation, NormalizedListing, RepairEstimate, RiskFlag, ScenarioValues, VehicleInfo } from "@/lib/domain/schemas";
+import type {
+  BuyerType,
+  DamageAssessment,
+  HistoryReport,
+  LogisticsInfo,
+  MarketValuation,
+  NormalizedListing,
+  RepairEstimate,
+  RiskFlag,
+  ScenarioValues,
+  VehicleInfo,
+} from "@/lib/domain/schemas";
 import { buildChecklist } from "@/lib/flags/checklist";
 import { deriveFlags } from "@/lib/flags/riskFlags";
 

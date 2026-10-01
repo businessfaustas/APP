@@ -71,9 +71,7 @@ export async function getAnalysisView(id: string, access: { userId: string } | {
   if (!a) return null;
   const shared = "shareToken" in access;
   const watch =
-    !shared && a.listingId
-      ? await prisma.watchlistItem.findUnique({ where: { userId_listingId: { userId: access.userId, listingId: a.listingId } } })
-      : null;
+    !shared && a.listingId ? await prisma.watchlistItem.findUnique({ where: { userId_listingId: { userId: access.userId, listingId: a.listingId } } }) : null;
   const sources = (a.dataSources as DataSources | null) ?? {};
   const photos: PhotoView[] = (a.listing?.photos ?? [])
     .map((p) => ({

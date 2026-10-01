@@ -36,7 +36,18 @@ export default async function HistoryPage({ searchParams }: { searchParams: Prom
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * pageSize,
       take: pageSize,
-      select: { id: true, status: true, verdict: true, maxBid: true, expectedProfit: true, dealScore: true, createdAt: true, listingSnapshot: true, inputValue: true, currentStep: true },
+      select: {
+        id: true,
+        status: true,
+        verdict: true,
+        maxBid: true,
+        expectedProfit: true,
+        dealScore: true,
+        createdAt: true,
+        listingSnapshot: true,
+        inputValue: true,
+        currentStep: true,
+      },
     }),
     prisma.analysis.count({ where }),
   ]);
@@ -85,7 +96,7 @@ export default async function HistoryPage({ searchParams }: { searchParams: Prom
                         <Link href={`/app/analyses/${a.id}`} className="font-medium hover:underline">
                           {l ? [l.year, l.make, l.model].filter(Boolean).join(" ") || a.inputValue : a.inputValue}
                         </Link>
-                        {l?.primaryDamage && <div className="text-xs text-muted-foreground">{l.primaryDamage.toLowerCase()}</div>}
+                        {l?.primaryDamage && <div className="text-muted-foreground text-xs">{l.primaryDamage.toLowerCase()}</div>}
                       </TableCell>
                       <TableCell className="text-xs">{l ? `${sourceLabel(l.source)}${l.lotNumber ? ` · ${l.lotNumber}` : ""}` : "—"}</TableCell>
                       <TableCell>
@@ -102,7 +113,7 @@ export default async function HistoryPage({ searchParams }: { searchParams: Prom
                       <TableCell className="num text-right">{formatUsd(a.maxBid)}</TableCell>
                       <TableCell className="num text-right">{formatUsd(a.expectedProfit)}</TableCell>
                       <TableCell className="num text-right">{a.dealScore ?? "—"}</TableCell>
-                      <TableCell className="text-right text-xs text-muted-foreground">{formatDateTime(a.createdAt)}</TableCell>
+                      <TableCell className="text-muted-foreground text-right text-xs">{formatDateTime(a.createdAt)}</TableCell>
                     </TableRow>
                   );
                 })}

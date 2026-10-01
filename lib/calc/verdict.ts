@@ -51,8 +51,7 @@ export function decideVerdict(a: VerdictArgs): { verdict: VerdictValue; reasons:
         a.expectedRoiAtMaxBidBps !== null ? ` (ROI ${(a.expectedRoiAtMaxBidBps / 100).toFixed(1)}%)` : ""
       } even at your max bid.`,
     );
-  if (a.currentBid !== null && a.headroomBps !== null)
-    go.push(`${(a.headroomBps / 100).toFixed(0)}% headroom between the current bid and your max bid.`);
+  if (a.currentBid !== null && a.headroomBps !== null) go.push(`${(a.headroomBps / 100).toFixed(0)}% headroom between the current bid and your max bid.`);
   if (highFlags.length === 0) go.push("No structural, flood or title red flags detected.");
   return { verdict: "GO", reasons: go };
 }

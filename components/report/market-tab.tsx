@@ -14,9 +14,9 @@ import { useReport } from "./report-context";
 function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
     <div className="rounded-lg border p-3">
-      <div className="text-xs text-muted-foreground">{label}</div>
+      <div className="text-muted-foreground text-xs">{label}</div>
       <div className="text-lg font-semibold">{value}</div>
-      {sub && <div className="text-xs text-muted-foreground">{sub}</div>}
+      {sub && <div className="text-muted-foreground text-xs">{sub}</div>}
     </div>
   );
 }
@@ -36,7 +36,11 @@ export function MarketTab() {
           value={formatUsd(calc?.scenarios.expected.resale)}
           sub={assumptions.exitStrategy === "EXPORT" ? "Destination value" : `${formatBps(assumptions.rebuiltFactorBps, 0)} of clean`}
         />
-        <Stat label="Median days to sell" value={m.medianDaysOnMarket !== null ? `${m.medianDaysOnMarket} days` : "—"} sub={`Holding ${assumptions.holdingDaysExpected} days assumed`} />
+        <Stat
+          label="Median days to sell"
+          value={m.medianDaysOnMarket !== null ? `${m.medianDaysOnMarket} days` : "—"}
+          sub={`Holding ${assumptions.holdingDaysExpected} days assumed`}
+        />
         <Stat label="Comps" value={String(m.compsCount)} sub={`Confidence ${Math.round(m.confidence * 100)}%`} />
       </div>
       <Card>
@@ -64,7 +68,7 @@ export function MarketTab() {
                   {m.comps.map((c, i) => (
                     <TableRow key={`${c.price}-${c.mileage}-${i}`}>
                       <TableCell className="text-right">{formatUsd(c.price)}</TableCell>
-                      <TableCell className="text-right text-muted-foreground">{formatUsd(c.adjustedPrice)}</TableCell>
+                      <TableCell className="text-muted-foreground text-right">{formatUsd(c.adjustedPrice)}</TableCell>
                       <TableCell className="text-right">{formatNumber(c.mileage)}</TableCell>
                       <TableCell>
                         {[c.city, c.state].filter(Boolean).join(", ") || "—"}
@@ -74,7 +78,13 @@ export function MarketTab() {
                       <TableCell className="capitalize">{c.sellerType}</TableCell>
                       <TableCell>
                         {c.url && (
-                          <a href={c.url} target="_blank" rel="noopener noreferrer" aria-label="Open listing" className="text-muted-foreground hover:text-foreground">
+                          <a
+                            href={c.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label="Open listing"
+                            className="text-muted-foreground hover:text-foreground"
+                          >
                             <ExternalLinkIcon className="size-3.5" />
                           </a>
                         )}
@@ -85,13 +95,16 @@ export function MarketTab() {
               </Table>
             </>
           ) : (
-            <p className="text-sm text-muted-foreground">No individual comps — the value comes from {m.provider.toLowerCase()}.</p>
+            <p className="text-muted-foreground text-sm">No individual comps — the value comes from {m.provider.toLowerCase()}.</p>
           )}
-          <ul className="space-y-1 text-xs text-muted-foreground">
+          <ul className="text-muted-foreground space-y-1 text-xs">
             {m.notes.map((n) => (
               <li key={n}>{n}</li>
             ))}
-            <li>Clean values are asking prices adjusted to this car&apos;s mileage, then multiplied by your list-to-sale ratio. Best = 75th percentile, worst = 25th.</li>
+            <li>
+              Clean values are asking prices adjusted to this car&apos;s mileage, then multiplied by your list-to-sale ratio. Best = 75th percentile, worst =
+              25th.
+            </li>
           </ul>
         </CardContent>
       </Card>

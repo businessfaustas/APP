@@ -51,8 +51,7 @@ export function mileageSlope(comps: readonly Pick<Comp, "price" | "mileage">[]):
 export function adjustComps(comps: readonly Comp[], subjectMileage: number | null, slope: number): Comp[] {
   return comps.map((c) => ({
     ...c,
-    adjustedPrice:
-      subjectMileage !== null && c.mileage !== null ? Math.round(c.price + (subjectMileage - c.mileage) * slope) : c.price,
+    adjustedPrice: subjectMileage !== null && c.mileage !== null ? Math.round(c.price + (subjectMileage - c.mileage) * slope) : c.price,
   }));
 }
 

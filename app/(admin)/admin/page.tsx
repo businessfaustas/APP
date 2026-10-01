@@ -22,7 +22,12 @@ export default async function AdminOverview() {
     prisma.$queryRaw<{ day: Date; cost: number; calls: bigint }[]>`
       SELECT date_trunc('day', "createdAt") AS day, SUM("costUsd")::float AS cost, COUNT(*) AS calls
       FROM "AiUsage" WHERE "createdAt" >= ${since} GROUP BY 1 ORDER BY 1 DESC LIMIT 30`,
-    prisma.aiUsage.groupBy({ by: ["purpose"], where: { createdAt: { gte: since } }, _sum: { costUsd: true, inputTokens: true, outputTokens: true }, _count: true }),
+    prisma.aiUsage.groupBy({
+      by: ["purpose"],
+      where: { createdAt: { gte: since } },
+      _sum: { costUsd: true, inputTokens: true, outputTokens: true },
+      _count: true,
+    }),
     prisma.feeSchedule.count({ where: { active: true, isPlaceholder: true } }),
   ]);
   const totalCost = byPurpose.reduce((a, p) => a + (p._sum.costUsd ?? 0), 0);
@@ -35,7 +40,7 @@ export default async function AdminOverview() {
   return (
     <div className="space-y-5">
       {placeholderFees > 0 && (
-        <p className="rounded-md bg-caution-soft px-3 py-2 text-sm">
+        <p className="bg-caution-soft rounded-md px-3 py-2 text-sm">
           {placeholderFees} active fee table(s) are still placeholders. Replace them with the official Copart/IAAI charts under <b>Fee tables</b> before launch.
         </p>
       )}
@@ -43,9 +48,9 @@ export default async function AdminOverview() {
         {tiles.map((t) => (
           <Card key={t.label}>
             <CardContent>
-              <div className="text-xs text-muted-foreground">{t.label}</div>
+              <div className="text-muted-foreground text-xs">{t.label}</div>
               <div className="text-2xl font-semibold">{t.value}</div>
-              {t.sub && <div className="text-xs text-muted-foreground">{t.sub}</div>}
+              {t.sub && <div className="text-muted-foreground text-xs">{t.sub}</div>}
             </CardContent>
           </Card>
         ))}
@@ -129,7 +134,7 @@ export default async function AdminOverview() {
             {integrationStatus().map((i) => (
               <li key={i.key}>
                 <span className={i.enabled ? "text-go" : "text-muted-foreground"}>{i.enabled ? "●" : "○"}</span> {i.label}{" "}
-                <span className="text-xs text-muted-foreground">— {i.note}</span>
+                <span className="text-muted-foreground text-xs">— {i.note}</span>
               </li>
             ))}
           </ul>

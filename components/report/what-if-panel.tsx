@@ -37,7 +37,7 @@ export function SliderRow({
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between gap-2">
-        <Label htmlFor={id} className="text-xs font-normal text-muted-foreground">
+        <Label htmlFor={id} className="text-muted-foreground text-xs font-normal">
           {label}
         </Label>
         <span className="num text-sm font-medium" data-testid={testId ? `${testId}-value` : undefined}>
@@ -85,7 +85,7 @@ export function MoneyInput({
   };
   return (
     <div className="space-y-1.5">
-      <Label className="text-xs font-normal text-muted-foreground">{label}</Label>
+      <Label className="text-muted-foreground text-xs font-normal">{label}</Label>
       <Input
         inputMode="numeric"
         value={text}
@@ -106,15 +106,26 @@ const pct = (bps: number) => `${(bps / 100).toFixed(bps % 100 === 0 ? 0 : 1)}%`;
 
 export function WhatIfControls({ compact = false }: { compact?: boolean }) {
   const { assumptions: a, setAssumption, view, reset, save, saveDefaults, dirty, saving } = useReport();
-  const set = <K extends keyof Assumptions>(k: K) => (v: Assumptions[K]) => setAssumption(k, v);
+  const set =
+    <K extends keyof Assumptions>(k: K) =>
+    (v: Assumptions[K]) =>
+      setAssumption(k, v);
   const readOnly = view.readOnly;
   const exportAvailable = Boolean(view.base?.exportProfile);
   return (
     <div className={cn("space-y-5", compact && "space-y-4")}>
       <SliderRow label="Labor rate" value={a.laborRate} min={40} max={150} step={5} format={(v) => `$${v}/h`} onChange={set("laborRate")} testId="labor-rate" />
-      <SliderRow label="Paint materials" value={a.paintMaterialsPerHour} min={20} max={80} step={5} format={(v) => `$${v}/paint h`} onChange={set("paintMaterialsPerHour")} />
+      <SliderRow
+        label="Paint materials"
+        value={a.paintMaterialsPerHour}
+        min={20}
+        max={80}
+        step={5}
+        format={(v) => `$${v}/paint h`}
+        onChange={set("paintMaterialsPerHour")}
+      />
       <div className="space-y-2">
-        <Label className="text-xs font-normal text-muted-foreground">Parts source</Label>
+        <Label className="text-muted-foreground text-xs font-normal">Parts source</Label>
         <SegmentedControl
           ariaLabel="Preferred parts source"
           value={a.partsSourcePreference}
@@ -129,7 +140,7 @@ export function WhatIfControls({ compact = false }: { compact?: boolean }) {
       <SliderRow label="Parts discount" value={a.partsDiscountBps} min={0} max={4000} step={100} format={pct} onChange={set("partsDiscountBps")} />
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <Label htmlFor="wi-cont" className="text-xs font-normal text-muted-foreground">
+          <Label htmlFor="wi-cont" className="text-muted-foreground text-xs font-normal">
             Override contingency
           </Label>
           <Switch
@@ -139,13 +150,38 @@ export function WhatIfControls({ compact = false }: { compact?: boolean }) {
           />
         </div>
         {a.contingencyOverrideBps !== null && (
-          <SliderRow label="Contingency (expected case)" value={a.contingencyOverrideBps} min={0} max={5000} step={100} format={pct} onChange={(v) => setAssumption("contingencyOverrideBps", v)} />
+          <SliderRow
+            label="Contingency (expected case)"
+            value={a.contingencyOverrideBps}
+            min={0}
+            max={5000}
+            step={100}
+            format={pct}
+            onChange={(v) => setAssumption("contingencyOverrideBps", v)}
+          />
         )}
       </div>
       <Separator />
       <SliderRow label="Target profit (% of resale)" value={a.targetProfitBps} min={0} max={4000} step={100} format={pct} onChange={set("targetProfitBps")} />
-      <SliderRow label="Minimum profit" value={a.targetProfitMin} min={0} max={10000} step={250} format={(v) => formatUsd(v)} onChange={set("targetProfitMin")} testId="profit-min" />
-      <SliderRow label="Rebuilt-title value (× clean)" value={a.rebuiltFactorBps} min={5000} max={10000} step={100} format={pct} onChange={set("rebuiltFactorBps")} />
+      <SliderRow
+        label="Minimum profit"
+        value={a.targetProfitMin}
+        min={0}
+        max={10000}
+        step={250}
+        format={(v) => formatUsd(v)}
+        onChange={set("targetProfitMin")}
+        testId="profit-min"
+      />
+      <SliderRow
+        label="Rebuilt-title value (× clean)"
+        value={a.rebuiltFactorBps}
+        min={5000}
+        max={10000}
+        step={100}
+        format={pct}
+        onChange={set("rebuiltFactorBps")}
+      />
       <MoneyInput
         label="Clean market value override (expected)"
         value={a.mvCleanOverride}
@@ -153,14 +189,35 @@ export function WhatIfControls({ compact = false }: { compact?: boolean }) {
         onCommit={set("mvCleanOverride")}
       />
       <Separator />
-      <SliderRow label="Transport" value={a.transportCentsPerMile} min={50} max={400} step={5} format={(v) => `$${(v / 100).toFixed(2)}/mi`} onChange={set("transportCentsPerMile")} />
+      <SliderRow
+        label="Transport"
+        value={a.transportCentsPerMile}
+        min={50}
+        max={400}
+        step={5}
+        format={(v) => `$${(v / 100).toFixed(2)}/mi`}
+        onChange={set("transportCentsPerMile")}
+      />
       <div className="grid grid-cols-2 gap-3">
         <MoneyInput label="Distance (mi)" value={a.distanceOverride} placeholder={String(view.base?.distanceMiles ?? "")} onCommit={set("distanceOverride")} />
-        <MoneyInput label="Current bid" value={a.currentBidOverride} placeholder={view.base?.currentBid !== null && view.base?.currentBid !== undefined ? String(view.base.currentBid) : "—"} onCommit={set("currentBidOverride")} />
+        <MoneyInput
+          label="Current bid"
+          value={a.currentBidOverride}
+          placeholder={view.base?.currentBid !== null && view.base?.currentBid !== undefined ? String(view.base.currentBid) : "—"}
+          onCommit={set("currentBidOverride")}
+        />
       </div>
-      <SliderRow label="Holding time" value={a.holdingDaysExpected} min={0} max={120} step={5} format={(v) => `${v} days`} onChange={set("holdingDaysExpected")} />
+      <SliderRow
+        label="Holding time"
+        value={a.holdingDaysExpected}
+        min={0}
+        max={120}
+        step={5}
+        format={(v) => `${v} days`}
+        onChange={set("holdingDaysExpected")}
+      />
       <div className="space-y-2">
-        <Label className="text-xs font-normal text-muted-foreground">Buyer type</Label>
+        <Label className="text-muted-foreground text-xs font-normal">Buyer type</Label>
         <SegmentedControl
           ariaLabel="Buyer type"
           value={a.buyerType}
@@ -176,7 +233,7 @@ export function WhatIfControls({ compact = false }: { compact?: boolean }) {
         <SliderRow label="Sales tax" value={a.salesTaxBps} min={0} max={1200} step={25} format={pct} onChange={set("salesTaxBps")} />
       </div>
       <div className="space-y-2">
-        <Label className="text-xs font-normal text-muted-foreground">Exit strategy</Label>
+        <Label className="text-muted-foreground text-xs font-normal">Exit strategy</Label>
         <SegmentedControl
           ariaLabel="Exit strategy"
           value={a.exitStrategy}
@@ -189,23 +246,28 @@ export function WhatIfControls({ compact = false }: { compact?: boolean }) {
         {a.exitStrategy === "EXPORT" &&
           (exportAvailable ? (
             <div className="space-y-3">
-              <MoneyInput label="Destination resale value (USD)" value={a.destinationResaleOverride} placeholder="Enter to use export pricing" onCommit={set("destinationResaleOverride")} />
+              <MoneyInput
+                label="Destination resale value (USD)"
+                value={a.destinationResaleOverride}
+                placeholder="Enter to use export pricing"
+                onCommit={set("destinationResaleOverride")}
+              />
               <div className="flex items-center justify-between">
-                <Label htmlFor="wi-vat" className="text-xs font-normal text-muted-foreground">
+                <Label htmlFor="wi-vat" className="text-muted-foreground text-xs font-normal">
                   VAT recoverable (VAT-registered)
                 </Label>
                 <Switch id="wi-vat" checked={a.vatRecoverable} onCheckedChange={set("vatRecoverable")} />
               </div>
               {a.destinationResaleOverride === null && !view.base?.destinationResale && (
-                <p className="text-xs text-caution">Enter the destination resale value — until then the retail value is used.</p>
+                <p className="text-caution text-xs">Enter the destination resale value — until then the retail value is used.</p>
               )}
             </div>
           ) : (
-            <p className="text-xs text-muted-foreground">Choose an export profile in Settings, then re-run the analysis to price export costs.</p>
+            <p className="text-muted-foreground text-xs">Choose an export profile in Settings, then re-run the analysis to price export costs.</p>
           ))}
       </div>
       {!readOnly && (
-        <div className="sticky bottom-0 -mx-1 flex flex-wrap gap-2 border-t bg-card px-1 pt-3 pb-1">
+        <div className="bg-card sticky bottom-0 -mx-1 flex flex-wrap gap-2 border-t px-1 pt-3 pb-1">
           <Button size="sm" variant="ghost" onClick={reset} disabled={saving}>
             <RotateCcwIcon /> Reset
           </Button>
@@ -224,9 +286,9 @@ export function WhatIfControls({ compact = false }: { compact?: boolean }) {
 export function WhatIfHeading() {
   return (
     <div className="flex items-center gap-2">
-      <SlidersHorizontalIcon className="size-4 text-muted-foreground" />
+      <SlidersHorizontalIcon className="text-muted-foreground size-4" />
       <h2 className="font-semibold">What-if</h2>
-      <span className="text-xs text-muted-foreground">updates instantly</span>
+      <span className="text-muted-foreground text-xs">updates instantly</span>
     </div>
   );
 }

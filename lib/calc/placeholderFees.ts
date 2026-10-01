@@ -31,10 +31,7 @@ export const PLACEHOLDER_FIXED_FEES = [
   { label: "Environmental fee", amount: 15 },
 ];
 
-export function placeholderFeeSchedule(
-  source: FeeSchedule["source"] = "COPART",
-  buyerType: FeeSchedule["buyerType"] = "LICENSED_DEALER",
-): FeeSchedule {
+export function placeholderFeeSchedule(source: FeeSchedule["source"] = "COPART", buyerType: FeeSchedule["buyerType"] = "LICENSED_DEALER"): FeeSchedule {
   return {
     id: `placeholder-${source.toLowerCase()}-${buyerType.toLowerCase()}`,
     source,

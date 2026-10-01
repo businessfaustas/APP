@@ -1,6 +1,17 @@
 "use client";
 
-import { BookPlusIcon, CalendarClockIcon, CheckIcon, CopyIcon, ExternalLinkIcon, EyeIcon, FileDownIcon, Link2Icon, MapPinIcon, RefreshCwIcon } from "lucide-react";
+import {
+  BookPlusIcon,
+  CalendarClockIcon,
+  CheckIcon,
+  CopyIcon,
+  ExternalLinkIcon,
+  EyeIcon,
+  FileDownIcon,
+  Link2Icon,
+  MapPinIcon,
+  RefreshCwIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -71,20 +82,20 @@ export function ReportHeader() {
     <div className="space-y-3">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0 space-y-1.5">
-          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+          <div className="text-muted-foreground flex flex-wrap items-center gap-2 text-xs">
             <Badge variant="outline">{sourceLabel(l.source)}</Badge>
             {l.lotNumber && <span>Lot {l.lotNumber}</span>}
             {l.sourceUrl && (
-              <a href={l.sourceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 hover:text-foreground">
+              <a href={l.sourceUrl} target="_blank" rel="noopener noreferrer" className="hover:text-foreground inline-flex items-center gap-1">
                 View listing <ExternalLinkIcon className="size-3" />
               </a>
             )}
             {view.isDemo && <Badge variant="info">Demo data</Badge>}
           </div>
           <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl" data-testid="report-title">
-            {title} <span className="font-normal text-muted-foreground">{l.trim}</span>
+            {title} <span className="text-muted-foreground font-normal">{l.trim}</span>
           </h1>
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+          <div className="text-muted-foreground flex flex-wrap gap-x-4 gap-y-1 text-sm">
             {l.saleDate && (
               <span className="inline-flex items-center gap-1">
                 <CalendarClockIcon className="size-3.5" /> Sale {formatCountdown(l.saleDate)}
@@ -104,7 +115,9 @@ export function ReportHeader() {
                 {l.odometerBrand !== "ACTUAL" && l.odometerBrand !== "UNKNOWN" ? ` · ${l.odometerBrand.toLowerCase().replace(/_/g, " ")}` : ""}
               </Badge>
             )}
-            <Badge variant={l.titleCategory === "NON_REPAIRABLE" || l.titleCategory === "PARTS_ONLY" ? "stop" : l.titleCategory === "CLEAN" ? "go" : "secondary"}>
+            <Badge
+              variant={l.titleCategory === "NON_REPAIRABLE" || l.titleCategory === "PARTS_ONLY" ? "stop" : l.titleCategory === "CLEAN" ? "go" : "secondary"}
+            >
               {TITLE_LABELS[l.titleCategory]}
             </Badge>
             {l.primaryDamage && <Badge variant="secondary">{l.primaryDamage.toLowerCase()}</Badge>}
@@ -155,7 +168,7 @@ export function ReportHeader() {
               <CopyIcon />
             </Button>
           </div>
-          <Button variant="ghost" className={cn("justify-self-start text-stop")} onClick={() => void revoke()}>
+          <Button variant="ghost" className={cn("text-stop justify-self-start")} onClick={() => void revoke()}>
             Revoke link
           </Button>
         </DialogContent>

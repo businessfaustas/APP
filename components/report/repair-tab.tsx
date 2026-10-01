@@ -19,7 +19,19 @@ import { useReport } from "./report-context";
 
 const SOURCE_LABEL: Record<PartSource, string> = { OEM_NEW: "OEM", AFTERMARKET: "Aftermarket", USED: "Used" };
 
-function CellNumber({ value, onCommit, label, step = 1, disabled }: { value: number; onCommit: (v: number) => void; label: string; step?: number; disabled?: boolean }) {
+function CellNumber({
+  value,
+  onCommit,
+  label,
+  step = 1,
+  disabled,
+}: {
+  value: number;
+  onCommit: (v: number) => void;
+  label: string;
+  step?: number;
+  disabled?: boolean;
+}) {
   const [text, setText] = useState(String(value));
   // Re-sync the draft when the committed value changes (adjust state during render).
   const [synced, setSynced] = useState(value);
@@ -116,7 +128,7 @@ export function RepairTab() {
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Repair line items</CardTitle>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             Prices and hours shown are the expected case. Edit any cell — the max bid updates instantly. Hidden-damage lines count only in the scenarios shown.
           </p>
         </CardHeader>
@@ -145,15 +157,24 @@ export function RepairTab() {
                 return (
                   <TableRow key={l.id} className={cn(!l.included && "opacity-50")}>
                     <TableCell>
-                      <Checkbox aria-label={`Include ${l.partName}`} checked={l.included} disabled={ro} onCheckedChange={(c) => updateLine(l.id, { included: c === true })} />
+                      <Checkbox
+                        aria-label={`Include ${l.partName}`}
+                        checked={l.included}
+                        disabled={ro}
+                        onCheckedChange={(c) => updateLine(l.id, { included: c === true })}
+                      />
                     </TableCell>
                     <TableCell className="max-w-56 min-w-40 whitespace-normal">
                       <div className="text-sm font-medium">{l.partName}</div>
-                      <div className="mt-0.5 flex flex-wrap items-center gap-1 text-[11px] text-muted-foreground">
+                      <div className="text-muted-foreground mt-0.5 flex flex-wrap items-center gap-1 text-[11px]">
                         <span>
                           {ZONE_LABELS[l.zone]} · {l.kind === "SUBLET" ? "sublet" : l.action.toLowerCase()}
                         </span>
-                        {l.origin === "HIDDEN_LIKELY" && <Badge variant="caution">{Math.round(l.probability * 100)}% likely · {note}</Badge>}
+                        {l.origin === "HIDDEN_LIKELY" && (
+                          <Badge variant="caution">
+                            {Math.round(l.probability * 100)}% likely · {note}
+                          </Badge>
+                        )}
                         {l.origin === "RULE" && <Badge variant="info">rule</Badge>}
                         {l.priceOrigin === "AI_ESTIMATE" && <Badge variant="outline">AI price</Badge>}
                         {l.userEdited && <Badge variant="outline">edited</Badge>}
@@ -161,7 +182,10 @@ export function RepairTab() {
                     </TableCell>
                     <TableCell>
                       {available.length > 1 && !ro ? (
-                        <Select value={l.selectedSource ?? "AUTO"} onValueChange={(v) => updateLine(l.id, { selectedSource: v === "AUTO" ? null : (v as PartSource) })}>
+                        <Select
+                          value={l.selectedSource ?? "AUTO"}
+                          onValueChange={(v) => updateLine(l.id, { selectedSource: v === "AUTO" ? null : (v as PartSource) })}
+                        >
                           <SelectTrigger size="sm" className="h-7 w-28 text-xs" aria-label={`Source for ${l.partName}`}>
                             <SelectValue />
                           </SelectTrigger>
@@ -175,22 +199,42 @@ export function RepairTab() {
                           </SelectContent>
                         </Select>
                       ) : (
-                        <span className="text-xs text-muted-foreground">{available.length === 1 ? SOURCE_LABEL[available[0]!] : l.kind === "SUBLET" ? "Shop" : "—"}</span>
+                        <span className="text-muted-foreground text-xs">
+                          {available.length === 1 ? SOURCE_LABEL[available[0]!] : l.kind === "SUBLET" ? "Shop" : "—"}
+                        </span>
                       )}
                     </TableCell>
                     <TableCell className="text-right">
                       <CellNumber label={`Price for ${l.partName}`} value={price} disabled={ro} onCommit={(v) => updateLine(l.id, { priceOverride: v })} />
                     </TableCell>
                     <TableCell className="text-right">
-                      <CellNumber label={`Body hours for ${l.partName}`} step={0.1} value={l.bodyHours.mid} disabled={ro} onCommit={(v) => updateLine(l.id, { bodyHours: { low: v, mid: v, high: v } })} />
+                      <CellNumber
+                        label={`Body hours for ${l.partName}`}
+                        step={0.1}
+                        value={l.bodyHours.mid}
+                        disabled={ro}
+                        onCommit={(v) => updateLine(l.id, { bodyHours: { low: v, mid: v, high: v } })}
+                      />
                     </TableCell>
                     <TableCell className="text-right">
-                      <CellNumber label={`Paint hours for ${l.partName}`} step={0.1} value={l.paintHours.mid} disabled={ro} onCommit={(v) => updateLine(l.id, { paintHours: { low: v, mid: v, high: v } })} />
+                      <CellNumber
+                        label={`Paint hours for ${l.partName}`}
+                        step={0.1}
+                        value={l.paintHours.mid}
+                        disabled={ro}
+                        onCommit={(v) => updateLine(l.id, { paintHours: { low: v, mid: v, high: v } })}
+                      />
                     </TableCell>
                     <TableCell className="text-right">
-                      <CellNumber label={`Mechanical hours for ${l.partName}`} step={0.1} value={l.mechHours.mid} disabled={ro} onCommit={(v) => updateLine(l.id, { mechHours: { low: v, mid: v, high: v } })} />
+                      <CellNumber
+                        label={`Mechanical hours for ${l.partName}`}
+                        step={0.1}
+                        value={l.mechHours.mid}
+                        disabled={ro}
+                        onCommit={(v) => updateLine(l.id, { mechHours: { low: v, mid: v, high: v } })}
+                      />
                     </TableCell>
-                    <TableCell className="num text-right text-xs text-muted-foreground">{Math.round(l.confidence * 100)}%</TableCell>
+                    <TableCell className="num text-muted-foreground text-right text-xs">{Math.round(l.confidence * 100)}%</TableCell>
                     <TableCell>
                       {l.priceOrigin === "USER" && !ro && (
                         <Button size="icon" variant="ghost" className="size-7" aria-label={`Remove ${l.partName}`} onClick={() => removeLine(l.id)}>
@@ -248,7 +292,7 @@ export function RepairTab() {
                 </TableRow>
               </TableBody>
             </Table>
-            <p className="mt-2 text-xs text-muted-foreground">
+            <p className="text-muted-foreground mt-2 text-xs">
               Labor at ${assumptions.laborRate}/h · paint materials ${assumptions.paintMaterialsPerHour}/paint hour · contingency{" "}
               {formatBps(assumptions.contingencyOverrideBps ?? view.repair?.baseContingencyBps ?? 0, 0)} expected (−5 pts best, +10 pts worst).
             </p>

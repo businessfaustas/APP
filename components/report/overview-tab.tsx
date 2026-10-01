@@ -19,7 +19,7 @@ const LEVEL_META: Record<RiskFlag["level"], { label: string; Icon: typeof InfoIc
 };
 
 export function RiskFlagsList({ flags }: { flags: RiskFlag[] }) {
-  if (flags.length === 0) return <p className="text-sm text-muted-foreground">No risk flags.</p>;
+  if (flags.length === 0) return <p className="text-muted-foreground text-sm">No risk flags.</p>;
   return (
     <ul className="space-y-2.5" data-testid="risk-flags">
       {flags.map((f) => {
@@ -31,7 +31,7 @@ export function RiskFlagsList({ flags }: { flags: RiskFlag[] }) {
               <div className="text-sm font-medium">
                 {f.title} <span className={cn("ml-1 text-[11px] font-normal uppercase", m.cls)}>{m.label}</span>
               </div>
-              <div className="text-xs text-muted-foreground">{f.detail}</div>
+              <div className="text-muted-foreground text-xs">{f.detail}</div>
             </div>
           </li>
         );
@@ -57,12 +57,12 @@ export function OverviewTab() {
           <ul className="space-y-2 text-sm">
             {bullets.map((b) => (
               <li key={b} className="flex gap-2">
-                <span className="mt-2 size-1.5 shrink-0 rounded-full bg-primary" />
+                <span className="bg-primary mt-2 size-1.5 shrink-0 rounded-full" />
                 <span>{b}</span>
               </li>
             ))}
           </ul>
-          <p className="mt-3 text-xs text-muted-foreground">Summary written from the computed numbers at the time of analysis; the cards above update live.</p>
+          <p className="text-muted-foreground mt-3 text-xs">Summary written from the computed numbers at the time of analysis; the cards above update live.</p>
         </CardContent>
       </Card>
       <Card>

@@ -14,13 +14,15 @@ const DecodeResponse = z.object({
 const RecallsResponse = z.object({
   results: z
     .array(
-      z.object({
-        NHTSACampaignNumber: z.string().optional(),
-        Component: z.string().optional(),
-        Summary: z.string().optional(),
-        Remedy: z.string().optional(),
-        ReportReceivedDate: z.string().optional(),
-      }).passthrough(),
+      z
+        .object({
+          NHTSACampaignNumber: z.string().optional(),
+          Component: z.string().optional(),
+          Summary: z.string().optional(),
+          Remedy: z.string().optional(),
+          ReportReceivedDate: z.string().optional(),
+        })
+        .passthrough(),
     )
     .default([]),
 });
@@ -65,9 +67,7 @@ export async function nhtsaDecode(vin: string): Promise<DecodedVin> {
   const fuel = val(r, "FuelTypePrimary");
   const adasFields = ["AdaptiveCruiseControl", "ForwardCollisionWarning", "LaneDepartureWarning", "CIB", "LaneKeepSystem"].map((k) => val(r, k));
   const hasAdas = adasFields.some((v) => v && /standard|optional/i.test(v)) ? true : adasFields.every((v) => v === null) ? null : false;
-  const engine = displacement
-    ? `${Number(displacement).toFixed(1)}L${cylinders ? ` ${cylinders}-cyl` : ""}${turbo ? " Turbo" : ""}`
-    : val(r, "EngineModel");
+  const engine = displacement ? `${Number(displacement).toFixed(1)}L${cylinders ? ` ${cylinders}-cyl` : ""}${turbo ? " Turbo" : ""}` : val(r, "EngineModel");
   const transStyle = val(r, "TransmissionStyle");
   const speeds = val(r, "TransmissionSpeeds");
   return {
@@ -106,7 +106,10 @@ export async function nhtsaComplaints(make: string, model: string, year: number)
   const json = ComplaintsResponse.parse(await fetchJson(url, { timeoutMs: 12000 }));
   const counts = new Map<string, number>();
   for (const c of json.results) {
-    for (const comp of (c.components ?? "").split(",").map((s) => s.trim()).filter(Boolean)) {
+    for (const comp of (c.components ?? "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean)) {
       counts.set(comp, (counts.get(comp) ?? 0) + 1);
     }
   }
@@ -120,7 +123,16 @@ export async function nhtsaComplaints(make: string, model: string, year: number)
 export function buildVehicleInfo(args: {
   vin: string | null;
   decoded: DecodedVin | null;
-  listing: { year: number | null; make: string | null; model: string | null; trim: string | null; engine: string | null; fuel: string | null; drive: string | null; transmission: string | null };
+  listing: {
+    year: number | null;
+    make: string | null;
+    model: string | null;
+    trim: string | null;
+    engine: string | null;
+    fuel: string | null;
+    drive: string | null;
+    transmission: string | null;
+  };
   recalls: Recall[];
   complaints: { component: string; count: number }[];
   decodeSource: string;

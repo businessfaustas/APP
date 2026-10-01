@@ -19,7 +19,14 @@ export default async function ReferencesPage() {
         description="The estimator prices parts from this table first (AI estimates fill gaps) and keeps AI labor hours inside these ranges. Calibrate with your real invoices."
       />
       <ReferencesEditor
-        prices={prices.map((p) => ({ partKey: p.partKey, vehicleClass: p.vehicleClass as VehicleClass, source: p.source, priceLow: p.priceLow, priceHigh: p.priceHigh, isPlaceholder: p.isPlaceholder }))}
+        prices={prices.map((p) => ({
+          partKey: p.partKey,
+          vehicleClass: p.vehicleClass as VehicleClass,
+          source: p.source,
+          priceLow: p.priceLow,
+          priceHigh: p.priceHigh,
+          isPlaceholder: p.isPlaceholder,
+        }))}
         labor={labor}
       />
     </div>

@@ -48,15 +48,43 @@ const STEPS = [
 ];
 
 const FEATURES = [
-  { Icon: WrenchIcon, title: "Itemized repair estimate", body: "Parts by source (OEM, aftermarket, used), body, paint and mechanical hours at your labor rate, plus hidden-damage probabilities." },
-  { Icon: ChartScatterIcon, title: "Market value from comps", body: "Retail comparables adjusted for mileage and title brand, with best / expected / worst resale instead of one optimistic number." },
-  { Icon: ShieldAlertIcon, title: "Risk flags", body: "Non-repairable titles, flood signs, deployed airbags, EV battery exposure, frame damage, odometer issues and seller-specific traps." },
-  { Icon: CalculatorIcon, title: "What-if sliders", body: "Change labor rate, parts preference, resale, profit target or buyer type and the max bid updates instantly — no extra credit." },
+  {
+    Icon: WrenchIcon,
+    title: "Itemized repair estimate",
+    body: "Parts by source (OEM, aftermarket, used), body, paint and mechanical hours at your labor rate, plus hidden-damage probabilities.",
+  },
+  {
+    Icon: ChartScatterIcon,
+    title: "Market value from comps",
+    body: "Retail comparables adjusted for mileage and title brand, with best / expected / worst resale instead of one optimistic number.",
+  },
+  {
+    Icon: ShieldAlertIcon,
+    title: "Risk flags",
+    body: "Non-repairable titles, flood signs, deployed airbags, EV battery exposure, frame damage, odometer issues and seller-specific traps.",
+  },
+  {
+    Icon: CalculatorIcon,
+    title: "What-if sliders",
+    body: "Change labor rate, parts preference, resale, profit target or buyer type and the max bid updates instantly — no extra credit.",
+  },
   { Icon: LayersIcon, title: "Batch compare", body: "Paste up to 10 lots and rank them side by side by deal score, max bid headroom and expected profit." },
-  { Icon: BellIcon, title: "Watchlist reminders", body: "Save lots you like and get an email before the sale with your max bid, so you don't overpay in the heat of the auction." },
-  { Icon: GlobeIcon, title: "Export mode", body: "Landed cost to the EU — inland to port, ocean freight, insurance, duty and VAT on CIF — against destination resale prices." },
+  {
+    Icon: BellIcon,
+    title: "Watchlist reminders",
+    body: "Save lots you like and get an email before the sale with your max bid, so you don't overpay in the heat of the auction.",
+  },
+  {
+    Icon: GlobeIcon,
+    title: "Export mode",
+    body: "Landed cost to the EU — inland to port, ocean freight, insurance, duty and VAT on CIF — against destination resale prices.",
+  },
   { Icon: FileTextIcon, title: "PDF & share links", body: "Send a clean report to a partner, a body shop or a buyer with one read-only link." },
-  { Icon: PuzzleIcon, title: "Browser extension", body: "Analyze straight from the auction page, including photos and details that only show when you're signed in." },
+  {
+    Icon: PuzzleIcon,
+    title: "Browser extension",
+    body: "Analyze straight from the auction page, including photos and details that only show when you're signed in.",
+  },
 ];
 
 const FAQ = [
@@ -100,7 +128,7 @@ function SampleSummaryCard({ sample, className }: { sample: Sample; className?: 
             <div className="truncate font-semibold">
               {listing.year} {listing.make === "AUDI" ? "Audi" : listing.make} {listing.model} {listing.trim}
             </div>
-            <div className="text-xs text-muted-foreground">
+            <div className="text-muted-foreground text-xs">
               {listing.location.yardName} · {TITLE_LABELS[listing.titleCategory]} · Front end · {formatNumber(listing.odometer)} mi
             </div>
           </div>
@@ -108,15 +136,15 @@ function SampleSummaryCard({ sample, className }: { sample: Sample; className?: 
         </div>
         <div className="grid grid-cols-3 gap-3">
           <div>
-            <div className="text-xs text-muted-foreground">Max bid</div>
+            <div className="text-muted-foreground text-xs">Max bid</div>
             <div className="num text-2xl font-semibold tracking-tight">{formatUsd(calc.maxBid)}</div>
           </div>
           <div>
-            <div className="text-xs text-muted-foreground">Comfort bid</div>
+            <div className="text-muted-foreground text-xs">Comfort bid</div>
             <div className="num text-lg font-medium">{formatUsd(calc.comfortBid)}</div>
           </div>
           <div>
-            <div className="text-xs text-muted-foreground">Break-even</div>
+            <div className="text-muted-foreground text-xs">Break-even</div>
             <div className="num text-lg font-medium">{formatUsd(calc.breakEvenBid)}</div>
           </div>
         </div>
@@ -141,7 +169,7 @@ function SampleReport({ sample }: { sample: Sample }) {
           <table className="w-full text-sm">
             <caption className="sr-only">Resale, repair, other costs and profit per scenario</caption>
             <thead>
-              <tr className="border-b text-left text-xs text-muted-foreground">
+              <tr className="text-muted-foreground border-b text-left text-xs">
                 <th scope="col" className="py-2 font-medium" />
                 {keys.map((k) => (
                   <th key={k} scope="col" className="py-2 pl-3 text-right font-medium">
@@ -152,7 +180,7 @@ function SampleReport({ sample }: { sample: Sample }) {
             </thead>
             <tbody className="num">
               <tr className="border-b">
-                <th scope="row" className="py-2 text-left font-normal text-muted-foreground">
+                <th scope="row" className="text-muted-foreground py-2 text-left font-normal">
                   Resale
                 </th>
                 {keys.map((k) => (
@@ -162,7 +190,7 @@ function SampleReport({ sample }: { sample: Sample }) {
                 ))}
               </tr>
               <tr className="border-b">
-                <th scope="row" className="py-2 text-left font-normal text-muted-foreground">
+                <th scope="row" className="text-muted-foreground py-2 text-left font-normal">
                   Repair
                 </th>
                 {keys.map((k) => (
@@ -172,7 +200,7 @@ function SampleReport({ sample }: { sample: Sample }) {
                 ))}
               </tr>
               <tr className="border-b">
-                <th scope="row" className="py-2 text-left font-normal text-muted-foreground">
+                <th scope="row" className="text-muted-foreground py-2 text-left font-normal">
                   Bid, fees & other
                 </th>
                 {keys.map((k) => {
@@ -199,9 +227,9 @@ function SampleReport({ sample }: { sample: Sample }) {
               </tr>
             </tbody>
           </table>
-          <p className="mt-4 text-xs text-muted-foreground">
-            Current bid {formatUsd(listing.currentBid)}. Repair includes parts, labor at {formatUsd(DEFAULT_SETTINGS.laborRate)}/h, paint materials, probability-weighted hidden
-            damage (like a front radar calibration) and a contingency that grows in the worst case.
+          <p className="text-muted-foreground mt-4 text-xs">
+            Current bid {formatUsd(listing.currentBid)}. Repair includes parts, labor at {formatUsd(DEFAULT_SETTINGS.laborRate)}/h, paint materials,
+            probability-weighted hidden damage (like a front radar calibration) and a contingency that grows in the worst case.
           </p>
         </CardContent>
       </Card>
@@ -217,7 +245,7 @@ function SampleReport({ sample }: { sample: Sample }) {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <ClipboardCheckIcon className="size-4 text-primary" aria-hidden="true" /> Inspect first
+              <ClipboardCheckIcon className="text-primary size-4" aria-hidden="true" /> Inspect first
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -238,14 +266,17 @@ export default function LandingPage() {
   return (
     <>
       <section className="relative overflow-hidden border-b">
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,color-mix(in_oklab,var(--color-primary)_16%,transparent),transparent_60%)]" />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,color-mix(in_oklab,var(--color-primary)_16%,transparent),transparent_60%)]"
+        />
         <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-4 py-16 md:py-24 lg:grid-cols-[1.1fr_1fr]">
           <div className="space-y-6">
             <Badge variant="outline" className="gap-1.5 py-1">
               Copart · IAAI · Bid.cars
             </Badge>
             <h1 className="text-4xl font-semibold tracking-tight text-balance sm:text-5xl">Know your max bid before you bid.</h1>
-            <p className="max-w-xl text-lg text-pretty text-muted-foreground">
+            <p className="text-muted-foreground max-w-xl text-lg text-pretty">
               Paste a salvage auction link. AuctionPulse reads the VIN, title and every photo, prices the repair line by line, checks what the car sells for
               fixed, and tells you exactly where to stop bidding.
             </p>
@@ -259,7 +290,7 @@ export default function LandingPage() {
                 <Link href="#sample">See a sample report</Link>
               </Button>
             </div>
-            <p className="text-sm text-muted-foreground">3 free reports every month. No card needed.</p>
+            <p className="text-muted-foreground text-sm">3 free reports every month. No card needed.</p>
           </div>
           <SampleSummaryCard sample={sample} className="w-full lg:max-w-md lg:justify-self-end" />
         </div>
@@ -273,22 +304,22 @@ export default function LandingPage() {
           </div>
           <ol className="grid gap-4 md:grid-cols-3">
             {STEPS.map((s, i) => (
-              <li key={s.title} className="rounded-xl border bg-card p-5">
+              <li key={s.title} className="bg-card rounded-xl border p-5">
                 <div className="mb-4 flex items-center gap-3">
-                  <span className="flex size-9 items-center justify-center rounded-lg bg-primary/12 text-primary">
+                  <span className="bg-primary/12 text-primary flex size-9 items-center justify-center rounded-lg">
                     <s.Icon className="size-5" aria-hidden="true" />
                   </span>
-                  <span className="text-xs font-medium text-muted-foreground">Step {i + 1}</span>
+                  <span className="text-muted-foreground text-xs font-medium">Step {i + 1}</span>
                 </div>
                 <h3 className="font-semibold">{s.title}</h3>
-                <p className="mt-1.5 text-sm text-muted-foreground">{s.body}</p>
+                <p className="text-muted-foreground mt-1.5 text-sm">{s.body}</p>
               </li>
             ))}
           </ol>
         </div>
       </section>
 
-      <section id="sample" className="scroll-mt-16 border-b bg-muted/30">
+      <section id="sample" className="bg-muted/30 scroll-mt-16 border-b">
         <div className="mx-auto max-w-6xl space-y-8 px-4 py-16">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div className="max-w-2xl space-y-2">
@@ -316,10 +347,10 @@ export default function LandingPage() {
           <div className="grid gap-x-8 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map((f) => (
               <div key={f.title} className="flex gap-3">
-                <f.Icon className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden="true" />
+                <f.Icon className="text-primary mt-0.5 size-5 shrink-0" aria-hidden="true" />
                 <div>
                   <h3 className="font-medium">{f.title}</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">{f.body}</p>
+                  <p className="text-muted-foreground mt-1 text-sm">{f.body}</p>
                 </div>
               </div>
             ))}
@@ -349,7 +380,7 @@ export default function LandingPage() {
                     +
                   </span>
                 </summary>
-                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{f.a}</p>
+                <p className="text-muted-foreground mt-3 text-sm leading-relaxed">{f.a}</p>
               </details>
             ))}
           </div>

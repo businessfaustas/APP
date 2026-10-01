@@ -49,7 +49,10 @@ export async function PUT(req: Request) {
       active: b.active,
     };
     if (b.active) {
-      await prisma.feeSchedule.updateMany({ where: { source: b.source, buyerType: b.buyerType, id: b.id ? { not: b.id } : undefined }, data: { active: false } });
+      await prisma.feeSchedule.updateMany({
+        where: { source: b.source, buyerType: b.buyerType, id: b.id ? { not: b.id } : undefined },
+        data: { active: false },
+      });
     }
     const row = b.id ? await prisma.feeSchedule.update({ where: { id: b.id }, data }) : await prisma.feeSchedule.create({ data });
     return json({ schedule: row });

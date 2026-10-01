@@ -22,7 +22,7 @@ export function ScoreMeter({ score }: { score: number }) {
   return (
     <div className="space-y-1.5" role="meter" aria-valuemin={0} aria-valuemax={100} aria-valuenow={score} aria-label="Deal score">
       <div className="flex items-baseline justify-between">
-        <span className="text-xs text-muted-foreground">Deal score</span>
+        <span className="text-muted-foreground text-xs">Deal score</span>
         <span className="text-sm font-semibold">
           {score}
           <span className="text-muted-foreground">/100</span>
@@ -74,7 +74,7 @@ export function BidLadder({ calc, currentBid }: { calc: CalculationResult; curre
     const p = (m.v / top) * 100;
     const row = p - lastRow0 < minGapPct ? 1 : 0;
     if (row === 0) lastRow0 = p;
-    placed.push({ ...m, row, align: p < 10 ? "translate-x-0" : p > 88 || i === marks.length - 1 && p > 75 ? "-translate-x-full" : "-translate-x-1/2" });
+    placed.push({ ...m, row, align: p < 10 ? "translate-x-0" : p > 88 || (i === marks.length - 1 && p > 75) ? "-translate-x-full" : "-translate-x-1/2" });
   });
   const rows = placed.some((m) => m.row === 1) ? 2 : 1;
   return (
@@ -83,7 +83,7 @@ export function BidLadder({ calc, currentBid }: { calc: CalculationResult; curre
         {currentBid !== null && (
           <div className="absolute top-0 -translate-x-1/2 text-center" style={{ left: pct(currentBid) }}>
             <div className="text-[11px] font-medium whitespace-nowrap">Current {formatUsd(currentBid)}</div>
-            <div className="mx-auto h-3 w-0.5 bg-foreground" />
+            <div className="bg-foreground mx-auto h-3 w-0.5" />
           </div>
         )}
         <div className="flex h-3 w-full gap-0.5 overflow-hidden rounded-full">
@@ -95,11 +95,7 @@ export function BidLadder({ calc, currentBid }: { calc: CalculationResult; curre
         </div>
         <div className={cn("relative mt-1", rows > 1 ? "h-[4.5rem]" : "h-9")}>
           {placed.map((m) => (
-            <div
-              key={m.label}
-              className={cn("absolute text-[11px] leading-tight whitespace-nowrap", m.align)}
-              style={{ left: pct(m.v), top: m.row * 34 }}
-            >
+            <div key={m.label} className={cn("absolute text-[11px] leading-tight whitespace-nowrap", m.align)} style={{ left: pct(m.v), top: m.row * 34 }}>
               <div className="text-muted-foreground">{m.label}</div>
               <div className="num font-semibold">{formatUsd(m.v)}</div>
             </div>
@@ -117,10 +113,10 @@ function MarketMissing() {
     <Card>
       <CardContent className="space-y-3">
         <div className="flex items-start gap-2">
-          <InfoIcon className="mt-0.5 size-5 shrink-0 text-caution" />
+          <InfoIcon className="text-caution mt-0.5 size-5 shrink-0" />
           <div>
             <div className="font-semibold">Enter the market value to get your max bid</div>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               No market-data source is configured, so we can&apos;t price this car yet. Enter what it sells for with a clean title in your area (median of local
               listings).
             </p>
@@ -134,7 +130,13 @@ function MarketMissing() {
             if (n > 0) setAssumption("mvCleanOverride", n);
           }}
         >
-          <Input inputMode="numeric" placeholder="e.g. 17,700" value={value} onChange={(e) => setValue(e.target.value)} aria-label="Clean retail market value" />
+          <Input
+            inputMode="numeric"
+            placeholder="e.g. 17,700"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            aria-label="Clean retail market value"
+          />
           <Button type="submit">Calculate</Button>
         </form>
       </CardContent>
@@ -161,11 +163,11 @@ export function DealSummary({ calc, currentBid }: { calc: CalculationResult; cur
             <VerdictBadge verdict={calc.verdict} size="lg" />
             {calc.maxBid !== null ? (
               <div>
-                <div className="text-sm text-muted-foreground">Do not bid above</div>
+                <div className="text-muted-foreground text-sm">Do not bid above</div>
                 <div className="text-5xl font-semibold tracking-tight" data-testid="max-bid">
                   {formatUsd(calc.maxBid)}
                 </div>
-                <div className="mt-1 text-sm text-muted-foreground">
+                <div className="text-muted-foreground mt-1 text-sm">
                   {currentBid !== null ? (
                     <>
                       Current bid <span className="num text-foreground">{formatUsd(currentBid)}</span>
@@ -185,16 +187,20 @@ export function DealSummary({ calc, currentBid }: { calc: CalculationResult; cur
               <div className="text-lg font-semibold">No bid reaches your profit target</div>
             )}
           </div>
-          <div className="space-y-3 rounded-lg bg-muted/50 p-4">
+          <div className="bg-muted/50 space-y-3 rounded-lg p-4">
             <div>
-              <div className="text-xs text-muted-foreground">Expected profit at max bid</div>
+              <div className="text-muted-foreground text-xs">Expected profit at max bid</div>
               <div className={cn("text-2xl font-semibold", (e.profitAtMaxBid ?? 0) < 0 && "text-stop")}>{formatUsd(e.profitAtMaxBid)}</div>
-              <div className="text-xs text-muted-foreground">ROI {formatBps(e.roiAtMaxBidBps)} · target {formatUsd(calc.targetProfit)}</div>
+              <div className="text-muted-foreground text-xs">
+                ROI {formatBps(e.roiAtMaxBidBps)} · target {formatUsd(calc.targetProfit)}
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div>
                 <div className="text-muted-foreground">Worst case</div>
-                <div className={cn("num font-medium", (calc.scenarios.worst.profitAtMaxBid ?? 0) < 0 && "text-stop")}>{formatUsd(calc.scenarios.worst.profitAtMaxBid)}</div>
+                <div className={cn("num font-medium", (calc.scenarios.worst.profitAtMaxBid ?? 0) < 0 && "text-stop")}>
+                  {formatUsd(calc.scenarios.worst.profitAtMaxBid)}
+                </div>
               </div>
               <div>
                 <div className="text-muted-foreground">Best case</div>
@@ -213,7 +219,12 @@ export function DealSummary({ calc, currentBid }: { calc: CalculationResult; cur
             <ul className="space-y-1.5 text-sm">
               {calc.verdictReasons.slice(0, 3).map((r) => (
                 <li key={r} className="flex gap-2">
-                  <span className={cn("mt-1.5 size-1.5 shrink-0 rounded-full", calc.verdict === "GO" ? "bg-go" : calc.verdict === "BE_CAUTIOUS" ? "bg-caution" : "bg-stop")} />
+                  <span
+                    className={cn(
+                      "mt-1.5 size-1.5 shrink-0 rounded-full",
+                      calc.verdict === "GO" ? "bg-go" : calc.verdict === "BE_CAUTIOUS" ? "bg-caution" : "bg-stop",
+                    )}
+                  />
                   <span>{r}</span>
                 </li>
               ))}

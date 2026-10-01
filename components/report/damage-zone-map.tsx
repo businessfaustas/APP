@@ -50,7 +50,7 @@ export function DamageZoneMap({
   return (
     <div className="flex flex-col items-center gap-3">
       <svg viewBox="0 0 200 360" className="h-auto w-full max-w-[220px]" role="group" aria-label="Damage map (top view, front up)">
-        <path d="M44 14 Q100 -4 156 14 L184 120 V250 L176 318 Q100 368 24 318 L16 250 V120 Z" className="fill-none stroke-border" strokeWidth={2} />
+        <path d="M44 14 Q100 -4 156 14 L184 120 V250 L176 318 Q100 368 24 318 L16 250 V120 Z" className="stroke-border fill-none" strokeWidth={2} />
         {SHAPES.map((s) => {
           const sev = severities[s.zone];
           const isSel = selected === s.zone;
@@ -63,7 +63,7 @@ export function DamageZoneMap({
                 aria-pressed={isSel}
                 aria-label={`${ZONE_LABELS[s.zone]}: ${sev ? `severity ${sev} of 10` : "no damage found"}`}
                 className={cn(
-                  "cursor-pointer stroke-card transition-opacity outline-none hover:opacity-80 focus-visible:stroke-ring",
+                  "stroke-card focus-visible:stroke-ring cursor-pointer transition-opacity outline-none hover:opacity-80",
                   fillClass(sev),
                   isSel && "stroke-foreground",
                 )}
@@ -79,7 +79,13 @@ export function DamageZoneMap({
                 <title>{`${ZONE_LABELS[s.zone]}${sev ? ` — severity ${sev}/10` : ""}`}</title>
               </path>
               {sev ? (
-                <text x={s.lx} y={s.ly} textAnchor="middle" dominantBaseline="central" className="pointer-events-none fill-foreground text-[11px] font-semibold">
+                <text
+                  x={s.lx}
+                  y={s.ly}
+                  textAnchor="middle"
+                  dominantBaseline="central"
+                  className="fill-foreground pointer-events-none text-[11px] font-semibold"
+                >
                   {sev}
                 </text>
               ) : null}
@@ -93,23 +99,23 @@ export function DamageZoneMap({
         className={cn(
           "rounded-full border px-3 py-1 text-xs",
           under ? (under > 6 ? "border-stop/50 bg-stop-soft" : "border-caution/50 bg-caution-soft") : "text-muted-foreground",
-          selected === "undercarriage" && "ring-2 ring-foreground",
+          selected === "undercarriage" && "ring-foreground ring-2",
         )}
       >
         Undercarriage{under ? ` · ${under}/10` : ""}
       </button>
-      <div className="flex flex-wrap justify-center gap-3 text-[11px] text-muted-foreground">
+      <div className="text-muted-foreground flex flex-wrap justify-center gap-3 text-[11px]">
         <span className="flex items-center gap-1">
-          <span className="size-2.5 rounded-sm bg-muted" /> none
+          <span className="bg-muted size-2.5 rounded-sm" /> none
         </span>
         <span className="flex items-center gap-1">
-          <span className="size-2.5 rounded-sm bg-caution/35" /> minor 1–3
+          <span className="bg-caution/35 size-2.5 rounded-sm" /> minor 1–3
         </span>
         <span className="flex items-center gap-1">
-          <span className="size-2.5 rounded-sm bg-caution/80" /> moderate 4–6
+          <span className="bg-caution/80 size-2.5 rounded-sm" /> moderate 4–6
         </span>
         <span className="flex items-center gap-1">
-          <span className="size-2.5 rounded-sm bg-stop/80" /> severe 7–10
+          <span className="bg-stop/80 size-2.5 rounded-sm" /> severe 7–10
         </span>
       </div>
     </div>

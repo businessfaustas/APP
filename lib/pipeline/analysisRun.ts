@@ -84,7 +84,13 @@ export async function runAnalysis(analysisId: string, step: StepRunner, now: Dat
         const fresh = existing && now.getTime() - existing.fetchedAt.getTime() < TTL.hours(6);
         const parsedRaw = existing ? NormalizedListingSchema.safeParse(existing.rawData) : null;
         if (fresh && parsedRaw?.success && (!demoFixture || existing.extractionMethod === "FIXTURE")) {
-          return { ok: true as const, listingId: existing.id, listing: parsedRaw.data, provider: "Cached listing", isDemo: existing.extractionMethod === "FIXTURE" };
+          return {
+            ok: true as const,
+            listingId: existing.id,
+            listing: parsedRaw.data,
+            provider: "Cached listing",
+            isDemo: existing.extractionMethod === "FIXTURE",
+          };
         }
       }
       try {
@@ -188,9 +194,16 @@ export async function runAnalysis(analysisId: string, step: StepRunner, now: Dat
           return { ok: false, stored: 0, failed: listing.photoUrls.length };
         }
       }),
-      step.run("decode-and-check", async () => decodeAndCheck(listing, demoFixture ? { vehicle: demoFixture.vehicle, history: demoFixture.history } : null, now)),
+      step.run("decode-and-check", async () =>
+        decodeAndCheck(listing, demoFixture ? { vehicle: demoFixture.vehicle, history: demoFixture.history } : null, now),
+      ),
     ]);
-    sources.photos = { provider: "Photo store", isDemo: Boolean(demoFixture), ok: photoResult.ok, note: `${photoResult.stored} stored${photoResult.failed ? `, ${photoResult.failed} failed` : ""}` };
+    sources.photos = {
+      provider: "Photo store",
+      isDemo: Boolean(demoFixture),
+      ok: photoResult.ok,
+      note: `${photoResult.stored} stored${photoResult.failed ? `, ${photoResult.failed} failed` : ""}`,
+    };
     sources.vehicle = vehicleResult.vehicleSource;
     sources.history = vehicleResult.historySource;
     const vehicle: VehicleInfo = vehicleResult.vehicle;
@@ -204,19 +217,39 @@ export async function runAnalysis(analysisId: string, step: StepRunner, now: Dat
         await progress(analysisId, "vision-audit", 40);
         if (demoFixture) return { damage: demoFixture.damage, fromPhotos: true, provider: "Demo fixture", isDemo: true, note: null as string | null };
         if (!features.ai()) {
-          return { damage: heuristicDamage(listing, "AI isn't configured, so the photos weren't analyzed."), fromPhotos: false, provider: "Damage description", isDemo: false, note: "No AI key" };
+          return {
+            damage: heuristicDamage(listing, "AI isn't configured, so the photos weren't analyzed."),
+            fromPhotos: false,
+            provider: "Damage description",
+            isDemo: false,
+            note: "No AI key",
+          };
         }
         const photos = await loadPhotosForVision(listingId, env().AI_MAX_PHOTOS);
         if (photos.length === 0) {
-          return { damage: heuristicDamage(listing, "No photos were available."), fromPhotos: false, provider: "Damage description", isDemo: false, note: "No photos" };
+          return {
+            damage: heuristicDamage(listing, "No photos were available."),
+            fromPhotos: false,
+            provider: "Damage description",
+            isDemo: false,
+            note: "No photos",
+          };
         }
         try {
-          const key = `vision:${modelId("vision")}:${createHash("sha256").update(photos.map((p) => p.sha256).join(",")).digest("hex")}`;
+          const key = `vision:${modelId("vision")}:${createHash("sha256")
+            .update(photos.map((p) => p.sha256).join(","))
+            .digest("hex")}`;
           const damage = await cached(key, TTL.days(30), () => runVisionAudit({ listing, photos, analysisId }));
           return { damage, fromPhotos: true, provider: `AI vision (${modelId("vision")})`, isDemo: false, note: `${photos.length} photos` };
         } catch (err) {
           console.error("Vision audit failed", err);
-          return { damage: heuristicDamage(listing, "The photo analysis failed."), fromPhotos: false, provider: "Damage description", isDemo: false, note: "Vision failed" };
+          return {
+            damage: heuristicDamage(listing, "The photo analysis failed."),
+            fromPhotos: false,
+            provider: "Damage description",
+            isDemo: false,
+            note: "Vision failed",
+          };
         }
       }),
       step.run("market-valuation", async () => {
@@ -246,7 +279,13 @@ export async function runAnalysis(analysisId: string, step: StepRunner, now: Dat
         const milesToPort = exportProfile
           ? estimateDistance({ zip: listing.location.zip, city: listing.location.city, state: listing.location.state }, exportProfile.departurePortZip).miles
           : null;
-        const logistics: LogisticsInfo = { distanceMiles: dist.miles, method: dist.method, yardZip: listing.location.zip, userZip: snapshot.homeZip, milesToPort };
+        const logistics: LogisticsInfo = {
+          distanceMiles: dist.miles,
+          method: dist.method,
+          yardZip: listing.location.zip,
+          userZip: snapshot.homeZip,
+          milesToPort,
+        };
         return { market, logistics };
       }),
     ]);
@@ -256,7 +295,13 @@ export async function runAnalysis(analysisId: string, step: StepRunner, now: Dat
     sources.logistics = { provider: marketResult.logistics.method, isDemo: Boolean(demoFixture), ok: marketResult.logistics.method !== "DEFAULT", note: null };
     await prisma.analysis.update({
       where: { id: analysisId },
-      data: { damage: json(damage), damageFromPhotos: visionResult.fromPhotos, market: json(marketResult.market), logistics: json(marketResult.logistics), progress: 60 },
+      data: {
+        damage: json(damage),
+        damageFromPhotos: visionResult.fromPhotos,
+        market: json(marketResult.market),
+        logistics: json(marketResult.logistics),
+        progress: 60,
+      },
     });
 
     // ── 4. Repair estimate ──────────────────────────────────────────────────
@@ -269,9 +314,7 @@ export async function runAnalysis(analysisId: string, step: StepRunner, now: Dat
         vehicle,
         listing,
         lookup,
-        aiPrices: features.ai()
-          ? (parts) => llmEstimatePartPrices({ vehicle: vehicleLabel(listing), parts, analysisId })
-          : null,
+        aiPrices: features.ai() ? (parts) => llmEstimatePartPrices({ vehicle: vehicleLabel(listing), parts, analysisId }) : null,
       });
     });
     sources.repair = { provider: demoFixture ? "Demo fixture" : "Estimator (reference prices + rules)", isDemo: Boolean(demoFixture), ok: true, note: null };
@@ -457,15 +500,19 @@ async function decodeAndCheck(
 }
 
 async function dbPriceLookup(vehicleClass: string): Promise<PriceLookup> {
-  const [prices, labor] = await Promise.all([
-    prisma.partPriceReference.findMany({ where: { vehicleClass } }),
-    prisma.laborReference.findMany(),
-  ]);
+  const [prices, labor] = await Promise.all([prisma.partPriceReference.findMany({ where: { vehicleClass } }), prisma.laborReference.findMany()]);
   const priceMap = new Map(prices.map((p) => [`${p.partKey}:${p.source}`, { low: p.priceLow, high: p.priceHigh }]));
   const laborMap = new Map<string, LaborRange>(
     labor.map((l) => [
       l.partKey,
-      { bodyLow: l.bodyHoursLow, bodyHigh: l.bodyHoursHigh, paintLow: l.paintHoursLow, paintHigh: l.paintHoursHigh, mechLow: l.mechHoursLow, mechHigh: l.mechHoursHigh },
+      {
+        bodyLow: l.bodyHoursLow,
+        bodyHigh: l.bodyHoursHigh,
+        paintLow: l.paintHoursLow,
+        paintHigh: l.paintHoursHigh,
+        mechLow: l.mechHoursLow,
+        mechHigh: l.mechHoursHigh,
+      },
     ]),
   );
   return {

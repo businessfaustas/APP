@@ -21,7 +21,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <div className="flex flex-wrap items-center gap-1 border-b pb-3">
           <span className="mr-3 font-semibold">Admin</span>
           {TABS.map((t) => (
-            <Link key={t.href} href={t.href} className="rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground">
+            <Link key={t.href} href={t.href} className="text-muted-foreground hover:bg-accent hover:text-accent-foreground rounded-md px-3 py-1.5 text-sm">
               {t.label}
             </Link>
           ))}

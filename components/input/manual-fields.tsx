@@ -35,7 +35,13 @@ export function ManualFields({ value, onChange }: { value: ManualListing; onChan
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
       <div className="col-span-2 space-y-1.5">
         <Label htmlFor="m-vin">VIN</Label>
-        <Input id="m-vin" value={value.vin ?? ""} onChange={(e) => set({ vin: e.target.value.toUpperCase() || null })} placeholder="17 characters" maxLength={17} />
+        <Input
+          id="m-vin"
+          value={value.vin ?? ""}
+          onChange={(e) => set({ vin: e.target.value.toUpperCase() || null })}
+          placeholder="17 characters"
+          maxLength={17}
+        />
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="m-year">Year</Label>
@@ -103,7 +109,13 @@ export function ManualFields({ value, onChange }: { value: ManualListing; onChan
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="m-zip">Yard ZIP</Label>
-        <Input id="m-zip" inputMode="numeric" value={value.zip ?? ""} onChange={(e) => set({ zip: e.target.value.replace(/\D/g, "").slice(0, 5) || null })} placeholder="75236" />
+        <Input
+          id="m-zip"
+          inputMode="numeric"
+          value={value.zip ?? ""}
+          onChange={(e) => set({ zip: e.target.value.replace(/\D/g, "").slice(0, 5) || null })}
+          placeholder="75236"
+        />
       </div>
     </div>
   );

@@ -53,7 +53,7 @@ export function PhotoUpload({ value, onChange, className }: { value: string[]; o
           void upload(e.dataTransfer.files);
         }}
         className={cn(
-          "flex w-full flex-col items-center justify-center gap-1 rounded-lg border border-dashed px-4 py-5 text-sm text-muted-foreground transition-colors hover:bg-muted/50",
+          "text-muted-foreground hover:bg-muted/50 flex w-full flex-col items-center justify-center gap-1 rounded-lg border border-dashed px-4 py-5 text-sm transition-colors",
           drag && "border-primary bg-primary/5",
         )}
       >
@@ -74,7 +74,7 @@ export function PhotoUpload({ value, onChange, className }: { value: string[]; o
       {value.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {value.map((ref) => (
-            <div key={ref} className="relative size-16 overflow-hidden rounded-md border bg-muted">
+            <div key={ref} className="bg-muted relative size-16 overflow-hidden rounded-md border">
               {previews[ref] && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={previews[ref]} alt="" className="size-full object-cover" />

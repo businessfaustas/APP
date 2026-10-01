@@ -19,25 +19,15 @@ export function TableBody({ className, ...props }: React.ComponentProps<"tbody">
 }
 
 export function TableFooter({ className, ...props }: React.ComponentProps<"tfoot">) {
-  return <tfoot className={cn("border-t bg-muted/50 font-medium [&>tr]:last:border-b-0", className)} {...props} />;
+  return <tfoot className={cn("bg-muted/50 border-t font-medium [&>tr]:last:border-b-0", className)} {...props} />;
 }
 
 export function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
-  return (
-    <tr className={cn("border-b transition-colors hover:bg-muted/40 data-[state=selected]:bg-muted", className)} {...props} />
-  );
+  return <tr className={cn("hover:bg-muted/40 data-[state=selected]:bg-muted border-b transition-colors", className)} {...props} />;
 }
 
 export function TableHead({ className, ...props }: React.ComponentProps<"th">) {
-  return (
-    <th
-      className={cn(
-        "h-9 px-2 text-left align-middle text-xs font-medium whitespace-nowrap text-muted-foreground",
-        className,
-      )}
-      {...props}
-    />
-  );
+  return <th className={cn("text-muted-foreground h-9 px-2 text-left align-middle text-xs font-medium whitespace-nowrap", className)} {...props} />;
 }
 
 export function TableCell({ className, ...props }: React.ComponentProps<"td">) {

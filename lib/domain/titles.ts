@@ -79,8 +79,6 @@ export function parseMoney(raw: string | null | undefined): number | null {
 /** Parses odometer strings like "61,200 mi (Actual)" → 61200. */
 export function parseOdometer(raw: string | null | undefined): number | null {
   if (!raw) return null;
-  const m = raw
-    .replace(/(\d)[\s,.](?=\d{3}\b)/g, "$1")
-    .match(/(\d{1,7})/);
+  const m = raw.replace(/(\d)[\s,.](?=\d{3}\b)/g, "$1").match(/(\d{1,7})/);
   return m ? Number(m[1]) : null;
 }

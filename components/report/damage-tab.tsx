@@ -34,7 +34,9 @@ export function DamageTab() {
   const zoneLines = lineItems.filter((l) => zone === null || l.zone === zone);
   const highlight = useMemo(() => (zone === null ? null : new Set(lineItems.filter((l) => l.zone === zone).flatMap((l) => l.photoRefs))), [zone, lineItems]);
   if (!d) return null;
-  const present = new Set(d.photo_coverage.angles_present.map((a) => (a === "front_left" || a === "front_right" ? "front" : a === "rear_left" || a === "rear_right" ? "rear" : a)));
+  const present = new Set(
+    d.photo_coverage.angles_present.map((a) => (a === "front_left" || a === "front_right" ? "front" : a === "rear_left" || a === "rear_right" ? "rear" : a)),
+  );
 
   return (
     <div className="grid gap-4 lg:grid-cols-[260px_1fr]">
@@ -55,12 +57,12 @@ export function DamageTab() {
             <ul className="grid grid-cols-2 gap-1.5 text-sm">
               {ANGLES.map((a) => (
                 <li key={a} className="flex items-center gap-1.5">
-                  {present.has(a) ? <CheckIcon className="size-3.5 text-go" /> : <XIcon className="size-3.5 text-stop" />}
+                  {present.has(a) ? <CheckIcon className="text-go size-3.5" /> : <XIcon className="text-stop size-3.5" />}
                   <span className={cn(!present.has(a) && "text-muted-foreground")}>{ANGLE_LABEL[a]}</span>
                 </li>
               ))}
             </ul>
-            <p className="mt-2 text-xs text-muted-foreground">Image quality: {d.photo_coverage.image_quality}</p>
+            <p className="text-muted-foreground mt-2 text-xs">Image quality: {d.photo_coverage.image_quality}</p>
           </CardContent>
         </Card>
       </div>
@@ -74,14 +76,18 @@ export function DamageTab() {
             <div className="flex flex-wrap gap-2">
               <Badge variant={d.severity_score >= 7 ? "stop" : d.severity_score >= 4 ? "caution" : "go"}>Severity {d.severity_score}/10</Badge>
               <Badge variant="outline">Confidence {Math.round(d.overall_confidence * 100)}%</Badge>
-              <Badge variant={d.airbag_deployed ? "caution" : "outline"}>{d.airbag_deployed ? `Airbags: ${d.airbags_deployed_list.join(", ") || "deployed"}` : "Airbags intact"}</Badge>
-              <Badge variant={d.frame_damage_suspected ? "stop" : "outline"}>{d.frame_damage_suspected ? "Frame damage suspected" : "No frame damage seen"}</Badge>
+              <Badge variant={d.airbag_deployed ? "caution" : "outline"}>
+                {d.airbag_deployed ? `Airbags: ${d.airbags_deployed_list.join(", ") || "deployed"}` : "Airbags intact"}
+              </Badge>
+              <Badge variant={d.frame_damage_suspected ? "stop" : "outline"}>
+                {d.frame_damage_suspected ? "Frame damage suspected" : "No frame damage seen"}
+              </Badge>
               {d.flood_indicators.length > 0 && <Badge variant="stop">Flood indicators</Badge>}
               {d.engine_bay_intact === false && <Badge variant="stop">Engine bay damaged</Badge>}
             </div>
-            {d.frame_evidence && <p className="text-xs text-muted-foreground">Frame evidence: {d.frame_evidence}</p>}
+            {d.frame_evidence && <p className="text-muted-foreground text-xs">Frame evidence: {d.frame_evidence}</p>}
             {!view.damageFromPhotos && (
-              <p className="rounded-md bg-caution-soft px-3 py-2 text-xs">
+              <p className="bg-caution-soft rounded-md px-3 py-2 text-xs">
                 These findings come from the listing&apos;s damage description, not the photos. Review the repair lines.
               </p>
             )}
@@ -91,14 +97,16 @@ export function DamageTab() {
           <CardHeader className="flex-row items-center justify-between">
             <CardTitle className="text-base">Photos{zone ? ` — ${ZONE_LABELS[zone]}` : ""}</CardTitle>
             {zone && (
-              <button type="button" className="text-xs text-muted-foreground underline" onClick={() => setZone(null)}>
+              <button type="button" className="text-muted-foreground text-xs underline" onClick={() => setZone(null)}>
                 Show all
               </button>
             )}
           </CardHeader>
           <CardContent>
             <PhotoGallery photos={view.photos} findings={findings} highlight={highlight} />
-            {view.photos.some((p) => p.url.startsWith("/demo-photos/")) && <p className="mt-2 text-xs text-muted-foreground">Demo lots use illustrative drawings, not real auction photos.</p>}
+            {view.photos.some((p) => p.url.startsWith("/demo-photos/")) && (
+              <p className="text-muted-foreground mt-2 text-xs">Demo lots use illustrative drawings, not real auction photos.</p>
+            )}
           </CardContent>
         </Card>
         <Card>
@@ -111,7 +119,7 @@ export function DamageTab() {
                 <li key={l.id} className="flex items-start justify-between gap-3 py-2">
                   <div className="min-w-0">
                     <div className="font-medium">{l.partName}</div>
-                    <div className="text-xs text-muted-foreground">
+                    <div className="text-muted-foreground text-xs">
                       {ZONE_LABELS[l.zone]} · {l.action.toLowerCase()}
                       {l.reason ? ` · ${l.reason}` : ""}
                     </div>
@@ -127,7 +135,7 @@ export function DamageTab() {
                   </div>
                 </li>
               ))}
-              {zoneLines.length === 0 && <li className="py-2 text-muted-foreground">No parts in this zone.</li>}
+              {zoneLines.length === 0 && <li className="text-muted-foreground py-2">No parts in this zone.</li>}
             </ul>
           </CardContent>
         </Card>

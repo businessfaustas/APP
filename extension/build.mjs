@@ -43,7 +43,10 @@ await writeFile(join(dist, "manifest.json"), JSON.stringify(manifest, null, 2));
 
 const svg = await readFile(join(here, "..", "app", "icon.svg"));
 for (const size of [16, 32, 48, 128]) {
-  await sharp(svg, { density: 384 }).resize(size, size).png().toFile(join(dist, "icons", `icon-${size}.png`));
+  await sharp(svg, { density: 384 })
+    .resize(size, size)
+    .png()
+    .toFile(join(dist, "icons", `icon-${size}.png`));
 }
 
 console.log(`Extension built → ${dist} (default app URL ${appUrl})`);

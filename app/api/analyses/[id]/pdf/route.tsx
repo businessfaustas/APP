@@ -20,7 +20,11 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   const lineItems = view.overrides.lineItems ?? view.base.lineItems;
   const calc = runAnalysisCalc({ ...view.base, lineItems }, assumptions);
   const buffer = await renderToBuffer(<ReportPdf view={view} calc={calc} assumptions={assumptions} />);
-  const name = [view.listing.year, view.listing.make, view.listing.model, view.listing.lotNumber].filter(Boolean).join("-").replace(/[^\w-]+/g, "_") || "report";
+  const name =
+    [view.listing.year, view.listing.make, view.listing.model, view.listing.lotNumber]
+      .filter(Boolean)
+      .join("-")
+      .replace(/[^\w-]+/g, "_") || "report";
   return new Response(new Uint8Array(buffer), {
     headers: {
       "content-type": "application/pdf",

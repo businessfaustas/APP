@@ -52,7 +52,7 @@ export function NewBatchForm({ demoLots }: { demoLots: DemoLot[] }) {
             onChange={(e) => setText(e.target.value)}
             placeholder={"https://www.copart.com/lot/…\nhttps://www.iaai.com/VehicleDetail/…\nhttps://bid.cars/en/lot/…"}
           />
-          <div className="flex justify-between text-xs text-muted-foreground">
+          <div className="text-muted-foreground flex justify-between text-xs">
             <span>{lines.length}/10 lots · 1 credit each</span>
             {invalid.length > 0 && <span className="text-caution">{invalid.length} line(s) aren&apos;t links or VINs</span>}
           </div>

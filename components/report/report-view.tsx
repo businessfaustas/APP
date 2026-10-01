@@ -1,7 +1,17 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { CarIcon, ClipboardListIcon, FileWarningIcon, LayoutDashboardIcon, ReceiptIcon, SlidersHorizontalIcon, TrendingUpIcon, TruckIcon, WrenchIcon } from "lucide-react";
+import {
+  CarIcon,
+  ClipboardListIcon,
+  FileWarningIcon,
+  LayoutDashboardIcon,
+  ReceiptIcon,
+  SlidersHorizontalIcon,
+  TrendingUpIcon,
+  TruckIcon,
+  WrenchIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -27,7 +37,7 @@ import { WhatIfControls, WhatIfHeading } from "./what-if-panel";
 
 export function Disclaimer() {
   return (
-    <p className="text-xs text-muted-foreground" data-testid="disclaimer">
+    <p className="text-muted-foreground text-xs" data-testid="disclaimer">
       Estimates only — not an appraisal, insurance estimate or guarantee. Verify fees, title rules and vehicle condition before bidding. You are responsible for
       your bids.
     </p>
@@ -38,7 +48,7 @@ function MobileBar() {
   const { calc, marketMissing } = useReport();
   if (!calc || marketMissing) return null;
   return (
-    <div className="fixed inset-x-0 bottom-[calc(3.6rem+env(safe-area-inset-bottom))] z-20 border-t bg-background/95 px-4 py-2 backdrop-blur md:bottom-0 lg:hidden">
+    <div className="bg-background/95 fixed inset-x-0 bottom-[calc(3.6rem+env(safe-area-inset-bottom))] z-20 border-t px-4 py-2 backdrop-blur md:bottom-0 lg:hidden">
       <div className="flex items-center justify-between gap-3">
         <VerdictBadge verdict={calc.verdict} />
         <div className="text-sm">
@@ -54,7 +64,8 @@ function MobileBar() {
             <DrawerHeader>
               <DrawerTitle>What-if</DrawerTitle>
               <DrawerDescription>
-                Max bid: <span className="font-semibold text-foreground">{calc.maxBid !== null ? formatUsd(calc.maxBid) : "—"}</span> · <VerdictBadge verdict={calc.verdict} />
+                Max bid: <span className="text-foreground font-semibold">{calc.maxBid !== null ? formatUsd(calc.maxBid) : "—"}</span> ·{" "}
+                <VerdictBadge verdict={calc.verdict} />
               </DrawerDescription>
             </DrawerHeader>
             <div className="overflow-y-auto px-4 pb-6">
@@ -161,9 +172,9 @@ export function ReportView({ initial }: { initial: AnalysisView }) {
       <Card className="mx-auto max-w-xl">
         <CardContent className="space-y-3">
           <div className="flex items-center gap-2 font-semibold">
-            <ClipboardListIcon className="size-5 text-stop" /> The analysis failed
+            <ClipboardListIcon className="text-stop size-5" /> The analysis failed
           </div>
-          <p className="text-sm text-muted-foreground">{view.error ?? "Unknown error."} Your credit was refunded.</p>
+          <p className="text-muted-foreground text-sm">{view.error ?? "Unknown error."} Your credit was refunded.</p>
           <Button asChild>
             <Link href="/app">Try again</Link>
           </Button>

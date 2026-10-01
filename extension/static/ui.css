@@ -1,21 +1,115 @@
-:root { color-scheme: light dark; --bg: #f8f9fb; --fg: #1d2433; --muted: #5b6475; --card: #fff; --border: #dde1e8; --primary: #2a78d6; --ok: #137a4f; --err: #b42318; }
-@media (prefers-color-scheme: dark) {
-  :root { --bg: #16181d; --fg: #e8eaee; --muted: #9aa3b2; --card: #1e2128; --border: #2e333d; --primary: #5cc8ff; --ok: #4fd39a; --err: #ff8a80; }
+:root {
+  color-scheme: light dark;
+  --bg: #f8f9fb;
+  --fg: #1d2433;
+  --muted: #5b6475;
+  --card: #fff;
+  --border: #dde1e8;
+  --primary: #2a78d6;
+  --ok: #137a4f;
+  --err: #b42318;
 }
-* { box-sizing: border-box; }
-body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
-h1 { font-size: 18px; margin: 0 0 4px; display: flex; align-items: center; gap: 8px; }
-p { margin: 0 0 12px; color: var(--muted); }
-label { display: block; font-weight: 500; margin: 14px 0 6px; }
-input { width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--fg); font: inherit; }
-input:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary) 50%, transparent); outline-offset: 1px; }
-button { font: inherit; font-weight: 500; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--fg); cursor: pointer; }
-button.primary { background: var(--primary); border-color: var(--primary); color: #0b1220; }
-button[disabled] { opacity: .6; cursor: progress; }
-a { color: var(--primary); }
-.row { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
-.hint { font-size: 12px; color: var(--muted); margin-top: 6px; }
-.msg { margin-top: 14px; font-size: 13px; min-height: 1.4em; }
-.msg.ok { color: var(--ok); }
-.msg.err { color: var(--err); }
-.logo { width: 22px; height: 22px; }
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #16181d;
+    --fg: #e8eaee;
+    --muted: #9aa3b2;
+    --card: #1e2128;
+    --border: #2e333d;
+    --primary: #5cc8ff;
+    --ok: #4fd39a;
+    --err: #ff8a80;
+  }
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font:
+    14px/1.45 system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
+}
+h1 {
+  font-size: 18px;
+  margin: 0 0 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+p {
+  margin: 0 0 12px;
+  color: var(--muted);
+}
+label {
+  display: block;
+  font-weight: 500;
+  margin: 14px 0 6px;
+}
+input {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--fg);
+  font: inherit;
+}
+input:focus-visible,
+button:focus-visible,
+a:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--primary) 50%, transparent);
+  outline-offset: 1px;
+}
+button {
+  font: inherit;
+  font-weight: 500;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--fg);
+  cursor: pointer;
+}
+button.primary {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #0b1220;
+}
+button[disabled] {
+  opacity: 0.6;
+  cursor: progress;
+}
+a {
+  color: var(--primary);
+}
+.row {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+.hint {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 6px;
+}
+.msg {
+  margin-top: 14px;
+  font-size: 13px;
+  min-height: 1.4em;
+}
+.msg.ok {
+  color: var(--ok);
+}
+.msg.err {
+  color: var(--err);
+}
+.logo {
+  width: 22px;
+  height: 22px;
+}

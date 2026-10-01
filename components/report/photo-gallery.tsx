@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 
 export function PhotoGallery({ photos, findings, highlight }: { photos: PhotoView[]; findings: Map<number, string>; highlight: Set<number> | null }) {
   const [open, setOpen] = useState<number | null>(null);
-  if (photos.length === 0) return <p className="text-sm text-muted-foreground">No photos were available for this listing.</p>;
+  if (photos.length === 0) return <p className="text-muted-foreground text-sm">No photos were available for this listing.</p>;
   const current = open !== null ? photos[open] : undefined;
   return (
     <>
@@ -22,10 +22,15 @@ export function PhotoGallery({ photos, findings, highlight }: { photos: PhotoVie
               key={p.id}
               type="button"
               onClick={() => setOpen(i)}
-              className={cn("group relative overflow-hidden rounded-lg border bg-muted text-left transition-opacity", dim && "opacity-35")}
+              className={cn("group bg-muted relative overflow-hidden rounded-lg border text-left transition-opacity", dim && "opacity-35")}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={p.url} alt={findings.get(p.position) ?? `Photo ${p.position}`} loading="lazy" className="aspect-[16/9] w-full object-cover transition-transform group-hover:scale-[1.02]" />
+              <img
+                src={p.url}
+                alt={findings.get(p.position) ?? `Photo ${p.position}`}
+                loading="lazy"
+                className="aspect-[16/9] w-full object-cover transition-transform group-hover:scale-[1.02]"
+              />
               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent px-2 pt-6 pb-1.5 text-[11px] text-white">
                 <span className="font-semibold">{p.position}</span> {findings.get(p.position) ?? ""}
               </div>
@@ -45,7 +50,12 @@ export function PhotoGallery({ photos, findings, highlight }: { photos: PhotoVie
                   <DialogDescription>{findings.get(current.position) ?? "No AI findings for this photo."}</DialogDescription>
                 </div>
                 <div className="flex shrink-0 gap-1">
-                  <Button size="icon" variant="outline" aria-label="Previous photo" onClick={() => setOpen((o) => (o === null ? 0 : (o - 1 + photos.length) % photos.length))}>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    aria-label="Previous photo"
+                    onClick={() => setOpen((o) => (o === null ? 0 : (o - 1 + photos.length) % photos.length))}
+                  >
                     <ChevronLeftIcon />
                   </Button>
                   <Button size="icon" variant="outline" aria-label="Next photo" onClick={() => setOpen((o) => (o === null ? 0 : (o + 1) % photos.length))}>

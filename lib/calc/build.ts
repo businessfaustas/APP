@@ -227,9 +227,7 @@ export function buildCalc(base: AnalysisBase, a: Assumptions): { input: CalcInpu
     scenarios,
     distanceMiles: a.distanceOverride ?? base.distanceMiles,
     feeSchedule: base.feeSchedules[a.buyerType],
-    ...(exportMode && base.exportProfile
-      ? { exportCosts: exportCostsFrom(base.exportProfile, base.milesToPort ?? base.distanceMiles, a) }
-      : {}),
+    ...(exportMode && base.exportProfile ? { exportCosts: exportCostsFrom(base.exportProfile, base.milesToPort ?? base.distanceMiles, a) } : {}),
     extraFixedCosts: base.extraFixedCosts,
     currentBid: a.currentBidOverride ?? base.currentBid,
     signals: base.signals,

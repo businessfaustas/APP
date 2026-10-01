@@ -49,7 +49,11 @@ describe("market stats", () => {
 
   it("confidence grows with more, tighter comps", () => {
     const few = adjustComps([comp(20000, 1), comp(15000, 1)], null, 0);
-    const many = adjustComps(Array.from({ length: 12 }, (_, i) => comp(20000 + i * 50, 1)), null, 0);
+    const many = adjustComps(
+      Array.from({ length: 12 }, (_, i) => comp(20000 + i * 50, 1)),
+      null,
+      0,
+    );
     expect(compsConfidence(many)).toBeGreaterThan(compsConfidence(few));
     expect(compsConfidence([])).toBe(0);
   });

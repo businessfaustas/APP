@@ -2,6 +2,8 @@
 
 # MASTER BUILD PROMPT — "AuctionPulse AI"
 
+> **Built:** this repository contains the app built from this prompt. For where the implementation differs, see [`DECISIONS.md`](../DECISIONS.md): Next.js 16 `proxy.ts` instead of middleware, Prisma 7, AI SDK 7 structured output, optional Inngest with an in-process runner, and placeholder fee tables.
+
 You are a senior full-stack engineer and AI architect. Build a **production-ready web + mobile-web application called "AuctionPulse AI"** for salvage-car flippers, body shops, small dealers and exporters. The user pastes a salvage-auction listing link (Copart, IAAI, Bid.cars, broker sites), a VIN, or the listing text. The app researches the car and returns an investor report: is the car worth buying, **the maximum they should bid**, an itemized repair cost, the market value after repair, profit, ROI and risks.
 
 Read this whole prompt before writing any code. It is the single source of truth.

@@ -13,12 +13,16 @@ const NAV = [
 
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-40 border-b bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70">
+    <header className="bg-background/85 supports-[backdrop-filter]:bg-background/70 sticky top-0 z-40 border-b backdrop-blur">
       <div className="mx-auto flex h-14 max-w-6xl items-center gap-4 px-4">
         <Logo />
         <nav aria-label="Main" className="ml-4 hidden items-center gap-1 md:flex">
           {NAV.map((n) => (
-            <Link key={n.href} href={n.href} className="rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
+            <Link
+              key={n.href}
+              href={n.href}
+              className="text-muted-foreground hover:bg-accent hover:text-foreground rounded-md px-3 py-1.5 text-sm transition-colors"
+            >
               {n.label}
             </Link>
           ))}
@@ -43,14 +47,14 @@ export function SiteFooter() {
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:grid-cols-[1.5fr_1fr_1fr]">
         <div className="space-y-3">
           <Logo />
-          <p className="max-w-sm text-xs leading-relaxed text-muted-foreground">
+          <p className="text-muted-foreground max-w-sm text-xs leading-relaxed">
             Estimates only — not an appraisal, insurance estimate or guarantee. Verify fees, title rules and vehicle condition before bidding. You are
             responsible for your bids. Not affiliated with Copart, IAAI or Bid.cars.
           </p>
         </div>
         <div className="space-y-2 text-sm">
           <div className="font-medium">Product</div>
-          <ul className="space-y-1.5 text-muted-foreground">
+          <ul className="text-muted-foreground space-y-1.5">
             <li>
               <Link className="hover:text-foreground" href="/#how-it-works">
                 How it works
@@ -75,7 +79,7 @@ export function SiteFooter() {
         </div>
         <div className="space-y-2 text-sm">
           <div className="font-medium">Legal</div>
-          <ul className="space-y-1.5 text-muted-foreground">
+          <ul className="text-muted-foreground space-y-1.5">
             <li>
               <Link className="hover:text-foreground" href="/terms">
                 Terms of Service
@@ -89,7 +93,7 @@ export function SiteFooter() {
           </ul>
         </div>
       </div>
-      <div className="border-t py-4 text-center text-xs text-muted-foreground">© {new Date().getFullYear()} AuctionPulse AI</div>
+      <div className="text-muted-foreground border-t py-4 text-center text-xs">© {new Date().getFullYear()} AuctionPulse AI</div>
     </footer>
   );
 }

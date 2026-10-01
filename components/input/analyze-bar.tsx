@@ -48,8 +48,7 @@ export function AnalyzeBar({ demoLots, initialInput = "" }: { demoLots: DemoLot[
       });
       const body = (await res.json()) as { id?: string; error?: string };
       if (!res.ok || !body.id) {
-        if (res.status === 402)
-          toast.error(body.error ?? "Out of credits", { action: { label: "Upgrade", onClick: () => router.push("/app/billing") } });
+        if (res.status === 402) toast.error(body.error ?? "Out of credits", { action: { label: "Upgrade", onClick: () => router.push("/app/billing") } });
         else toast.error(body.error ?? "Couldn't start the analysis");
         setBusy(false);
         return;
@@ -68,7 +67,7 @@ export function AnalyzeBar({ demoLots, initialInput = "" }: { demoLots: DemoLot[
           e.preventDefault();
           if (canSubmit) void submit();
         }}
-        className="rounded-xl border bg-card p-2 shadow-sm focus-within:ring-[3px] focus-within:ring-ring/40"
+        className="bg-card focus-within:ring-ring/40 rounded-xl border p-2 shadow-sm focus-within:ring-[3px]"
       >
         <Textarea
           aria-label="Auction link, VIN or listing text"
@@ -86,10 +85,7 @@ export function AnalyzeBar({ demoLots, initialInput = "" }: { demoLots: DemoLot[
         />
         <div className="flex flex-wrap items-center justify-between gap-2 px-1 pt-1">
           <div
-            className={cn(
-              "flex min-w-0 items-center gap-1.5 text-xs",
-              parsed.type === "INVALID" ? "text-muted-foreground" : "text-primary",
-            )}
+            className={cn("flex min-w-0 items-center gap-1.5 text-xs", parsed.type === "INVALID" ? "text-muted-foreground" : "text-primary")}
             aria-live="polite"
           >
             {input.trim() ? (
@@ -111,11 +107,11 @@ export function AnalyzeBar({ demoLots, initialInput = "" }: { demoLots: DemoLot[
             </Button>
           </div>
         </div>
-        {parsed.warnings.length > 0 && <p className="px-2 pt-1 text-xs text-caution">{parsed.warnings.join(" ")}</p>}
+        {parsed.warnings.length > 0 && <p className="text-caution px-2 pt-1 text-xs">{parsed.warnings.join(" ")}</p>}
       </form>
 
       {more && (
-        <div className="space-y-4 rounded-xl border bg-card p-4">
+        <div className="bg-card space-y-4 rounded-xl border p-4">
           {parsed.type === "TEXT" && (
             <div className="space-y-1.5">
               <Label htmlFor="src-url">Listing link (optional)</Label>
@@ -132,7 +128,7 @@ export function AnalyzeBar({ demoLots, initialInput = "" }: { demoLots: DemoLot[
 
       {demoLots.length > 0 && (
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs text-muted-foreground">Try a demo lot:</span>
+          <span className="text-muted-foreground text-xs">Try a demo lot:</span>
           {demoLots.map((lot) => (
             <button
               key={lot.id}
@@ -143,14 +139,14 @@ export function AnalyzeBar({ demoLots, initialInput = "" }: { demoLots: DemoLot[
                 void submit(lot.url);
               }}
               title={lot.description}
-              className="rounded-full border bg-background px-3 py-1 text-xs transition-colors hover:border-primary hover:text-primary disabled:opacity-50"
+              className="bg-background hover:border-primary hover:text-primary rounded-full border px-3 py-1 text-xs transition-colors disabled:opacity-50"
             >
               {lot.label}
             </button>
           ))}
         </div>
       )}
-      <p className="text-xs text-muted-foreground">
+      <p className="text-muted-foreground text-xs">
         Fetching blocked? Open the lot, press <kbd className="rounded border px-1">Ctrl</kbd>+<kbd className="rounded border px-1">A</kbd>,{" "}
         <kbd className="rounded border px-1">Ctrl</kbd>+<kbd className="rounded border px-1">C</kbd> and paste the text here — or use the{" "}
         <Link href="/app/settings#extension" className="underline">

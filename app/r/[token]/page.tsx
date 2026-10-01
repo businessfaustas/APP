@@ -37,7 +37,7 @@ export default async function SharedReportPage({ params }: { params: Promise<{ t
         </div>
       </header>
       <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
-        <p className="mb-4 rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">
+        <p className="bg-muted text-muted-foreground mb-4 rounded-md px-3 py-2 text-xs">
           Shared read-only report. You can move the What-if sliders, but nothing is saved. Auction photos are not included in shared reports.
         </p>
         <SharedReport view={view} />

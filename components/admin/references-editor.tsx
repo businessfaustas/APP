@@ -118,10 +118,22 @@ function PricesTab({ rows }: { rows: PriceRefRow[] }) {
                     <TableCell className="font-mono text-xs">{r.partKey}</TableCell>
                     <TableCell className="text-xs">{r.source.replace("_", " ").toLowerCase()}</TableCell>
                     <TableCell className="text-right">
-                      <Input className="num ml-auto h-7 w-24 text-right text-xs" inputMode="numeric" value={e.priceLow} onChange={(ev) => setEdits({ ...edits, [key(r)]: { ...e, priceLow: Number(ev.target.value) || 0 } })} aria-label="Low price" />
+                      <Input
+                        className="num ml-auto h-7 w-24 text-right text-xs"
+                        inputMode="numeric"
+                        value={e.priceLow}
+                        onChange={(ev) => setEdits({ ...edits, [key(r)]: { ...e, priceLow: Number(ev.target.value) || 0 } })}
+                        aria-label="Low price"
+                      />
                     </TableCell>
                     <TableCell className="text-right">
-                      <Input className="num ml-auto h-7 w-24 text-right text-xs" inputMode="numeric" value={e.priceHigh} onChange={(ev) => setEdits({ ...edits, [key(r)]: { ...e, priceHigh: Number(ev.target.value) || 0 } })} aria-label="High price" />
+                      <Input
+                        className="num ml-auto h-7 w-24 text-right text-xs"
+                        inputMode="numeric"
+                        value={e.priceHigh}
+                        onChange={(ev) => setEdits({ ...edits, [key(r)]: { ...e, priceHigh: Number(ev.target.value) || 0 } })}
+                        aria-label="High price"
+                      />
                     </TableCell>
                     <TableCell>{r.isPlaceholder && <Badge variant="outline">placeholder</Badge>}</TableCell>
                   </TableRow>
@@ -136,7 +148,7 @@ function PricesTab({ rows }: { rows: PriceRefRow[] }) {
           <CardTitle className="text-base">Import CSV</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             Columns: <code>partKey,vehicleClass,source,low,high</code> — e.g. <code>front_bumper_cover,premium,AFTERMARKET,280,420</code>. Classes:{" "}
             {VEHICLE_CLASSES.join(", ")}. Sources: OEM_NEW, AFTERMARKET, USED.
           </p>
@@ -186,7 +198,7 @@ function LaborTab({ rows }: { rows: LaborRefRow[] }) {
               <TableRow key={r.partKey}>
                 <TableCell>
                   <div className="text-sm">{r.displayName}</div>
-                  <div className="font-mono text-[11px] text-muted-foreground">{r.partKey}</div>
+                  <div className="text-muted-foreground font-mono text-[11px]">{r.partKey}</div>
                 </TableCell>
                 {[0, 2, 4].map((i) => (
                   <TableCell key={i} className="text-right">

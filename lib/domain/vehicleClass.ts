@@ -32,12 +32,7 @@ const ECONOMY_MODELS = /^(RIO|FORTE|SOUL|ACCENT|ELANTRA|VENUE|VERSA|SENTRA|KICKS
 const TRUCK_SUV_MODELS =
   /\b(F-?150|F-?250|F-?350|SILVERADO|SIERRA|RAM|TUNDRA|TACOMA|TITAN|FRONTIER|COLORADO|CANYON|RANGER|GLADIATOR|TAHOE|SUBURBAN|YUKON|ESCALADE|EXPEDITION|NAVIGATOR|SEQUOIA|ARMADA|4RUNNER|LAND CRUISER)\b/i;
 
-export function classifyVehicle(v: {
-  make: string | null;
-  model: string | null;
-  bodyClass?: string | null;
-  fuelType?: string | null;
-}): VehicleClass {
+export function classifyVehicle(v: { make: string | null; model: string | null; bodyClass?: string | null; fuelType?: string | null }): VehicleClass {
   const fuel = (v.fuelType ?? "").toUpperCase();
   if (/ELECTRIC|BEV|BATTERY/.test(fuel) && !/HYBRID|GASOLINE/.test(fuel)) return "ev";
   const make = (v.make ?? "").toUpperCase().trim();

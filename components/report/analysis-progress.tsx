@@ -21,8 +21,10 @@ export function AnalysisProgress({ view }: { view: AnalysisView }) {
   return (
     <Card className="mx-auto max-w-xl" data-testid="analysis-progress">
       <CardHeader>
-        <CardTitle className="text-lg">Analyzing{view.listing ? ` ${[view.listing.year, view.listing.make, view.listing.model].filter(Boolean).join(" ")}` : ""}…</CardTitle>
-        <p className="text-sm text-muted-foreground">{view.stepLabel}</p>
+        <CardTitle className="text-lg">
+          Analyzing{view.listing ? ` ${[view.listing.year, view.listing.make, view.listing.model].filter(Boolean).join(" ")}` : ""}…
+        </CardTitle>
+        <p className="text-muted-foreground text-sm">{view.stepLabel}</p>
       </CardHeader>
       <CardContent className="space-y-5">
         <Progress value={view.progress} aria-label="Analysis progress" />
@@ -40,14 +42,14 @@ export function AnalysisProgress({ view }: { view: AnalysisView }) {
                     active && "border-primary",
                   )}
                 >
-                  {done ? <CheckIcon className="size-3" /> : active ? <Loader2Icon className="size-3 animate-spin text-primary" /> : null}
+                  {done ? <CheckIcon className="size-3" /> : active ? <Loader2Icon className="text-primary size-3 animate-spin" /> : null}
                 </span>
                 <span className={cn(!done && !active && "text-muted-foreground")}>{label}</span>
               </li>
             );
           })}
         </ol>
-        <p className="text-xs text-muted-foreground">Usually under a minute. You can leave this page — the report will be in your history.</p>
+        <p className="text-muted-foreground text-xs">Usually under a minute. You can leave this page — the report will be in your history.</p>
       </CardContent>
     </Card>
   );
@@ -82,12 +84,14 @@ export function NeedsInputForm({ view, onResumed }: { view: AnalysisView; onResu
     <Card className="mx-auto max-w-2xl" data-testid="needs-input">
       <CardHeader>
         <CardTitle className="text-lg">We need the listing details</CardTitle>
-        <p className="text-sm text-muted-foreground">{view.error}</p>
+        <p className="text-muted-foreground text-sm">{view.error}</p>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-1.5">
           <div className="text-sm font-medium">Paste the listing text</div>
-          <p className="text-xs text-muted-foreground">On the lot page press Ctrl+A then Ctrl+C (⌘A, ⌘C on Mac) and paste here. You don&apos;t need to clean it up.</p>
+          <p className="text-muted-foreground text-xs">
+            On the lot page press Ctrl+A then Ctrl+C (⌘A, ⌘C on Mac) and paste here. You don&apos;t need to clean it up.
+          </p>
           <Textarea value={text} onChange={(e) => setText(e.target.value)} rows={6} placeholder="Lot #… VIN… Odometer… Primary damage…" />
         </div>
         <PhotoUpload value={photos} onChange={setPhotos} />

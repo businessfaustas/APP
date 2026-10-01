@@ -51,7 +51,7 @@ export function AppShell({ user, children }: { user: ShellUser; children: React.
   return (
     <div className="min-h-dvh md:grid md:grid-cols-[232px_1fr]">
       {/* Desktop sidebar */}
-      <aside className="sticky top-0 hidden h-dvh flex-col border-r bg-card/40 md:flex">
+      <aside className="bg-card/40 sticky top-0 hidden h-dvh flex-col border-r md:flex">
         <div className="px-4 py-4">
           <Logo href="/app" />
         </div>
@@ -61,8 +61,8 @@ export function AppShell({ user, children }: { user: ShellUser; children: React.
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground",
-                isActive(pathname, item.href, item.exact) && "bg-accent font-medium text-accent-foreground",
+                "text-muted-foreground hover:bg-accent hover:text-accent-foreground flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors",
+                isActive(pathname, item.href, item.exact) && "bg-accent text-accent-foreground font-medium",
               )}
             >
               <item.icon className="size-4" />
@@ -73,8 +73,8 @@ export function AppShell({ user, children }: { user: ShellUser; children: React.
             <Link
               href="/admin"
               className={cn(
-                "mt-2 flex items-center gap-2.5 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground",
-                pathname.startsWith("/admin") && "bg-accent font-medium text-accent-foreground",
+                "text-muted-foreground hover:bg-accent hover:text-accent-foreground mt-2 flex items-center gap-2.5 rounded-md px-3 py-2 text-sm",
+                pathname.startsWith("/admin") && "bg-accent text-accent-foreground font-medium",
               )}
             >
               <ShieldIcon className="size-4" />
@@ -83,14 +83,14 @@ export function AppShell({ user, children }: { user: ShellUser; children: React.
           )}
         </nav>
         <div className="space-y-3 border-t p-3">
-          <Link href="/app/billing" className="flex items-center justify-between rounded-md bg-muted px-3 py-2 text-xs">
+          <Link href="/app/billing" className="bg-muted flex items-center justify-between rounded-md px-3 py-2 text-xs">
             <span className="text-muted-foreground">Credits</span>
             <span className="num font-semibold">{user.creditsRemaining}</span>
           </Link>
           <div className="flex items-center justify-between gap-2">
             <div className="min-w-0">
               <div className="truncate text-sm font-medium">{user.name ?? user.email}</div>
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <div className="text-muted-foreground flex items-center gap-1.5 text-xs">
                 {user.plan}
                 {user.isDemo && <Badge variant="info">Demo</Badge>}
               </div>
@@ -98,7 +98,11 @@ export function AppShell({ user, children }: { user: ShellUser; children: React.
             <div className="flex items-center">
               <ThemeToggle />
               <form action="/api/auth/logout" method="post">
-                <button type="submit" aria-label="Sign out" className="inline-flex size-9 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground">
+                <button
+                  type="submit"
+                  aria-label="Sign out"
+                  className="text-muted-foreground hover:bg-accent hover:text-accent-foreground inline-flex size-9 items-center justify-center rounded-md"
+                >
                   <LogOutIcon className="size-4" />
                 </button>
               </form>
@@ -108,10 +112,10 @@ export function AppShell({ user, children }: { user: ShellUser; children: React.
       </aside>
 
       {/* Mobile top bar */}
-      <header className="sticky top-0 z-30 flex items-center justify-between border-b bg-background/90 px-4 py-2.5 backdrop-blur md:hidden">
+      <header className="bg-background/90 sticky top-0 z-30 flex items-center justify-between border-b px-4 py-2.5 backdrop-blur md:hidden">
         <Logo href="/app" className="text-sm" />
         <div className="flex items-center gap-1">
-          <Link href="/app/billing" className="num rounded-md bg-muted px-2 py-1 text-xs font-medium">
+          <Link href="/app/billing" className="num bg-muted rounded-md px-2 py-1 text-xs font-medium">
             {user.creditsRemaining} credits
           </Link>
           <ThemeToggle />
@@ -121,13 +125,13 @@ export function AppShell({ user, children }: { user: ShellUser; children: React.
       <main className="min-w-0 pb-24 md:pb-10">{children}</main>
 
       {/* Mobile bottom nav */}
-      <nav className="pb-safe fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t bg-background/95 backdrop-blur md:hidden" aria-label="Main">
+      <nav className="pb-safe bg-background/95 fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t backdrop-blur md:hidden" aria-label="Main">
         {MOBILE_NAV.map((item) => (
           <Link
             key={item.href}
             href={item.href}
             className={cn(
-              "flex flex-col items-center gap-0.5 pt-2 pb-1 text-[11px] text-muted-foreground",
+              "text-muted-foreground flex flex-col items-center gap-0.5 pt-2 pb-1 text-[11px]",
               isActive(pathname, item.href, item.exact) && "text-primary",
             )}
           >

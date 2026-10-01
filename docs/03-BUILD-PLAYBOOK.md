@@ -1,5 +1,7 @@
 # Build Playbook: turning the prompt into a working app
 
+> The app in this repository was built this way. To run it, start with the [README](../README.md). Keep this playbook for rebuilding it or extending it phase by phase.
+
 This guide explains how to use [`02-AI-MASTER-PROMPT.md`](./02-AI-MASTER-PROMPT.md) to get a working AuctionPulse AI app from an AI coding tool, one phase at a time, checking each phase before moving on.
 
 ---

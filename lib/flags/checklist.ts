@@ -26,7 +26,8 @@ export function buildChecklist(args: { flags: RiskFlag[]; damage: DamageAssessme
   if (has("FEE_TABLE_PLACEHOLDER")) items.push("Verify the auction's current fee chart for your buyer type and payment method.");
   if (l.titleCategory === "SALVAGE" || l.titleCategory === "FLOOD")
     items.push(`Check ${l.titleState ? `${l.titleState}'s` : "your state's"} rebuilt-title inspection rules before buying.`);
-  if (has("TITLE_NON_REPAIRABLE") || has("TITLE_PARTS_ONLY")) items.push("This title can't go back on the road — only buy it to part out or if export is allowed.");
+  if (has("TITLE_NON_REPAIRABLE") || has("TITLE_PARTS_ONLY"))
+    items.push("This title can't go back on the road — only buy it to part out or if export is allowed.");
   items.push("Plan pickup inside the free storage window to avoid daily storage fees.");
   items.push("Run the VIN through NICB VINCheck (free) for theft and total-loss records.");
   return [...new Set(items)];

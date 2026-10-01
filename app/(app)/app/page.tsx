@@ -29,7 +29,17 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       where: { userId: user.id },
       orderBy: { createdAt: "desc" },
       take: 8,
-      select: { id: true, status: true, verdict: true, maxBid: true, dealScore: true, createdAt: true, listingSnapshot: true, inputValue: true, currentStep: true },
+      select: {
+        id: true,
+        status: true,
+        verdict: true,
+        maxBid: true,
+        dealScore: true,
+        createdAt: true,
+        listingSnapshot: true,
+        inputValue: true,
+        currentStep: true,
+      },
     }),
     prisma.watchlistItem.findMany({
       where: { userId: user.id, listing: { saleDate: { gte: new Date() } } },
@@ -47,9 +57,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       <section className="space-y-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">What are you bidding on?</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Paste a listing and get your verdict, max bid, repair estimate and profit in about a minute.
-          </p>
+          <p className="text-muted-foreground mt-1 text-sm">Paste a listing and get your verdict, max bid, repair estimate and profit in about a minute.</p>
         </div>
         <AnalyzeBar demoLots={features.demoMode() ? DEMO_LOTS : []} initialInput={sp.input ?? ""} />
       </section>
@@ -58,7 +66,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         <Card className="lg:col-span-2">
           <CardHeader className="flex-row items-center justify-between">
             <CardTitle className="text-base">Recent analyses</CardTitle>
-            <Link href="/app/history" className="text-xs text-muted-foreground hover:text-foreground">
+            <Link href="/app/history" className="text-muted-foreground hover:text-foreground text-xs">
               View all
             </Link>
           </CardHeader>
@@ -76,7 +84,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                       <Link href={`/app/analyses/${a.id}`} className="flex items-center justify-between gap-3 py-2.5 hover:opacity-80">
                         <div className="min-w-0">
                           <div className="truncate text-sm font-medium">{title(l, a.inputValue)}</div>
-                          <div className="text-xs text-muted-foreground">
+                          <div className="text-muted-foreground text-xs">
                             {l?.primaryDamage ? `${l.primaryDamage} · ` : ""}
                             {formatDate(a.createdAt)}
                           </div>
@@ -112,35 +120,38 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
             <CardContent className="grid grid-cols-3 gap-3 text-center">
               <div>
                 <div className="num text-2xl font-semibold">{total}</div>
-                <div className="text-xs text-muted-foreground">Reports</div>
+                <div className="text-muted-foreground text-xs">Reports</div>
               </div>
               <div>
-                <div className="num text-2xl font-semibold text-go">{goCount}</div>
-                <div className="text-xs text-muted-foreground">GO deals</div>
+                <div className="num text-go text-2xl font-semibold">{goCount}</div>
+                <div className="text-muted-foreground text-xs">GO deals</div>
               </div>
               <div>
                 <div className="num text-2xl font-semibold">{user.creditsRemaining}</div>
-                <div className="text-xs text-muted-foreground">Credits</div>
+                <div className="text-muted-foreground text-xs">Credits</div>
               </div>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex-row items-center justify-between">
               <CardTitle className="text-base">Upcoming sales</CardTitle>
-              <Link href="/app/watchlist" className="text-xs text-muted-foreground hover:text-foreground">
+              <Link href="/app/watchlist" className="text-muted-foreground hover:text-foreground text-xs">
                 Watchlist
               </Link>
             </CardHeader>
             <CardContent>
               {watch.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Save lots from a report to see their sale countdowns here.</p>
+                <p className="text-muted-foreground text-sm">Save lots from a report to see their sale countdowns here.</p>
               ) : (
                 <ul className="space-y-2.5">
                   {watch.map((w) => (
                     <li key={w.id}>
-                      <Link href={w.analysisId ? `/app/analyses/${w.analysisId}` : "/app/watchlist"} className="flex items-center justify-between gap-2 text-sm">
+                      <Link
+                        href={w.analysisId ? `/app/analyses/${w.analysisId}` : "/app/watchlist"}
+                        className="flex items-center justify-between gap-2 text-sm"
+                      >
                         <span className="truncate">{[w.listing.year, w.listing.make, w.listing.model].filter(Boolean).join(" ")}</span>
-                        <span className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground">
+                        <span className="text-muted-foreground flex shrink-0 items-center gap-1 text-xs">
                           <CalendarClockIcon className="size-3.5" />
                           {formatCountdown(w.listing.saleDate)}
                         </span>

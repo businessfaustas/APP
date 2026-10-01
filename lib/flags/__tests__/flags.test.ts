@@ -32,7 +32,13 @@ const codes = (i: FlagInputs) => deriveFlags(i).map((f) => f.code);
 
 describe("risk flags", () => {
   it("odometer, keys, start, sale status", () => {
-    const l = { ...audi.listing(NOW), odometerBrand: "NOT_ACTUAL" as const, hasKeys: false, runCondition: "WONT_START" as const, saleStatus: "ON_APPROVAL" as const };
+    const l = {
+      ...audi.listing(NOW),
+      odometerBrand: "NOT_ACTUAL" as const,
+      hasKeys: false,
+      runCondition: "WONT_START" as const,
+      saleStatus: "ON_APPROVAL" as const,
+    };
     expect(codes(inputs({ listing: l }))).toEqual(expect.arrayContaining(["ODOMETER_NOT_ACTUAL", "KEYS_MISSING", "DOES_NOT_START", "SALE_ON_APPROVAL"]));
   });
 
@@ -43,7 +49,15 @@ describe("risk flags", () => {
   });
 
   it("history problems", () => {
-    const h = { ...audi.history, totalLossEvents: 2, theftRecords: 1, odometerRecords: [{ date: "2020-01-01", reading: 50000 }, { date: "2022-01-01", reading: 30000 }] };
+    const h = {
+      ...audi.history,
+      totalLossEvents: 2,
+      theftRecords: 1,
+      odometerRecords: [
+        { date: "2020-01-01", reading: 50000 },
+        { date: "2022-01-01", reading: 30000 },
+      ],
+    };
     expect(codes(inputs({ history: h }))).toEqual(expect.arrayContaining(["PRIOR_SALVAGE_EVENTS", "THEFT_RECORD", "ODOMETER_INCONSISTENT"]));
     expect(codes(inputs({ history: null }))).toContain("HISTORY_UNAVAILABLE");
   });
@@ -52,7 +66,9 @@ describe("risk flags", () => {
     expect(codes(inputs({ market: { ...audi.market, provider: "NONE" } }))).toContain("MARKET_VALUE_MISSING");
     expect(codes(inputs({ market: { ...audi.market, provider: "AI estimate — verify" } }))).toContain("MARKET_ESTIMATE_ONLY");
     expect(codes(inputs({ market: { ...audi.market, compsCount: 3 } }))).toContain("LOW_COMP_COUNT");
-    expect(codes(inputs({ logistics: { distanceMiles: 500, method: "DEFAULT", yardZip: null, userZip: null, milesToPort: null } }))).toContain("DISTANCE_ESTIMATED");
+    expect(codes(inputs({ logistics: { distanceMiles: 500, method: "DEFAULT", yardZip: null, userZip: null, milesToPort: null } }))).toContain(
+      "DISTANCE_ESTIMATED",
+    );
   });
 
   it("no photo analysis and low confidence", () => {
@@ -96,8 +112,12 @@ describe("checklist and narrative", () => {
     const text = templateNarrative({ calc, currentBid: 2100, flags: a.flags, checklist: a.checklist });
     expect(text).toContain("do not bid above $3,100");
     expect(text).toContain("$2,518");
-    expect(buildChecklist({ flags: [], damage: { ...audi.damage, photo_coverage: { ...audi.damage.photo_coverage, missing_critical_angles: [] } }, listing: { ...audi.listing(NOW), hasKeys: null } })).toEqual(
-      expect.arrayContaining([expect.stringMatching(/keys are included/)]),
-    );
+    expect(
+      buildChecklist({
+        flags: [],
+        damage: { ...audi.damage, photo_coverage: { ...audi.damage.photo_coverage, missing_critical_angles: [] } },
+        listing: { ...audi.listing(NOW), hasKeys: null },
+      }),
+    ).toEqual(expect.arrayContaining([expect.stringMatching(/keys are included/)]));
   });
 });
