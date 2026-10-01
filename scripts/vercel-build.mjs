@@ -6,7 +6,10 @@
 import { execSync } from "node:child_process";
 
 const run = (cmd) => execSync(cmd, { stdio: "inherit" });
-const hasDatabase = Boolean(process.env.DATABASE_URL?.trim() || process.env.POSTGRES_URL?.trim());
+// Same rule as lib/config/deployment.ts: any …_URL variable holding a Postgres connection string.
+const hasDatabase = Object.entries(process.env).some(
+  ([key, value]) => /_URL(_UNPOOLED|_NON_POOLING)?$/i.test(key) && /^postgres(ql)?:\/\//i.test(value?.trim() ?? ""),
+);
 
 if (hasDatabase) {
   run("pnpm db:deploy");

@@ -1,5 +1,7 @@
 # AuctionPulse AI
 
+**Live demo:** <https://auctionpulse-ai.vercel.app>. It runs in demo mode: click **Analyze a lot → Continue as demo user**.
+
 **Know your max bid before you bid.** Paste a Copart, IAAI or Bid.cars link, a VIN or the listing text. AuctionPulse decodes the VIN and reads the title and every photo. It builds an itemized repair estimate and values the car from market comparables. Then it adds auction fees, transport, holding and selling costs and returns:
 
 - a **GO / BE CAUTIOUS / WALK AWAY** verdict
