@@ -2,6 +2,8 @@ import "server-only";
 
 import { z } from "zod";
 
+import { appUrl, databaseUrl } from "./deployment";
+
 const bool = z
   .string()
   .optional()
@@ -16,7 +18,8 @@ const EnvSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   NEXT_PUBLIC_APP_URL: z.string().default("http://localhost:3000"),
   DEMO_MODE: bool,
-  DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
+  // Optional here: the database client reports a clear error on first use when it is missing.
+  DATABASE_URL: opt,
   NEXT_PUBLIC_SUPABASE_URL: opt,
   NEXT_PUBLIC_SUPABASE_ANON_KEY: opt,
   SUPABASE_SERVICE_ROLE_KEY: opt,
@@ -57,7 +60,7 @@ let cached: Env | null = null;
 /** Validated environment. Missing optional keys switch features to demo/fallback mode. */
 export function env(): Env {
   if (cached) return cached;
-  const parsed = EnvSchema.safeParse(process.env);
+  const parsed = EnvSchema.safeParse({ ...process.env, DATABASE_URL: databaseUrl(), NEXT_PUBLIC_APP_URL: appUrl() });
   if (!parsed.success) {
     const msg = parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ");
     throw new Error(`Invalid environment: ${msg}`);

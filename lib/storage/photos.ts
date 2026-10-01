@@ -2,6 +2,7 @@ import "server-only";
 
 import { createHash, randomUUID } from "node:crypto";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
@@ -13,7 +14,8 @@ import { assertPublicUrl, fetchWithTimeout } from "@/lib/providers/http";
 
 const MAX_BYTES = 15 * 1024 * 1024;
 const MAX_EDGE = 1568;
-const LOCAL_ROOT = path.join(process.cwd(), ".data", "photos");
+// Without Supabase Storage photos go to local disk; on Vercel only the temp directory is writable.
+const LOCAL_ROOT = process.env.VERCEL ? path.join(os.tmpdir(), "auctionpulse-photos") : path.join(process.cwd(), ".data", "photos");
 
 let supabase: SupabaseClient | null = null;
 function storageClient(): SupabaseClient | null {

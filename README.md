@@ -65,7 +65,7 @@ Every provider has a fallback, so a missing key never breaks an analysis.
 
 ## Environment variables
 
-Copy `.env.example` to `.env`. Only `DATABASE_URL` is required.
+Copy `.env.example` to `.env`. Only `DATABASE_URL` is required. On Vercel, the names its Postgres integrations set (`DATABASE_URL_UNPOOLED`, `POSTGRES_URL`, `POSTGRES_URL_NON_POOLING`) are accepted as well.
 
 | Variable                                                               | Purpose                                                                                                           | Where to get it                             |
 | ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
@@ -148,13 +148,23 @@ Auction fees change often and differ by buyer type and payment method, so treat 
 
 ---
 
-## Deploying (Vercel + Supabase + Inngest)
+## Preview on Vercel (about 5 minutes)
+
+The repo deploys to Vercel as-is. `vercel.json` runs `scripts/vercel-build.mjs`, which applies migrations and seeds reference data when a database is connected, then builds.
+
+1. In Vercel, choose **Add New → Project** and import this repository. Under **Environment Variables**, add `DEMO_MODE` = `true`, then click **Deploy**. The first build succeeds even without a database. The home page works, and signing in explains that a database is needed.
+2. In the project, open **Storage → Create Database → Neon** (free) and connect it to the project. Vercel adds `DATABASE_URL` and `DATABASE_URL_UNPOOLED`, which the app picks up automatically. The Supabase integration's `POSTGRES_URL` / `POSTGRES_URL_NON_POOLING` work too.
+3. Open **Deployments**, choose **Redeploy** on the latest deployment, then open your `….vercel.app` link and click **Continue as demo user**.
+
+`NEXT_PUBLIC_APP_URL` defaults to the project's production domain on Vercel, so share links and emails point at the right place. Without Supabase Storage, uploaded photos live in the function's temporary directory and don't persist. The demo lots aren't affected.
+
+## Deploying for real users (Vercel + Supabase + Inngest)
 
 1. **Supabase**
    - Create a project. Copy the pooled and direct connection strings into `DATABASE_URL` / `DIRECT_URL`.
    - Under **Authentication**, enable Email (magic link) and Google. Add `https://YOUR_DOMAIN/auth/callback` to the redirect URLs.
    - Create a private storage bucket named `listing-photos`.
-2. **Database**: `DATABASE_URL=… DIRECT_URL=… pnpm db:deploy && pnpm db:seed` (or set Vercel's build command to `pnpm db:deploy && pnpm build`).
+2. **Database**: on Vercel, the build applies migrations and seeds automatically (`scripts/vercel-build.mjs`). Elsewhere, run `pnpm db:deploy && pnpm db:seed` against the production database.
 3. **Vercel**: import the repo, set the env vars above with `DEMO_MODE=false`, and deploy. Proxy and route handlers run on the Node.js runtime.
 4. **Inngest**: install the Vercel integration, or set `INNGEST_EVENT_KEY` / `INNGEST_SIGNING_KEY` and sync `https://YOUR_DOMAIN/api/inngest`. This gives durable analysis runs, watchlist reminders every 15 minutes, and daily maintenance (expired runs refunded, photos older than 90 days deleted, caches pruned).
    - Without Inngest, analyses run in-process. Schedule the two jobs yourself, for example with Vercel Cron and `CRON_SECRET` set (Vercel sends it as the bearer token). The 15-minute schedule needs a Vercel plan that allows it:

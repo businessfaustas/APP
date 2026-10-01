@@ -11,8 +11,9 @@ import { placeholderFeeSchedule } from "../lib/calc/placeholderFees";
 import { VEHICLE_CLASSES, PART_SOURCES } from "../lib/domain/schemas";
 import { LABOR_REFERENCE, placeholderPrice } from "../lib/estimate/referenceData";
 import { DEMO_USER } from "../lib/config/demo";
+import { databaseUrl } from "../lib/config/deployment";
 
-const connectionString = process.env.DATABASE_URL ?? "postgresql://postgres:postgres@localhost:5432/auctionpulse";
+const connectionString = databaseUrl() ?? "postgresql://postgres:postgres@localhost:5432/auctionpulse";
 const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString }) });
 
 async function seedFeeSchedules() {
