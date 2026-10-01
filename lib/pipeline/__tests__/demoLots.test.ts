@@ -1,37 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { assumptionsFromSettings, DEFAULT_SETTINGS, runAnalysisCalc } from "@/lib/calc/build";
-import { placeholderFeeSchedule } from "@/lib/calc/placeholderFees";
-import { DEMO_FIXTURES, findDemoFixtureById } from "@/lib/demo/fixtures";
-
-import { assemble } from "../assemble";
+import { DEMO_FIXTURES } from "@/lib/demo/fixtures";
+import { runDemoFixtureOffline } from "@/lib/demo/offline";
 
 const NOW = new Date("2026-10-01T12:00:00Z");
 
-function run(id: string) {
-  const fx = findDemoFixtureById(id)!;
-  const listing = fx.listing(NOW);
-  const assembled = assemble({
-    listing,
-    vehicle: fx.vehicle,
-    history: fx.history,
-    damage: fx.damage,
-    damageFromPhotos: true,
-    repair: fx.repair,
-    market: fx.market,
-    logistics: { distanceMiles: fx.distanceMiles, method: "FIXTURE", yardZip: listing.location.zip, userZip: "77002", milesToPort: null },
-    feeSchedules: {
-      LICENSED_DEALER: placeholderFeeSchedule(fx.source === "IAAI" ? "IAAI" : "COPART", "LICENSED_DEALER"),
-      PUBLIC_VIA_BROKER: placeholderFeeSchedule(fx.source === "IAAI" ? "IAAI" : "COPART", "PUBLIC_VIA_BROKER"),
-    },
-    buyerType: "LICENSED_DEALER",
-    exportProfile: null,
-    destinationResale: null,
-    now: NOW,
-  });
-  const calc = runAnalysisCalc(assembled.base, assumptionsFromSettings(DEFAULT_SETTINGS));
-  return { fx, listing, assembled, calc };
-}
+const run = (id: string) => runDemoFixtureOffline(id, NOW);
 
 describe("demo lots end to end (assemble → calculate)", () => {
   it("Audi A3 reproduces the reference case exactly", () => {
