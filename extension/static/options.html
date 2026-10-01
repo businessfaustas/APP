@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AuctionPulse AI — extension settings</title>
+    <link rel="stylesheet" href="ui.css" />
+    <style>main { max-width: 520px; margin: 40px auto; padding: 24px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; }</style>
+  </head>
+  <body>
+    <main>
+      <h1><img class="logo" src="icons/icon-48.png" alt="" /> AuctionPulse AI</h1>
+      <p>Connect the extension to your account to analyze lots straight from Copart, IAAI and Bid.cars.</p>
+      <form id="form">
+        <label for="apiBase">App URL</label>
+        <input id="apiBase" type="url" required placeholder="https://your-app.example.com" autocomplete="off" />
+        <label for="token">API token</label>
+        <input id="token" type="password" required placeholder="ap_…" autocomplete="off" spellcheck="false" />
+        <div class="hint">Create one in AuctionPulse → <a id="settingsLink" href="#" target="_blank" rel="noreferrer">Settings → Browser extension</a>. It's stored only in this browser.</div>
+        <div class="row">
+          <button class="primary" type="submit">Save</button>
+          <button type="button" id="test">Test connection</button>
+        </div>
+        <div id="msg" class="msg" role="status" aria-live="polite"></div>
+      </form>
+    </main>
+    <script src="options.js"></script>
+  </body>
+</html>

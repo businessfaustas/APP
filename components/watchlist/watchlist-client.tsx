@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import type { VerdictValue } from "@/lib/calc/types";
-import { cn, formatCountdown, formatDateTime, formatUsd } from "@/lib/utils";
+import { cn, formatCountdown, formatDateTime, formatUsd, isPast } from "@/lib/utils";
 
 export interface WatchItemView {
   id: string;
@@ -35,7 +35,7 @@ function Item({ item }: { item: WatchItemView }) {
   const router = useRouter();
   const [myMax, setMyMax] = useState(item.myMaxBid !== null ? String(item.myMaxBid) : "");
   const [notes, setNotes] = useState(item.notes ?? "");
-  const ended = item.saleDate ? new Date(item.saleDate).getTime() < Date.now() : false;
+  const ended = isPast(item.saleDate);
 
   async function save() {
     const res = await fetch("/api/watchlist", {

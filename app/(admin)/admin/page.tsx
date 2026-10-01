@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { integrationStatus } from "@/lib/config/env";
 import { prisma } from "@/lib/db/prisma";
+import { daysAgo } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Admin" };
 
@@ -12,7 +13,7 @@ function usd(n: number): string {
 }
 
 export default async function AdminOverview() {
-  const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const since = daysAgo(30);
   const [users, analyses, completed30, failed30, usage, byPurpose, placeholderFees] = await Promise.all([
     prisma.user.count(),
     prisma.analysis.count(),

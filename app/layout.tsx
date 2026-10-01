@@ -12,6 +12,7 @@ export const metadata: Metadata = {
     "Paste a Copart, IAAI or Bid.cars link and get an investor report: verdict, maximum bid, itemized repair estimate, market value, profit and risks.",
   applicationName: "AuctionPulse AI",
   manifest: "/manifest.webmanifest",
+  icons: { icon: [{ url: "/icon.svg", type: "image/svg+xml" }], apple: "/icons/apple-touch-icon.png" },
   appleWebApp: { capable: true, title: "AuctionPulse", statusBarStyle: "black-translucent" },
 };
 

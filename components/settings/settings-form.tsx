@@ -134,6 +134,8 @@ export function SettingsForm({
   async function deleteAccount() {
     if (!confirm("Delete your account and all reports permanently? This can't be undone.")) return;
     const res = await fetch("/api/account", { method: "DELETE" });
+    // Full reload on purpose: drops every client-side cache of the deleted account.
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
     if (res.ok) window.location.href = "/";
     else toast.error("Couldn't delete the account");
   }

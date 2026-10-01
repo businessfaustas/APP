@@ -1,7 +1,7 @@
 "use client";
 
 import { PlusIcon, Trash2Icon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,12 @@ const SOURCE_LABEL: Record<PartSource, string> = { OEM_NEW: "OEM", AFTERMARKET: 
 
 function CellNumber({ value, onCommit, label, step = 1, disabled }: { value: number; onCommit: (v: number) => void; label: string; step?: number; disabled?: boolean }) {
   const [text, setText] = useState(String(value));
-  useEffect(() => setText(String(value)), [value]);
+  // Re-sync the draft when the committed value changes (adjust state during render).
+  const [synced, setSynced] = useState(value);
+  if (synced !== value) {
+    setSynced(value);
+    setText(String(value));
+  }
   const commit = () => {
     const n = Number(text.replace(/[^\d.]/g, ""));
     if (Number.isFinite(n) && n !== value) onCommit(step < 1 ? Math.round(n * 10) / 10 : Math.round(n));

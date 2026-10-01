@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>AuctionPulse AI</title>
+    <link rel="stylesheet" href="ui.css" />
+    <style>body { width: 300px; padding: 16px; } button { width: 100%; } .row { flex-direction: column; }</style>
+  </head>
+  <body>
+    <h1><img class="logo" src="icons/icon-48.png" alt="" /> AuctionPulse AI</h1>
+    <p>Open a lot page on Copart, IAAI or Bid.cars, then analyze it.</p>
+    <div class="row">
+      <button class="primary" id="analyze" type="button">Analyze this lot</button>
+      <button id="open" type="button">Open AuctionPulse</button>
+      <button id="options" type="button">Extension settings</button>
+    </div>
+    <div id="msg" class="msg" role="status" aria-live="polite"></div>
+    <script src="popup.js"></script>
+  </body>
+</html>

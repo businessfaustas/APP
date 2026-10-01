@@ -1,7 +1,7 @@
 "use client";
 
 import { RotateCcwIcon, SaveIcon, SlidersHorizontalIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -73,7 +73,12 @@ export function MoneyInput({
   testId?: string;
 }) {
   const [text, setText] = useState(value === null ? "" : String(value));
-  useEffect(() => setText(value === null ? "" : String(value)), [value]);
+  // Re-sync the draft when the committed value changes (adjust state during render).
+  const [synced, setSynced] = useState(value);
+  if (synced !== value) {
+    setSynced(value);
+    setText(value === null ? "" : String(value));
+  }
   const commit = () => {
     const digits = text.replace(/[^\d]/g, "");
     onCommit(digits === "" ? null : Number(digits));

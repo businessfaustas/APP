@@ -5,6 +5,20 @@ export function cn(...inputs: ClassValue[]): string {
   return twMerge(clsx(inputs));
 }
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** The moment `days` days before now. */
+export function daysAgo(days: number): Date {
+  return new Date(Date.now() - days * DAY_MS);
+}
+
+/** True when the date is in the past (null/invalid → false). */
+export function isPast(d: Date | string | null | undefined): boolean {
+  if (!d) return false;
+  const t = new Date(d).getTime();
+  return Number.isFinite(t) && t < Date.now();
+}
+
 const usd = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
 
 /** Formats whole dollars as `$12,390` (negative: `−$791`). */

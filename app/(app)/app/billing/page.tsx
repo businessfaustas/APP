@@ -7,7 +7,7 @@ import { requireUser } from "@/lib/auth/session";
 import { PLANS } from "@/lib/billing/plans";
 import { features } from "@/lib/config/env";
 import { prisma } from "@/lib/db/prisma";
-import { formatDate, formatDateTime } from "@/lib/utils";
+import { daysAgo, formatDate, formatDateTime } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Billing" };
 
@@ -18,7 +18,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
     prisma.user.findUnique({ where: { id: user.id }, select: { stripeCustomerId: true, creditsResetAt: true } }),
     prisma.creditLedger.findMany({ where: { userId: user.id }, orderBy: { createdAt: "desc" }, take: 12 }),
     prisma.creditLedger.count({
-      where: { userId: user.id, reason: "ANALYSIS", createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } },
+      where: { userId: user.id, reason: "ANALYSIS", createdAt: { gte: daysAgo(30) } },
     }),
   ]);
   return (
