@@ -44,16 +44,17 @@ export function formatMiles(n: number | null | undefined, unit: "mi" | "km" = "m
   return `${formatNumber(n)} ${unit}`;
 }
 
-export function formatDateTime(d: Date | string | null | undefined): string {
+/** `locale` is an Intl locale such as "lt-LT" (see `INTL_LOCALE`). */
+export function formatDateTime(d: Date | string | null | undefined, locale = "en-US"): string {
   if (!d) return "—";
   const date = typeof d === "string" ? new Date(d) : d;
-  return new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short" }).format(date);
+  return new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(date);
 }
 
-export function formatDate(d: Date | string | null | undefined): string {
+export function formatDate(d: Date | string | null | undefined, locale = "en-US"): string {
   if (!d) return "—";
   const date = typeof d === "string" ? new Date(d) : d;
-  return new Intl.DateTimeFormat("en-US", { dateStyle: "medium" }).format(date);
+  return new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(date);
 }
 
 /** "in 2d 4h", "in 35m", "ended" */

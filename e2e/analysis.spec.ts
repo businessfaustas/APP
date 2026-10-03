@@ -70,7 +70,7 @@ test("a real Copart link the site won't let us read: four details from the lot p
   await expect(form).toBeVisible({ timeout: 30_000 });
   await expect(page.getByTestId("prefill-summary")).toHaveText("2019 HONDA CIVIC LX · salvage · Dallas, TX");
   await page.getByTestId("quick-damage").click();
-  await page.getByRole("option", { name: "FRONT END" }).click();
+  await page.getByRole("option", { name: "Front end" }).click();
   await page.locator("#q-odo").fill("48000");
   await page.locator("#q-bid").fill("1800");
   await page.locator("#q-acv").fill("16900");

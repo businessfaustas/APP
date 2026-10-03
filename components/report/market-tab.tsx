@@ -5,6 +5,8 @@ import { ExternalLinkIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useT } from "@/lib/i18n/client";
+import { trText } from "@/lib/i18n/generated";
 import { median } from "@/lib/providers/market/stats";
 import { formatBps, formatNumber, formatUsd } from "@/lib/utils";
 
@@ -23,6 +25,7 @@ function Stat({ label, value, sub }: { label: string; value: string; sub?: strin
 
 export function MarketTab() {
   const { view, calc, assumptions } = useReport();
+  const t = useT();
   const m = view.market;
   if (!m) return null;
   const mvExpected = assumptions.mvCleanOverride ?? m.mvClean.expected;
@@ -30,23 +33,27 @@ export function MarketTab() {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Stat label="Clean value — expected" value={formatUsd(mvExpected)} sub={`Range ${formatUsd(m.mvClean.worst)} – ${formatUsd(m.mvClean.best)}`} />
         <Stat
-          label={assumptions.exitStrategy === "EXPORT" ? "Resale (export)" : "Rebuilt-title resale"}
+          label={t("report.cleanExpected")}
+          value={formatUsd(mvExpected)}
+          sub={t("report.range", { low: formatUsd(m.mvClean.worst), high: formatUsd(m.mvClean.best) })}
+        />
+        <Stat
+          label={assumptions.exitStrategy === "EXPORT" ? t("report.resaleExport") : t("report.rebuiltResale")}
           value={formatUsd(calc?.scenarios.expected.resale)}
-          sub={assumptions.exitStrategy === "EXPORT" ? "Destination value" : `${formatBps(assumptions.rebuiltFactorBps, 0)} of clean`}
+          sub={assumptions.exitStrategy === "EXPORT" ? t("report.destinationValue") : t("report.ofClean", { pct: formatBps(assumptions.rebuiltFactorBps, 0) })}
         />
         <Stat
-          label="Median days to sell"
-          value={m.medianDaysOnMarket !== null ? `${m.medianDaysOnMarket} days` : "—"}
-          sub={`Holding ${assumptions.holdingDaysExpected} days assumed`}
+          label={t("report.medianDays")}
+          value={m.medianDaysOnMarket !== null ? t("report.days", { n: m.medianDaysOnMarket }) : "—"}
+          sub={t("report.holdingAssumed", { n: assumptions.holdingDaysExpected })}
         />
-        <Stat label="Comps" value={String(m.compsCount)} sub={`Confidence ${Math.round(m.confidence * 100)}%`} />
+        <Stat label={t("report.comps")} value={String(m.compsCount)} sub={t("report.confidence", { pct: Math.round(m.confidence * 100) })} />
       </div>
       <Card>
         <CardHeader className="flex-row items-center justify-between gap-2">
-          <CardTitle className="text-base">Comparable listings</CardTitle>
-          <Badge variant={m.isDemo ? "info" : "outline"}>{m.provider}</Badge>
+          <CardTitle className="text-base">{t("report.comparableListings")}</CardTitle>
+          <Badge variant={m.isDemo ? "info" : "outline"}>{trText(t, m.provider)}</Badge>
         </CardHeader>
         <CardContent className="space-y-4">
           {m.comps.length > 0 ? (
@@ -55,12 +62,12 @@ export function MarketTab() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="text-right">Asking</TableHead>
-                    <TableHead className="text-right">Adjusted</TableHead>
-                    <TableHead className="text-right">Miles</TableHead>
-                    <TableHead>Location</TableHead>
-                    <TableHead className="text-right">Days listed</TableHead>
-                    <TableHead>Seller</TableHead>
+                    <TableHead className="text-right">{t("report.asking")}</TableHead>
+                    <TableHead className="text-right">{t("report.adjusted")}</TableHead>
+                    <TableHead className="text-right">{t("report.miles")}</TableHead>
+                    <TableHead>{t("report.location")}</TableHead>
+                    <TableHead className="text-right">{t("report.daysListed")}</TableHead>
+                    <TableHead>{t("report.seller")}</TableHead>
                     <TableHead />
                   </TableRow>
                 </TableHeader>
@@ -75,14 +82,14 @@ export function MarketTab() {
                         {c.distanceMiles !== null ? <span className="text-muted-foreground"> · {c.distanceMiles} mi</span> : null}
                       </TableCell>
                       <TableCell className="text-right">{c.daysOnMarket ?? "—"}</TableCell>
-                      <TableCell className="capitalize">{c.sellerType}</TableCell>
+                      <TableCell className="capitalize">{trText(t, c.sellerType)}</TableCell>
                       <TableCell>
                         {c.url && (
                           <a
                             href={c.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            aria-label="Open listing"
+                            aria-label={t("report.openListing")}
                             className="text-muted-foreground hover:text-foreground"
                           >
                             <ExternalLinkIcon className="size-3.5" />
@@ -95,16 +102,13 @@ export function MarketTab() {
               </Table>
             </>
           ) : (
-            <p className="text-muted-foreground text-sm">No individual comps — the value comes from {m.provider.toLowerCase()}.</p>
+            <p className="text-muted-foreground text-sm">{t("report.noComps", { provider: trText(t, m.provider).toLowerCase() })}</p>
           )}
           <ul className="text-muted-foreground space-y-1 text-xs">
             {m.notes.map((n) => (
-              <li key={n}>{n}</li>
+              <li key={n}>{trText(t, n)}</li>
             ))}
-            <li>
-              Clean values are asking prices adjusted to this car&apos;s mileage, then multiplied by your list-to-sale ratio. Best = 75th percentile, worst =
-              25th.
-            </li>
+            <li>{t("report.compsMethod")}</li>
           </ul>
         </CardContent>
       </Card>

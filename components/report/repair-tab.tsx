@@ -11,13 +11,13 @@ import { Checkbox } from "@/components/ui/misc";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { HIDDEN_THRESHOLDS, linePrice } from "@/lib/calc/repair";
-import { ZONE_LABELS } from "@/lib/domain/damageZones";
 import type { PartSource, RepairLineItem } from "@/lib/domain/schemas";
+import { useT } from "@/lib/i18n/client";
+import { trPart, trText } from "@/lib/i18n/generated";
+import type { Translator } from "@/lib/i18n/translate";
 import { cn, formatBps, formatUsd } from "@/lib/utils";
 
 import { useReport } from "./report-context";
-
-const SOURCE_LABEL: Record<PartSource, string> = { OEM_NEW: "OEM", AFTERMARKET: "Aftermarket", USED: "Used" };
 
 function CellNumber({
   value,
@@ -60,15 +60,16 @@ function CellNumber({
   );
 }
 
-function scenarioNote(l: RepairLineItem): string | null {
+function scenarioNote(t: Translator, l: RepairLineItem): string | null {
   if (l.origin !== "HIDDEN_LIKELY") return null;
-  if (l.probability >= HIDDEN_THRESHOLDS.expected) return "expected + worst";
-  if (l.probability >= HIDDEN_THRESHOLDS.worst) return "worst case only";
-  return "not counted";
+  if (l.probability >= HIDDEN_THRESHOLDS.expected) return t("report.expectedWorst");
+  if (l.probability >= HIDDEN_THRESHOLDS.worst) return t("report.worstOnly");
+  return t("report.notCounted");
 }
 
 function AddLine() {
   const { addLine, view } = useReport();
+  const t = useT();
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [hours, setHours] = useState("");
@@ -102,18 +103,38 @@ function AddLine() {
           userEdited: true,
           selectedSource: null,
           priceOverride: null,
-          reason: "Added by you",
+          reason: t("report.addedByYou"),
         });
         setName("");
         setPrice("");
         setHours("");
       }}
     >
-      <Input aria-label="New part name" placeholder="Add a part or service…" value={name} onChange={(e) => setName(e.target.value)} className="h-8 w-56" />
-      <Input aria-label="Price" placeholder="Price $" inputMode="numeric" value={price} onChange={(e) => setPrice(e.target.value)} className="h-8 w-24" />
-      <Input aria-label="Labor hours" placeholder="Labor h" inputMode="decimal" value={hours} onChange={(e) => setHours(e.target.value)} className="h-8 w-24" />
+      <Input
+        aria-label={t("report.newPartName")}
+        placeholder={t("report.addPartPlaceholder")}
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        className="h-8 w-56"
+      />
+      <Input
+        aria-label={t("report.price")}
+        placeholder={t("report.pricePlaceholder")}
+        inputMode="numeric"
+        value={price}
+        onChange={(e) => setPrice(e.target.value)}
+        className="h-8 w-24"
+      />
+      <Input
+        aria-label={t("report.laborHours")}
+        placeholder={t("report.laborPlaceholder")}
+        inputMode="decimal"
+        value={hours}
+        onChange={(e) => setHours(e.target.value)}
+        className="h-8 w-24"
+      />
       <Button size="sm" type="submit" variant="outline">
-        <PlusIcon /> Add line
+        <PlusIcon /> {t("report.addLine")}
       </Button>
     </form>
   );
@@ -121,31 +142,30 @@ function AddLine() {
 
 export function RepairTab() {
   const { view, lineItems, updateLine, removeLine, assumptions, calc } = useReport();
+  const t = useT();
   const ro = view.readOnly;
   const pref = assumptions.partsSourcePreference;
   return (
     <div className="space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Repair line items</CardTitle>
-          <p className="text-muted-foreground text-xs">
-            Prices and hours shown are the expected case. Edit any cell — the max bid updates instantly. Hidden-damage lines count only in the scenarios shown.
-          </p>
+          <CardTitle className="text-base">{t("report.lineItems")}</CardTitle>
+          <p className="text-muted-foreground text-xs">{t("report.lineItemsNote")}</p>
         </CardHeader>
         <CardContent className="space-y-3">
           <Table data-testid="repair-table">
             <TableHeader>
               <TableRow>
                 <TableHead className="w-8">
-                  <span className="sr-only">Include</span>
+                  <span className="sr-only">{t("report.include")}</span>
                 </TableHead>
-                <TableHead>Part / service</TableHead>
-                <TableHead>Source</TableHead>
-                <TableHead className="text-right">Price</TableHead>
-                <TableHead className="text-right">Body h</TableHead>
-                <TableHead className="text-right">Paint h</TableHead>
-                <TableHead className="text-right">Mech h</TableHead>
-                <TableHead className="text-right">Conf.</TableHead>
+                <TableHead>{t("report.partService")}</TableHead>
+                <TableHead>{t("report.source")}</TableHead>
+                <TableHead className="text-right">{t("report.price")}</TableHead>
+                <TableHead className="text-right">{t("report.bodyH")}</TableHead>
+                <TableHead className="text-right">{t("report.paintH")}</TableHead>
+                <TableHead className="text-right">{t("report.mechH")}</TableHead>
+                <TableHead className="text-right">{t("report.conf")}</TableHead>
                 <TableHead className="w-8" />
               </TableRow>
             </TableHeader>
@@ -153,31 +173,32 @@ export function RepairTab() {
               {lineItems.map((l) => {
                 const available = (["OEM_NEW", "AFTERMARKET", "USED"] as const).filter((s) => l.prices[s]);
                 const price = linePrice(l, "expected", pref);
-                const note = scenarioNote(l);
+                const note = scenarioNote(t, l);
+                const name = trPart(t, l.partName);
                 return (
                   <TableRow key={l.id} className={cn(!l.included && "opacity-50")}>
                     <TableCell>
                       <Checkbox
-                        aria-label={`Include ${l.partName}`}
+                        aria-label={t("report.includeX", { name })}
                         checked={l.included}
                         disabled={ro}
                         onCheckedChange={(c) => updateLine(l.id, { included: c === true })}
                       />
                     </TableCell>
                     <TableCell className="max-w-56 min-w-40 whitespace-normal">
-                      <div className="text-sm font-medium">{l.partName}</div>
+                      <div className="text-sm font-medium">{name}</div>
                       <div className="text-muted-foreground mt-0.5 flex flex-wrap items-center gap-1 text-[11px]">
                         <span>
-                          {ZONE_LABELS[l.zone]} · {l.kind === "SUBLET" ? "sublet" : l.action.toLowerCase()}
+                          {t(`report.zone.${l.zone}`)} · {l.kind === "SUBLET" ? t("report.sublet") : t(`report.action.${l.action}`)}
                         </span>
-                        {l.origin === "HIDDEN_LIKELY" && (
-                          <Badge variant="caution">
-                            {Math.round(l.probability * 100)}% likely · {note}
+                        {l.origin === "HIDDEN_LIKELY" && <Badge variant="caution">{t("report.likely", { pct: Math.round(l.probability * 100), note })}</Badge>}
+                        {l.origin === "RULE" && (
+                          <Badge variant="info" title={l.reason ? trText(t, l.reason) : undefined}>
+                            {t("report.rule")}
                           </Badge>
                         )}
-                        {l.origin === "RULE" && <Badge variant="info">rule</Badge>}
-                        {l.priceOrigin === "AI_ESTIMATE" && <Badge variant="outline">AI price</Badge>}
-                        {l.userEdited && <Badge variant="outline">edited</Badge>}
+                        {l.priceOrigin === "AI_ESTIMATE" && <Badge variant="outline">{t("report.aiPrice")}</Badge>}
+                        {l.userEdited && <Badge variant="outline">{t("report.edited")}</Badge>}
                       </div>
                     </TableCell>
                     <TableCell>
@@ -186,30 +207,30 @@ export function RepairTab() {
                           value={l.selectedSource ?? "AUTO"}
                           onValueChange={(v) => updateLine(l.id, { selectedSource: v === "AUTO" ? null : (v as PartSource) })}
                         >
-                          <SelectTrigger size="sm" className="h-7 w-28 text-xs" aria-label={`Source for ${l.partName}`}>
+                          <SelectTrigger size="sm" className="h-7 w-28 text-xs" aria-label={t("report.sourceFor", { name })}>
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="AUTO">Auto</SelectItem>
+                            <SelectItem value="AUTO">{t("report.auto")}</SelectItem>
                             {available.map((s) => (
                               <SelectItem key={s} value={s}>
-                                {SOURCE_LABEL[s]}
+                                {t(`domain.partSource.${s}`)}
                               </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
                       ) : (
                         <span className="text-muted-foreground text-xs">
-                          {available.length === 1 ? SOURCE_LABEL[available[0]!] : l.kind === "SUBLET" ? "Shop" : "—"}
+                          {available.length === 1 ? t(`domain.partSource.${available[0]!}`) : l.kind === "SUBLET" ? t("report.shop") : "—"}
                         </span>
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      <CellNumber label={`Price for ${l.partName}`} value={price} disabled={ro} onCommit={(v) => updateLine(l.id, { priceOverride: v })} />
+                      <CellNumber label={t("report.priceFor", { name })} value={price} disabled={ro} onCommit={(v) => updateLine(l.id, { priceOverride: v })} />
                     </TableCell>
                     <TableCell className="text-right">
                       <CellNumber
-                        label={`Body hours for ${l.partName}`}
+                        label={t("report.bodyHoursFor", { name })}
                         step={0.1}
                         value={l.bodyHours.mid}
                         disabled={ro}
@@ -218,7 +239,7 @@ export function RepairTab() {
                     </TableCell>
                     <TableCell className="text-right">
                       <CellNumber
-                        label={`Paint hours for ${l.partName}`}
+                        label={t("report.paintHoursFor", { name })}
                         step={0.1}
                         value={l.paintHours.mid}
                         disabled={ro}
@@ -227,7 +248,7 @@ export function RepairTab() {
                     </TableCell>
                     <TableCell className="text-right">
                       <CellNumber
-                        label={`Mechanical hours for ${l.partName}`}
+                        label={t("report.mechHoursFor", { name })}
                         step={0.1}
                         value={l.mechHours.mid}
                         disabled={ro}
@@ -237,7 +258,7 @@ export function RepairTab() {
                     <TableCell className="num text-muted-foreground text-right text-xs">{Math.round(l.confidence * 100)}%</TableCell>
                     <TableCell>
                       {l.priceOrigin === "USER" && !ro && (
-                        <Button size="icon" variant="ghost" className="size-7" aria-label={`Remove ${l.partName}`} onClick={() => removeLine(l.id)}>
+                        <Button size="icon" variant="ghost" className="size-7" aria-label={t("report.remove", { name })} onClick={() => removeLine(l.id)}>
                           <Trash2Icon className="size-3.5" />
                         </Button>
                       )}
@@ -253,26 +274,26 @@ export function RepairTab() {
       {calc && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Repair totals by scenario</CardTitle>
+            <CardTitle className="text-base">{t("report.totalsByScenario")}</CardTitle>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead />
-                  <TableHead className="text-right">Best</TableHead>
-                  <TableHead className="text-right">Expected</TableHead>
-                  <TableHead className="text-right">Worst</TableHead>
+                  <TableHead className="text-right">{t("domain.scenario.best")}</TableHead>
+                  <TableHead className="text-right">{t("domain.scenario.expected")}</TableHead>
+                  <TableHead className="text-right">{t("domain.scenario.worst")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody className="num">
                 {(
                   [
-                    ["Parts (after discount)", "parts"],
-                    ["Labor", "labor"],
-                    ["Paint materials", "paintMaterials"],
-                    ["Sublets", "sublets"],
-                    ["Contingency", "contingency"],
+                    [t("report.partsAfterDiscount"), "parts"],
+                    [t("report.labor"), "labor"],
+                    [t("report.paintMaterials"), "paintMaterials"],
+                    [t("report.sublets"), "sublets"],
+                    [t("report.contingency"), "contingency"],
                   ] as const
                 ).map(([label, key]) => (
                   <TableRow key={key}>
@@ -283,7 +304,7 @@ export function RepairTab() {
                   </TableRow>
                 ))}
                 <TableRow className="font-semibold">
-                  <TableCell>Total repair</TableCell>
+                  <TableCell>{t("report.totalRepair")}</TableCell>
                   <TableCell className="text-right">{formatUsd(calc.scenarios.best.repair)}</TableCell>
                   <TableCell className="text-right" data-testid="repair-expected">
                     {formatUsd(calc.scenarios.expected.repair)}
@@ -293,8 +314,11 @@ export function RepairTab() {
               </TableBody>
             </Table>
             <p className="text-muted-foreground mt-2 text-xs">
-              Labor at ${assumptions.laborRate}/h · paint materials ${assumptions.paintMaterialsPerHour}/paint hour · contingency{" "}
-              {formatBps(assumptions.contingencyOverrideBps ?? view.repair?.baseContingencyBps ?? 0, 0)} expected (−5 pts best, +10 pts worst).
+              {t("report.repairNote", {
+                rate: assumptions.laborRate,
+                paint: assumptions.paintMaterialsPerHour,
+                cont: formatBps(assumptions.contingencyOverrideBps ?? view.repair?.baseContingencyBps ?? 0, 0),
+              })}
             </p>
           </CardContent>
         </Card>

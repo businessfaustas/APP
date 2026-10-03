@@ -5,8 +5,11 @@ import { PageContainer } from "@/components/page-header";
 import { ReportView } from "@/components/report/report-view";
 import { getAnalysisView } from "@/lib/analysis/view";
 import { requireUser } from "@/lib/auth/session";
+import { getT } from "@/lib/i18n/server";
 
-export const metadata: Metadata = { title: "Report" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getT())("report.reportTitle") };
+}
 
 export default async function AnalysisPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requireUser();

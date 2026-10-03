@@ -8,6 +8,7 @@ import type { AnalysisView } from "@/lib/analysis/view";
 import { assumptionsFromSettings, runAnalysisCalc, type Assumptions } from "@/lib/calc/build";
 import type { CalculationResult } from "@/lib/calc/types";
 import type { RepairLineItem } from "@/lib/domain/schemas";
+import { useT } from "@/lib/i18n/client";
 
 interface ReportState {
   view: AnalysisView;
@@ -70,6 +71,7 @@ const SETTINGS_KEYS = [
 ] as const;
 
 export function ReportProvider({ view, children }: { view: AnalysisView; children: React.ReactNode }) {
+  const t = useT();
   const [defaults, setDefaults] = useState(() => assumptionsFromSettings(view.settings));
   const [saved, setSaved] = useState<UserOverrides>(view.overrides);
   const originalLines = useMemo(() => view.repair?.lineItems ?? [], [view.repair]);
@@ -115,15 +117,15 @@ export function ReportProvider({ view, children }: { view: AnalysisView; childre
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ userOverrides: body }),
       });
-      if (!res.ok) throw new Error(((await res.json()) as { error?: string }).error ?? "Save failed");
+      if (!res.ok) throw new Error(((await res.json()) as { error?: string }).error ?? t("report.saveFailed"));
       setSaved(body);
-      toast.success("Saved to this report");
+      toast.success(t("report.savedToReport"));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Save failed");
+      toast.error(err instanceof Error ? err.message : t("report.saveFailed"));
     } finally {
       setSaving(false);
     }
-  }, [assumptions, defaults, lineItems, originalLines, view.id]);
+  }, [assumptions, defaults, lineItems, originalLines, view.id, t]);
 
   const saveDefaults = useCallback(async () => {
     setSaving(true);
@@ -131,17 +133,17 @@ export function ReportProvider({ view, children }: { view: AnalysisView; childre
     for (const k of SETTINGS_KEYS) patch[k] = assumptions[k];
     try {
       const res = await fetch("/api/settings", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify(patch) });
-      if (!res.ok) throw new Error(((await res.json()) as { error?: string }).error ?? "Save failed");
+      if (!res.ok) throw new Error(((await res.json()) as { error?: string }).error ?? t("report.saveFailed"));
       const nextDefaults: Assumptions = { ...defaults };
       for (const k of SETTINGS_KEYS) (nextDefaults as unknown as Record<string, unknown>)[k] = assumptions[k];
       setDefaults(nextDefaults);
-      toast.success("Saved as your defaults for future reports");
+      toast.success(t("report.savedDefaults"));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Save failed");
+      toast.error(err instanceof Error ? err.message : t("report.saveFailed"));
     } finally {
       setSaving(false);
     }
-  }, [assumptions, defaults]);
+  }, [assumptions, defaults, t]);
 
   const value: ReportState = {
     view,

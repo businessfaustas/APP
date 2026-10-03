@@ -11,19 +11,21 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { CompareRow } from "@/lib/analysis/batch";
-import { cn, formatBps, formatCountdown, formatUsd } from "@/lib/utils";
+import { useT } from "@/lib/i18n/client";
+import { countdownLabel, damageLabel } from "@/lib/i18n/labels";
+import { cn, formatBps, formatUsd } from "@/lib/utils";
 
 type SortKey = "dealScore" | "maxBid" | "expectedProfit" | "roiBps" | "headroomBps" | "severity" | "saleDate";
 
-const COLS: { key: SortKey; label: string }[] = [
-  { key: "saleDate", label: "Sale" },
-  { key: "maxBid", label: "Max bid" },
-  { key: "headroomBps", label: "Headroom" },
-  { key: "expectedProfit", label: "Exp. profit" },
-  { key: "roiBps", label: "ROI" },
-  { key: "severity", label: "Severity" },
-  { key: "dealScore", label: "Score" },
-];
+const COLS = [
+  { key: "saleDate", label: "colSale" },
+  { key: "maxBid", label: "colMax" },
+  { key: "headroomBps", label: "colHeadroom" },
+  { key: "expectedProfit", label: "colProfit" },
+  { key: "roiBps", label: "colRoi" },
+  { key: "severity", label: "colSeverity" },
+  { key: "dealScore", label: "colScore" },
+] as const satisfies readonly { key: SortKey; label: string }[];
 
 function value(r: CompareRow, k: SortKey): number {
   if (k === "saleDate") return r.saleDate ? -new Date(r.saleDate).getTime() : -Infinity;
@@ -32,6 +34,7 @@ function value(r: CompareRow, k: SortKey): number {
 }
 
 export function CompareTable({ batchId, initial }: { batchId: string; initial: CompareRow[] }) {
+  const t = useT();
   const [sort, setSort] = useState<SortKey>("dealScore");
   const [desc, setDesc] = useState(true);
   const { data } = useQuery({
@@ -49,16 +52,16 @@ export function CompareTable({ batchId, initial }: { batchId: string; initial: C
 
   async function watch(id: string) {
     const res = await fetch("/api/watchlist", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ analysisId: id }) });
-    if (res.ok) toast.success("Added to watchlist");
-    else toast.error(((await res.json()) as { error?: string }).error ?? "Failed");
+    if (res.ok) toast.success(t("compare.addedToWatchlist"));
+    else toast.error(((await res.json()) as { error?: string }).error ?? t("dash.failed"));
   }
 
   return (
     <Table data-testid="compare-table">
       <TableHeader>
         <TableRow>
-          <TableHead>Vehicle</TableHead>
-          <TableHead>Verdict</TableHead>
+          <TableHead>{t("compare.vehicle")}</TableHead>
+          <TableHead>{t("compare.verdict")}</TableHead>
           {COLS.map((c) => (
             <TableHead key={c.key} className="text-right">
               <button
@@ -72,7 +75,7 @@ export function CompareTable({ batchId, initial }: { batchId: string; initial: C
                   }
                 }}
               >
-                {c.label} <ArrowDownUpIcon className="size-3" />
+                {t(`compare.${c.label}`)} <ArrowDownUpIcon className="size-3" />
               </button>
             </TableHead>
           ))}
@@ -92,11 +95,16 @@ export function CompareTable({ batchId, initial }: { batchId: string; initial: C
                 )}
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5 font-medium">
-                    {r.status === "COMPLETED" && i === 0 && sort === "dealScore" && desc && <Badge variant="go">Best</Badge>}
+                    {r.status === "COMPLETED" && i === 0 && sort === "dealScore" && desc && <Badge variant="go">{t("compare.best")}</Badge>}
                     <span className="max-w-48 truncate">{r.title}</span>
                   </div>
                   <div className="text-muted-foreground text-xs">
-                    {[r.damage?.toLowerCase(), r.title_?.toLowerCase().replace(/_/g, " ")].filter(Boolean).join(" · ")}
+                    {[
+                      r.damage ? damageLabel(t, r.damage).toLowerCase() : null,
+                      r.title_ ? t.dyn(`domain.title.${r.title_}`, undefined, r.title_).toLowerCase() : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
                   </div>
                 </div>
               </Link>
@@ -106,7 +114,7 @@ export function CompareTable({ batchId, initial }: { batchId: string; initial: C
                 <TableCell>
                   <VerdictBadge verdict={r.verdict} />
                 </TableCell>
-                <TableCell className="text-right text-xs">{formatCountdown(r.saleDate)}</TableCell>
+                <TableCell className="text-right text-xs">{countdownLabel(t, r.saleDate)}</TableCell>
                 <TableCell className="num text-right font-semibold">{formatUsd(r.maxBid)}</TableCell>
                 <TableCell className={cn("num text-right", (r.headroomBps ?? 0) < 1500 && "text-caution")}>{formatBps(r.headroomBps, 0)}</TableCell>
                 <TableCell className={cn("num text-right", (r.expectedProfit ?? 0) < 0 && "text-stop")}>{formatUsd(r.expectedProfit)}</TableCell>
@@ -114,7 +122,7 @@ export function CompareTable({ batchId, initial }: { batchId: string; initial: C
                 <TableCell className="num text-right">{r.severity ?? "—"}/10</TableCell>
                 <TableCell className="num text-right font-semibold">{r.dealScore ?? "—"}</TableCell>
                 <TableCell>
-                  <Button size="icon" variant="ghost" className="size-8" aria-label="Add to watchlist" onClick={() => void watch(r.id)}>
+                  <Button size="icon" variant="ghost" className="size-8" aria-label={t("compare.addToWatchlist")} onClick={() => void watch(r.id)}>
                     <EyeIcon className="size-4" />
                   </Button>
                 </TableCell>
@@ -122,14 +130,14 @@ export function CompareTable({ batchId, initial }: { batchId: string; initial: C
             ) : (
               <TableCell colSpan={COLS.length + 2} className="text-muted-foreground text-sm">
                 {r.status === "FAILED" ? (
-                  <Badge variant="stop">Failed</Badge>
+                  <Badge variant="stop">{t("dash.failed")}</Badge>
                 ) : r.needsInput ? (
                   <Link href={`/app/analyses/${r.id}`} className="underline">
-                    Needs listing details — open
+                    {t("compare.needsDetails")}
                   </Link>
                 ) : (
                   <span className="inline-flex items-center gap-2">
-                    <Loader2Icon className="size-3.5 animate-spin" /> Analyzing… {r.progress}%
+                    <Loader2Icon className="size-3.5 animate-spin" /> {t("compare.analyzing", { pct: r.progress })}
                   </span>
                 )}
               </TableCell>

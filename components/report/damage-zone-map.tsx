@@ -1,7 +1,7 @@
 "use client";
 
-import { ZONE_LABELS } from "@/lib/domain/damageZones";
 import type { DamageAssessment, DamageZone, RepairLineItem } from "@/lib/domain/schemas";
+import { useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
 
 type Shape = { zone: DamageZone; d: string; lx: number; ly: number };
@@ -46,10 +46,11 @@ export function DamageZoneMap({
   selected: DamageZone | null;
   onSelect: (z: DamageZone | null) => void;
 }) {
+  const t = useT();
   const under = severities.undercarriage;
   return (
     <div className="flex flex-col items-center gap-3">
-      <svg viewBox="0 0 200 360" className="h-auto w-full max-w-[220px]" role="group" aria-label="Damage map (top view, front up)">
+      <svg viewBox="0 0 200 360" className="h-auto w-full max-w-[220px]" role="group" aria-label={t("report.damageMapAria")}>
         <path d="M44 14 Q100 -4 156 14 L184 120 V250 L176 318 Q100 368 24 318 L16 250 V120 Z" className="stroke-border fill-none" strokeWidth={2} />
         {SHAPES.map((s) => {
           const sev = severities[s.zone];
@@ -61,7 +62,7 @@ export function DamageZoneMap({
                 role="button"
                 tabIndex={0}
                 aria-pressed={isSel}
-                aria-label={`${ZONE_LABELS[s.zone]}: ${sev ? `severity ${sev} of 10` : "no damage found"}`}
+                aria-label={`${t(`report.zone.${s.zone}`)}: ${sev ? t("report.zoneSeverity", { n: sev }) : t("report.noDamageFound")}`}
                 className={cn(
                   "stroke-card focus-visible:stroke-ring cursor-pointer transition-opacity outline-none hover:opacity-80",
                   fillClass(sev),
@@ -76,7 +77,7 @@ export function DamageZoneMap({
                   }
                 }}
               >
-                <title>{`${ZONE_LABELS[s.zone]}${sev ? ` — severity ${sev}/10` : ""}`}</title>
+                <title>{`${t(`report.zone.${s.zone}`)}${sev ? t("report.zoneSeverityShort", { n: sev }) : ""}`}</title>
               </path>
               {sev ? (
                 <text
@@ -102,20 +103,21 @@ export function DamageZoneMap({
           selected === "undercarriage" && "ring-foreground ring-2",
         )}
       >
-        Undercarriage{under ? ` · ${under}/10` : ""}
+        {t("report.zone.undercarriage")}
+        {under ? ` · ${under}/10` : ""}
       </button>
       <div className="text-muted-foreground flex flex-wrap justify-center gap-3 text-[11px]">
         <span className="flex items-center gap-1">
-          <span className="bg-muted size-2.5 rounded-sm" /> none
+          <span className="bg-muted size-2.5 rounded-sm" /> {t("report.sevNone")}
         </span>
         <span className="flex items-center gap-1">
-          <span className="bg-caution/35 size-2.5 rounded-sm" /> minor 1–3
+          <span className="bg-caution/35 size-2.5 rounded-sm" /> {t("report.sevMinor")}
         </span>
         <span className="flex items-center gap-1">
-          <span className="bg-caution/80 size-2.5 rounded-sm" /> moderate 4–6
+          <span className="bg-caution/80 size-2.5 rounded-sm" /> {t("report.sevModerate")}
         </span>
         <span className="flex items-center gap-1">
-          <span className="bg-stop/80 size-2.5 rounded-sm" /> severe 7–10
+          <span className="bg-stop/80 size-2.5 rounded-sm" /> {t("report.sevSevere")}
         </span>
       </div>
     </div>

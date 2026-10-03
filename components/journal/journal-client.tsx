@@ -13,6 +13,8 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Input, Textarea } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useLocale, useT } from "@/lib/i18n/client";
+import { INTL_LOCALE } from "@/lib/i18n/locales";
 import { dealPnl, journalSummary, type JournalNumbers } from "@/lib/journal";
 import { cn, formatBps, formatDate, formatUsd } from "@/lib/utils";
 
@@ -28,19 +30,20 @@ export interface JournalEntryView extends JournalNumbers {
 
 export type JournalDraft = Omit<JournalEntryView, "id"> & { id?: string };
 
-const MONEY_FIELDS: { key: keyof JournalNumbers; label: string }[] = [
-  { key: "purchasePrice", label: "Winning bid" },
-  { key: "auctionFeesActual", label: "Auction fees" },
-  { key: "transportActual", label: "Transport" },
-  { key: "partsActual", label: "Parts" },
-  { key: "laborActual", label: "Labor" },
-  { key: "otherCostsActual", label: "Other (title, storage…)" },
-  { key: "salePrice", label: "Sale price" },
-  { key: "estimatedRepair", label: "Estimated repair" },
-];
+const MONEY_FIELDS = [
+  "purchasePrice",
+  "auctionFeesActual",
+  "transportActual",
+  "partsActual",
+  "laborActual",
+  "otherCostsActual",
+  "salePrice",
+  "estimatedRepair",
+] as const satisfies readonly (keyof JournalNumbers)[];
 
 function EntryDialog({ draft, onClose }: { draft: JournalDraft; onClose: () => void }) {
   const router = useRouter();
+  const t = useT();
   const [d, setD] = useState<JournalDraft>(draft);
   const [busy, setBusy] = useState(false);
   const setMoney = (k: keyof JournalNumbers, v: string) => setD((x) => ({ ...x, [k]: v.trim() === "" ? null : Number(v.replace(/[^\d-]/g, "")) }));
@@ -53,8 +56,8 @@ function EntryDialog({ draft, onClose }: { draft: JournalDraft; onClose: () => v
       body: JSON.stringify(d),
     });
     setBusy(false);
-    if (!res.ok) return toast.error(((await res.json()) as { error?: string }).error ?? "Couldn't save");
-    toast.success("Saved");
+    if (!res.ok) return toast.error(((await res.json()) as { error?: string }).error ?? t("journal.couldNotSave"));
+    toast.success(t("common.saved"));
     onClose();
     router.replace("/app/journal");
     router.refresh();
@@ -64,38 +67,38 @@ function EntryDialog({ draft, onClose }: { draft: JournalDraft; onClose: () => v
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{d.id ? "Edit deal" : "Log a deal"}</DialogTitle>
+          <DialogTitle>{d.id ? t("journal.edit") : t("journal.log")}</DialogTitle>
         </DialogHeader>
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="space-y-1.5 sm:col-span-2">
-            <Label htmlFor="j-title">Vehicle</Label>
+            <Label htmlFor="j-title">{t("journal.vehicle")}</Label>
             <Input id="j-title" value={d.title} onChange={(e) => setD({ ...d, title: e.target.value })} placeholder="2019 Audi A3" />
           </div>
           {MONEY_FIELDS.map((f) => (
-            <div key={f.key} className="space-y-1.5">
-              <Label htmlFor={`j-${f.key}`}>{f.label} ($)</Label>
-              <Input id={`j-${f.key}`} inputMode="numeric" value={d[f.key] ?? ""} onChange={(e) => setMoney(f.key, e.target.value)} />
+            <div key={f} className="space-y-1.5">
+              <Label htmlFor={`j-${f}`}>{t(`journal.${f}`)} ($)</Label>
+              <Input id={`j-${f}`} inputMode="numeric" value={d[f] ?? ""} onChange={(e) => setMoney(f, e.target.value)} />
             </div>
           ))}
           <div className="space-y-1.5">
-            <Label htmlFor="j-bought">Bought on</Label>
+            <Label htmlFor="j-bought">{t("journal.boughtOn")}</Label>
             <Input id="j-bought" type="date" value={d.purchasedAt?.slice(0, 10) ?? ""} onChange={(e) => setD({ ...d, purchasedAt: e.target.value || null })} />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="j-sold">Sold on</Label>
+            <Label htmlFor="j-sold">{t("journal.soldOn")}</Label>
             <Input id="j-sold" type="date" value={d.soldAt?.slice(0, 10) ?? ""} onChange={(e) => setD({ ...d, soldAt: e.target.value || null })} />
           </div>
           <div className="space-y-1.5 sm:col-span-2">
-            <Label htmlFor="j-notes">Notes</Label>
+            <Label htmlFor="j-notes">{t("journal.notes")}</Label>
             <Textarea id="j-notes" rows={2} value={d.notes ?? ""} onChange={(e) => setD({ ...d, notes: e.target.value || null })} />
           </div>
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={onClose}>
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button onClick={() => void save()} disabled={busy || !d.title.trim()}>
-            Save
+            {t("common.save")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -123,6 +126,8 @@ const EMPTY: JournalDraft = {
 
 export function JournalClient({ entries, prefill }: { entries: JournalEntryView[]; prefill: JournalDraft | null }) {
   const router = useRouter();
+  const t = useT();
+  const intl = INTL_LOCALE[useLocale()];
   const [editing, setEditing] = useState<JournalDraft | null>(prefill);
   const summary = journalSummary(entries);
   const chart = entries
@@ -139,23 +144,23 @@ export function JournalClient({ entries, prefill }: { entries: JournalEntryView[
     <div className="space-y-5">
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {[
-          { label: "Deals logged", value: String(summary.deals), sub: `${summary.sold} sold` },
-          { label: "Total profit (sold)", value: formatUsd(summary.totalProfit), sub: "sale − all costs" },
-          { label: "Average ROI", value: formatBps(summary.avgRoiBps), sub: "on sold deals" },
+          { label: t("journal.dealsLogged"), value: String(summary.deals), sub: t("journal.soldN", { n: summary.sold }) },
+          { label: t("journal.totalProfit"), value: formatUsd(summary.totalProfit), sub: t("journal.saleMinusCosts") },
+          { label: t("journal.avgRoi"), value: formatBps(summary.avgRoiBps), sub: t("journal.onSold") },
           {
-            label: "Repair estimate accuracy",
+            label: t("journal.accuracy"),
             value: summary.medianRepairErrorBps !== null ? `±${formatBps(summary.medianRepairErrorBps, 0)}` : "—",
             sub:
               summary.avgRepairBiasBps !== null
-                ? `repairs ran ${summary.avgRepairBiasBps >= 0 ? "over" : "under"} by ${formatBps(Math.abs(summary.avgRepairBiasBps), 0)} on average`
-                : "median error vs. actual",
+                ? t(summary.avgRepairBiasBps >= 0 ? "journal.ranOver" : "journal.ranUnder", { pct: formatBps(Math.abs(summary.avgRepairBiasBps), 0) })
+                : t("journal.medianError"),
           },
-        ].map((t) => (
-          <Card key={t.label}>
+        ].map((tile) => (
+          <Card key={tile.label}>
             <CardContent>
-              <div className="text-muted-foreground text-xs">{t.label}</div>
-              <div className="text-2xl font-semibold">{t.value}</div>
-              <div className="text-muted-foreground text-xs">{t.sub}</div>
+              <div className="text-muted-foreground text-xs">{tile.label}</div>
+              <div className="text-2xl font-semibold">{tile.value}</div>
+              <div className="text-muted-foreground text-xs">{tile.sub}</div>
             </CardContent>
           </Card>
         ))}
@@ -163,26 +168,24 @@ export function JournalClient({ entries, prefill }: { entries: JournalEntryView[
 
       <Card>
         <CardHeader className="flex-row items-center justify-between">
-          <CardTitle className="text-base">Deals</CardTitle>
+          <CardTitle className="text-base">{t("journal.deals")}</CardTitle>
           <Button size="sm" onClick={() => setEditing(EMPTY)}>
-            <PlusIcon /> Log a deal
+            <PlusIcon /> {t("journal.log")}
           </Button>
         </CardHeader>
         <CardContent>
           {entries.length === 0 ? (
-            <p className="text-muted-foreground text-sm">
-              After you buy a car, log what you actually paid and sold it for. Comparing estimates with reality is how your future max bids get sharper.
-            </p>
+            <p className="text-muted-foreground text-sm">{t("journal.emptyBody")}</p>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Vehicle</TableHead>
-                  <TableHead className="text-right">All-in cost</TableHead>
-                  <TableHead className="text-right">Sale</TableHead>
-                  <TableHead className="text-right">Profit</TableHead>
-                  <TableHead className="text-right">ROI</TableHead>
-                  <TableHead className="text-right">Repair vs est.</TableHead>
+                  <TableHead>{t("journal.vehicle")}</TableHead>
+                  <TableHead className="text-right">{t("journal.allIn")}</TableHead>
+                  <TableHead className="text-right">{t("journal.sale")}</TableHead>
+                  <TableHead className="text-right">{t("journal.profit")}</TableHead>
+                  <TableHead className="text-right">{t("journal.roi")}</TableHead>
+                  <TableHead className="text-right">{t("journal.repairVsEst")}</TableHead>
                   <TableHead />
                 </TableRow>
               </TableHeader>
@@ -202,7 +205,11 @@ export function JournalClient({ entries, prefill }: { entries: JournalEntryView[
                           )}
                         </div>
                         <div className="text-muted-foreground text-xs">
-                          {e.soldAt ? `Sold ${formatDate(e.soldAt)}` : e.purchasedAt ? `Bought ${formatDate(e.purchasedAt)}` : ""}
+                          {e.soldAt
+                            ? t("journal.soldDate", { date: formatDate(e.soldAt, intl) })
+                            : e.purchasedAt
+                              ? t("journal.boughtDate", { date: formatDate(e.purchasedAt, intl) })
+                              : ""}
                         </div>
                       </TableCell>
                       <TableCell className="text-right">{formatUsd(p.totalCost)}</TableCell>
@@ -213,10 +220,10 @@ export function JournalClient({ entries, prefill }: { entries: JournalEntryView[
                         {p.repairErrorBps !== null ? `${p.repairErrorBps > 0 ? "+" : ""}${formatBps(p.repairErrorBps, 0)}` : "—"}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button size="icon" variant="ghost" className="size-8" aria-label="Edit" onClick={() => setEditing(e)}>
+                        <Button size="icon" variant="ghost" className="size-8" aria-label={t("common.edit")} onClick={() => setEditing(e)}>
                           <PencilIcon className="size-3.5" />
                         </Button>
-                        <Button size="icon" variant="ghost" className="size-8" aria-label="Delete" onClick={() => void remove(e.id)}>
+                        <Button size="icon" variant="ghost" className="size-8" aria-label={t("common.delete")} onClick={() => void remove(e.id)}>
                           <Trash2Icon className="size-3.5" />
                         </Button>
                       </TableCell>
@@ -232,15 +239,15 @@ export function JournalClient({ entries, prefill }: { entries: JournalEntryView[
       {chart.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Estimated vs. actual repair cost</CardTitle>
+            <CardTitle className="text-base">{t("journal.chartTitle")}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-muted-foreground mb-2 flex gap-4 text-xs">
               <span className="flex items-center gap-1.5">
-                <span className="size-2.5 rounded-sm" style={{ background: "var(--series-1)" }} /> Estimated
+                <span className="size-2.5 rounded-sm" style={{ background: "var(--series-1)" }} /> {t("journal.estimated")}
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="size-2.5 rounded-sm" style={{ background: "var(--series-2)" }} /> Actual
+                <span className="size-2.5 rounded-sm" style={{ background: "var(--series-2)" }} /> {t("journal.actual")}
               </span>
             </div>
             <div className="h-64">
@@ -263,7 +270,7 @@ export function JournalClient({ entries, prefill }: { entries: JournalEntryView[
                           <div className="font-medium">{String(label)}</div>
                           {payload.map((p) => (
                             <div key={String(p.dataKey)}>
-                              {p.dataKey === "estimated" ? "Estimated" : "Actual"}: {formatUsd(Number(p.value))}
+                              {p.dataKey === "estimated" ? t("journal.estimated") : t("journal.actual")}: {formatUsd(Number(p.value))}
                             </div>
                           ))}
                         </div>

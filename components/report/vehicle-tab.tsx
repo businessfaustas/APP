@@ -5,9 +5,11 @@ import { ExternalLinkIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { RUN_LABELS, TITLE_LABELS } from "@/lib/domain/titles";
-import { VEHICLE_CLASS_LABELS } from "@/lib/domain/vehicleClass";
 import { exportCostsFrom } from "@/lib/calc/build";
+import { useLocale, useT } from "@/lib/i18n/client";
+import { trText } from "@/lib/i18n/generated";
+import { damageLabel, keysLabel, runLabel, titleLabel } from "@/lib/i18n/labels";
+import { INTL_LOCALE } from "@/lib/i18n/locales";
 import { formatDate, formatDateTime, formatNumber, formatUsd } from "@/lib/utils";
 
 import { useReport } from "./report-context";
@@ -23,6 +25,8 @@ function Row({ k, v }: { k: string; v: React.ReactNode }) {
 
 export function VehicleTab() {
   const { view } = useReport();
+  const t = useT();
+  const intl = INTL_LOCALE[useLocale()];
   const v = view.vehicle;
   const l = view.listing;
   const h = view.history;
@@ -31,48 +35,48 @@ export function VehicleTab() {
     <div className="grid gap-4 lg:grid-cols-2">
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Vehicle</CardTitle>
+          <CardTitle className="text-base">{t("report.vehicle")}</CardTitle>
         </CardHeader>
         <CardContent>
           <dl className="divide-y">
-            <Row k="VIN" v={<span className="font-mono text-xs">{l.vin ?? "—"}</span>} />
-            <Row k="Year / make / model" v={[v?.year ?? l.year, v?.make ?? l.make, v?.model ?? l.model].filter(Boolean).join(" ")} />
-            <Row k="Trim" v={v?.trim ?? l.trim} />
-            <Row k="Body" v={v?.bodyClass} />
-            <Row k="Engine" v={v?.engine ?? l.engine} />
-            <Row k="Transmission" v={v?.transmission ?? l.transmission} />
-            <Row k="Drive" v={v?.driveType ?? l.drive} />
-            <Row k="Fuel" v={v?.fuelType ?? l.fuel} />
-            <Row k="Class" v={v ? VEHICLE_CLASS_LABELS[v.vehicleClass] : "—"} />
-            <Row k="Decoded by" v={v?.decodeSource} />
+            <Row k={t("report.vin")} v={<span className="font-mono text-xs">{l.vin ?? "—"}</span>} />
+            <Row k={t("report.ymm")} v={[v?.year ?? l.year, v?.make ?? l.make, v?.model ?? l.model].filter(Boolean).join(" ")} />
+            <Row k={t("report.trim")} v={v?.trim ?? l.trim} />
+            <Row k={t("report.body")} v={v?.bodyClass} />
+            <Row k={t("report.engine")} v={v?.engine ?? l.engine} />
+            <Row k={t("report.transmission")} v={v?.transmission ?? l.transmission} />
+            <Row k={t("report.drive")} v={v?.driveType ?? l.drive} />
+            <Row k={t("report.fuel")} v={v?.fuelType ?? l.fuel} />
+            <Row k={t("report.class")} v={v ? t(`report.vehicleClass.${v.vehicleClass}`) : "—"} />
+            <Row k={t("report.decodedBy")} v={v?.decodeSource} />
           </dl>
         </CardContent>
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Listing</CardTitle>
+          <CardTitle className="text-base">{t("report.listing")}</CardTitle>
         </CardHeader>
         <CardContent>
           <dl className="divide-y">
             <Row
-              k="Odometer"
-              v={l.odometer !== null ? `${formatNumber(l.odometer)} ${l.odometerUnit} (${l.odometerBrand.toLowerCase().replace(/_/g, " ")})` : "—"}
+              k={t("report.odometer")}
+              v={l.odometer !== null ? `${formatNumber(l.odometer)} ${l.odometerUnit} (${t(`report.odoBrand.${l.odometerBrand}`)})` : "—"}
             />
-            <Row k="Title" v={`${TITLE_LABELS[l.titleCategory]}${l.titleRaw ? ` — ${l.titleRaw}` : ""}`} />
-            <Row k="Primary damage" v={l.primaryDamage} />
-            <Row k="Secondary damage" v={l.secondaryDamage} />
-            <Row k="Condition" v={RUN_LABELS[l.runCondition]} />
-            <Row k="Keys" v={l.hasKeys === null ? "Unknown" : l.hasKeys ? "Yes" : "No"} />
-            <Row k="Sale date" v={formatDateTime(l.saleDate)} />
-            <Row k="Sale status" v={l.saleStatus.toLowerCase().replace(/_/g, " ")} />
-            <Row k="Auction's retail value" v={l.listedRetailValue ? `${formatUsd(l.listedRetailValue)} (low trust)` : "—"} />
-            <Row k="Seller" v={l.sellerType} />
+            <Row k={t("report.title")} v={`${titleLabel(t, l.titleCategory)}${l.titleRaw ? ` — ${l.titleRaw}` : ""}`} />
+            <Row k={t("report.primaryDamage")} v={l.primaryDamage ? damageLabel(t, l.primaryDamage) : null} />
+            <Row k={t("report.secondaryDamage")} v={l.secondaryDamage ? damageLabel(t, l.secondaryDamage) : null} />
+            <Row k={t("report.condition")} v={runLabel(t, l.runCondition)} />
+            <Row k={t("report.keys")} v={keysLabel(t, l.hasKeys)} />
+            <Row k={t("report.saleDate")} v={formatDateTime(l.saleDate, intl)} />
+            <Row k={t("report.saleStatus")} v={t(`report.saleStatusValue.${l.saleStatus}`)} />
+            <Row k={t("report.auctionRetail")} v={l.listedRetailValue ? t("report.lowTrust", { amount: formatUsd(l.listedRetailValue) }) : "—"} />
+            <Row k={t("report.seller")} v={l.sellerType} />
           </dl>
         </CardContent>
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Recalls & common problems</CardTitle>
+          <CardTitle className="text-base">{t("report.recallsTitle")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {v && v.recalls.length > 0 ? (
@@ -85,16 +89,14 @@ export function VehicleTab() {
                   <div className="text-muted-foreground text-xs">{r.summary}</div>
                 </li>
               ))}
-              <li className="text-muted-foreground text-xs">
-                Recalls listed for this model year — dealers repair open recalls free. Check the VIN-specific status.
-              </li>
+              <li className="text-muted-foreground text-xs">{t("report.recallsNote")}</li>
             </ul>
           ) : (
-            <p className="text-muted-foreground text-sm">No recalls found for this model year.</p>
+            <p className="text-muted-foreground text-sm">{t("report.noRecalls")}</p>
           )}
           {v && v.complaints.length > 0 && (
             <div>
-              <div className="text-muted-foreground mb-1.5 text-xs font-medium">Most-reported problems (NHTSA complaints)</div>
+              <div className="text-muted-foreground mb-1.5 text-xs font-medium">{t("report.complaints")}</div>
               <div className="flex flex-wrap gap-1.5">
                 {v.complaints.map((c) => (
                   <Badge key={c.component} variant="outline">
@@ -111,14 +113,14 @@ export function VehicleTab() {
               rel="noopener noreferrer"
               className="text-primary inline-flex items-center gap-1 text-sm underline-offset-4 hover:underline"
             >
-              Free theft / total-loss check (NICB VINCheck) <ExternalLinkIcon className="size-3.5" />
+              {t("report.nicb")} <ExternalLinkIcon className="size-3.5" />
             </a>
           )}
         </CardContent>
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Title & odometer history</CardTitle>
+          <CardTitle className="text-base">{t("report.historyTitle")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           {h ? (
@@ -126,22 +128,22 @@ export function VehicleTab() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>State</TableHead>
-                    <TableHead>Event</TableHead>
+                    <TableHead>{t("report.date")}</TableHead>
+                    <TableHead>{t("report.state")}</TableHead>
+                    <TableHead>{t("report.event")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {h.titleRecords.map((t, i) => (
+                  {h.titleRecords.map((rec, i) => (
                     <TableRow key={`t${i}`}>
-                      <TableCell>{formatDate(t.date)}</TableCell>
-                      <TableCell>{t.state ?? "—"}</TableCell>
-                      <TableCell>Title: {t.brand}</TableCell>
+                      <TableCell>{formatDate(rec.date, intl)}</TableCell>
+                      <TableCell>{rec.state ?? "—"}</TableCell>
+                      <TableCell>{t("report.titleEvent", { brand: rec.brand })}</TableCell>
                     </TableRow>
                   ))}
                   {h.junkSalvageRecords.map((j, i) => (
                     <TableRow key={`j${i}`}>
-                      <TableCell>{formatDate(j.date)}</TableCell>
+                      <TableCell>{formatDate(j.date, intl)}</TableCell>
                       <TableCell>—</TableCell>
                       <TableCell>
                         {j.reportingEntity}
@@ -151,21 +153,19 @@ export function VehicleTab() {
                   ))}
                   {h.odometerRecords.map((o, i) => (
                     <TableRow key={`o${i}`}>
-                      <TableCell>{formatDate(o.date)}</TableCell>
+                      <TableCell>{formatDate(o.date, intl)}</TableCell>
                       <TableCell>—</TableCell>
-                      <TableCell className="num">Odometer {formatNumber(o.reading)} mi</TableCell>
+                      <TableCell className="num">{t("report.odometerEvent", { n: formatNumber(o.reading) })}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
               <p className="text-muted-foreground text-xs">
-                Source: {h.provider}.{" "}
-                {!h.isDemo &&
-                  "NMVTIS data comes from state titling agencies, insurers and salvage/junk yards. It may not include every event, and it isn't a substitute for an inspection."}
+                {t("report.historySource", { provider: trText(t, h.provider) })} {!h.isDemo && t("report.nmvtisNote")}
               </p>
             </>
           ) : (
-            <p className="text-muted-foreground text-sm">No history provider is configured. Add a VinAudit key for NMVTIS title and odometer history.</p>
+            <p className="text-muted-foreground text-sm">{t("report.noHistory")}</p>
           )}
         </CardContent>
       </Card>
@@ -175,6 +175,7 @@ export function VehicleTab() {
 
 export function LogisticsTab() {
   const { view, calc, assumptions } = useReport();
+  const t = useT();
   const l = view.listing;
   const lg = view.logistics;
   const base = view.base;
@@ -185,37 +186,43 @@ export function LogisticsTab() {
     <div className="grid gap-4 lg:grid-cols-2">
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Transport</CardTitle>
+          <CardTitle className="text-base">{t("report.transport")}</CardTitle>
         </CardHeader>
         <CardContent>
           <dl className="divide-y">
-            <Row k="Yard" v={[l.location.yardName, l.location.city, l.location.state, l.location.zip].filter(Boolean).join(", ")} />
-            <Row k="Delivered to" v={lg.userZip ? `ZIP ${lg.userZip}` : "—"} />
-            <Row k="Distance" v={`${formatNumber(assumptions.distanceOverride ?? lg.distanceMiles)} mi${lg.method === "DEFAULT" ? " (estimated)" : ""}`} />
-            <Row k="Rate" v={`$${(assumptions.transportCentsPerMile / 100).toFixed(2)}/mi, min ${formatUsd(assumptions.transportMin)}`} />
-            <Row k="Transport cost" v={formatUsd(calc.scenarios.expected.logistics)} />
-            <Row k="Title / inspection / storage" v={formatUsd(calc.scenarios.expected.admin)} />
+            <Row k={t("report.yard")} v={[l.location.yardName, l.location.city, l.location.state, l.location.zip].filter(Boolean).join(", ")} />
+            <Row k={t("report.deliveredTo")} v={lg.userZip ? t("report.zip", { zip: lg.userZip }) : "—"} />
+            <Row
+              k={t("report.distance")}
+              v={`${formatNumber(assumptions.distanceOverride ?? lg.distanceMiles)} mi${lg.method === "DEFAULT" ? t("report.estimated") : ""}`}
+            />
+            <Row
+              k={t("report.rate")}
+              v={t("report.rateValue", { rate: (assumptions.transportCentsPerMile / 100).toFixed(2), min: formatUsd(assumptions.transportMin) })}
+            />
+            <Row k={t("report.transportCost")} v={formatUsd(calc.scenarios.expected.logistics)} />
+            <Row k={t("report.titleInspection")} v={formatUsd(calc.scenarios.expected.admin)} />
           </dl>
         </CardContent>
       </Card>
       {ec && base.exportProfile && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Export — {base.exportProfile.name}</CardTitle>
-            {base.exportProfile.isPlaceholder && <p className="text-caution text-xs">Placeholder profile — edit the real costs in Admin → Export profiles.</p>}
+            <CardTitle className="text-base">{t("report.exportTo", { name: base.exportProfile.name })}</CardTitle>
+            {base.exportProfile.isPlaceholder && <p className="text-caution text-xs">{t("report.placeholderProfile")}</p>}
           </CardHeader>
           <CardContent>
             <dl className="divide-y">
-              <Row k="Inland to port" v={formatUsd(ec.inlandToPort)} />
-              <Row k="Port & loading" v={formatUsd(ec.portAndLoading)} />
-              <Row k="Ocean freight" v={formatUsd(ec.oceanFreight)} />
-              <Row k="Destination port + customs broker" v={formatUsd(ec.destinationPortFees + ec.customsBrokerFee)} />
-              <Row k="Customs duty" v={`${ec.dutyBps / 100}% of CIF`} />
-              <Row k="VAT" v={ec.vatRecoverable ? "Recoverable" : `${ec.vatBps / 100}% of CIF + duty`} />
-              <Row k="Registration / excise" v={formatUsd(ec.registrationTax)} />
-              <Row k="Compliance conversion" v={formatUsd(ec.complianceConversion)} />
-              <Row k="Delivery from port" v={formatUsd(ec.deliveryFromPort)} />
-              <Row k="Duty + VAT at max bid" v={formatUsd((calc.acquisitionAtMaxBid?.duty ?? 0) + (calc.acquisitionAtMaxBid?.vat ?? 0))} />
+              <Row k={t("report.inlandToPort")} v={formatUsd(ec.inlandToPort)} />
+              <Row k={t("report.portLoading")} v={formatUsd(ec.portAndLoading)} />
+              <Row k={t("report.oceanFreight")} v={formatUsd(ec.oceanFreight)} />
+              <Row k={t("report.destPort")} v={formatUsd(ec.destinationPortFees + ec.customsBrokerFee)} />
+              <Row k={t("report.customsDuty")} v={t("report.ofCif", { pct: ec.dutyBps / 100 })} />
+              <Row k={t("report.vat")} v={ec.vatRecoverable ? t("report.recoverable") : t("report.ofCifDuty", { pct: ec.vatBps / 100 })} />
+              <Row k={t("report.registration")} v={formatUsd(ec.registrationTax)} />
+              <Row k={t("report.compliance")} v={formatUsd(ec.complianceConversion)} />
+              <Row k={t("report.deliveryFromPort")} v={formatUsd(ec.deliveryFromPort)} />
+              <Row k={t("report.dutyVatAtMax")} v={formatUsd((calc.acquisitionAtMaxBid?.duty ?? 0) + (calc.acquisitionAtMaxBid?.vat ?? 0))} />
             </dl>
           </CardContent>
         </Card>

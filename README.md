@@ -197,6 +197,17 @@ If you run a public demo with `DEMO_MODE=true`, every visitor shares one demo ac
 
 ---
 
+## Languages (English / Lithuanian)
+
+The app speaks English and Lithuanian. The **EN | LT** switch is in the site header, the app sidebar (top bar on phones) and the sign-in page. The choice is stored in the `ap_locale` cookie for a year; without it, browsers set to Lithuanian get Lithuanian and everyone else gets English.
+
+- Dictionaries live in `lib/i18n/messages/{en,lt}/`. The English files define the keys and the Lithuanian ones are type-checked against them, so a missing key fails `pnpm typecheck`. `tests/i18n.test.ts` also checks that both languages use the same `{placeholders}`.
+- Server components use `await getT()` (`lib/i18n/server.ts`), client components use `useT()` (`lib/i18n/client.tsx`). Plurals use `{n:one|few|many}` inside a message.
+- The analysis engine still writes its stored text (risk flags, verdict reasons, checklist, repair lines, provider notes) in English. `lib/i18n/generated.ts` matches each sentence against the English templates in `messages/en/generated.ts` and re-renders it in the active language. When you add or reword an engine sentence, add the template there and its translation in `messages/lt/generated.ts`. The test fails if a demo lot produces text it can't translate.
+- Still English only: what the AI writes about photos, the admin pages, legal text, the PDF, emails and the browser extension.
+
+---
+
 ## Project layout
 
 ```
@@ -208,6 +219,7 @@ lib/providers/       Listing fetch/extract, NHTSA, VinAudit, Marketcheck, FX, di
 lib/ai/              AI SDK client (structured output + retry), prompts, usage tracking, narrative guard
 lib/estimate/        Repair estimator (rules, reference prices, heuristic damage)
 lib/flags/           Risk flags, inspection checklist, template narrative
+lib/i18n/            EN/LT dictionaries, translator, display-time translation of engine text
 lib/demo/            Demo fixtures (5 lots) and generated demo photos
 prisma/              Schema, migrations, seed
 extension/           Chrome MV3 extension

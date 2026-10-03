@@ -6,12 +6,16 @@ import { WatchlistClient, type WatchItemView } from "@/components/watchlist/watc
 import { requireUser } from "@/lib/auth/session";
 import { features } from "@/lib/config/env";
 import { prisma } from "@/lib/db/prisma";
-import { sourceLabel } from "@/lib/input/urls";
+import { rich } from "@/lib/i18n/rich";
+import { getT } from "@/lib/i18n/server";
 
-export const metadata: Metadata = { title: "Watchlist" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getT())("watch.title") };
+}
 
 export default async function WatchlistPage() {
   const user = await requireUser();
+  const t = await getT();
   const rows = await prisma.watchlistItem.findMany({
     where: { userId: user.id },
     include: { listing: { include: { photos: { orderBy: { position: "asc" }, take: 1 } } } },
@@ -29,8 +33,8 @@ export default async function WatchlistPage() {
       return {
         id: r.id,
         analysisId: r.analysisId,
-        title: [l.year, l.make, l.model].filter(Boolean).join(" ") || "Vehicle",
-        source: sourceLabel(l.source),
+        title: [l.year, l.make, l.model].filter(Boolean).join(" ") || t("report.vehicle"),
+        source: t(`domain.source.${l.source}`),
         lotNumber: l.lotNumber,
         sourceUrl: l.sourceUrl,
         saleDate: l.saleDate?.toISOString() ?? null,
@@ -48,17 +52,10 @@ export default async function WatchlistPage() {
 
   return (
     <PageContainer>
-      <PageHeader
-        title="Watchlist"
-        description={
-          features.email()
-            ? "Saved lots, soonest sale first. We email you 2 hours before each sale."
-            : "Saved lots, soonest sale first. Email reminders turn on when Resend is configured."
-        }
-      />
+      <PageHeader title={t("watch.title")} description={features.email() ? t("watch.bodyEmail") : t("watch.bodyNoEmail")} />
       {items.length === 0 ? (
-        <EmptyState icon={<EyeIcon />} title="Nothing saved yet">
-          Open a report and press <b>Watch</b> to track a lot&apos;s sale date and your max bid.
+        <EmptyState icon={<EyeIcon />} title={t("watch.empty")}>
+          {rich(t("watch.emptyBody"), { watch: <b>{t("report.watch")}</b> })}
         </EmptyState>
       ) : (
         <WatchlistClient items={items} />

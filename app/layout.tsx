@@ -3,18 +3,22 @@ import { GeistSans } from "geist/font/sans";
 import type { Metadata, Viewport } from "next";
 
 import { Providers } from "@/components/providers";
+import { getMessages } from "@/lib/i18n/messages";
+import { getLocale, getT } from "@/lib/i18n/server";
 
 import "./globals.css";
 
-export const metadata: Metadata = {
-  title: { default: "AuctionPulse AI — know your max bid before you bid", template: "%s · AuctionPulse AI" },
-  description:
-    "Paste a Copart, IAAI or Bid.cars link and get an investor report: verdict, maximum bid, itemized repair estimate, market value, profit and risks.",
-  applicationName: "AuctionPulse AI",
-  manifest: "/manifest.webmanifest",
-  icons: { icon: [{ url: "/icon.svg", type: "image/svg+xml" }], apple: "/icons/apple-touch-icon.png" },
-  appleWebApp: { capable: true, title: "AuctionPulse", statusBarStyle: "black-translucent" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return {
+    title: { default: t("site.metaTitle"), template: "%s · AuctionPulse AI" },
+    description: t("site.metaDescription"),
+    applicationName: "AuctionPulse AI",
+    manifest: "/manifest.webmanifest",
+    icons: { icon: [{ url: "/icon.svg", type: "image/svg+xml" }], apple: "/icons/apple-touch-icon.png" },
+    appleWebApp: { capable: true, title: "AuctionPulse", statusBarStyle: "black-translucent" },
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: [
@@ -26,11 +30,14 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const locale = await getLocale();
   return (
-    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`} suppressHydrationWarning>
+    <html lang={locale} className={`${GeistSans.variable} ${GeistMono.variable}`} suppressHydrationWarning>
       <body className="min-h-dvh font-sans">
-        <Providers>{children}</Providers>
+        <Providers locale={locale} messages={getMessages(locale)}>
+          {children}
+        </Providers>
       </body>
     </html>
   );

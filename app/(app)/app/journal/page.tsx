@@ -6,12 +6,16 @@ import { requireUser } from "@/lib/auth/session";
 import type { CalculationResult } from "@/lib/calc/types";
 import { prisma } from "@/lib/db/prisma";
 import type { NormalizedListing } from "@/lib/domain/schemas";
+import { getT } from "@/lib/i18n/server";
 
-export const metadata: Metadata = { title: "Deal journal" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getT())("journal.title") };
+}
 
 export default async function JournalPage({ searchParams }: { searchParams: Promise<{ analysisId?: string }> }) {
   const user = await requireUser();
   const sp = await searchParams;
+  const t = await getT();
   const rows = await prisma.dealJournalEntry.findMany({ where: { userId: user.id }, orderBy: { createdAt: "desc" } });
   const entries: JournalEntryView[] = rows.map((r) => ({
     id: r.id,
@@ -60,7 +64,7 @@ export default async function JournalPage({ searchParams }: { searchParams: Prom
 
   return (
     <PageContainer>
-      <PageHeader title="Deal journal" description="Track what you actually paid, spent and sold for — and how close the estimates were." />
+      <PageHeader title={t("journal.title")} description={t("journal.body")} />
       <JournalClient entries={entries} prefill={prefill} />
     </PageContainer>
   );

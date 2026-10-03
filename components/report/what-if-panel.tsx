@@ -10,6 +10,7 @@ import { SegmentedControl, Separator } from "@/components/ui/misc";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import type { Assumptions } from "@/lib/calc/build";
+import { useT } from "@/lib/i18n/client";
 import { cn, formatUsd } from "@/lib/utils";
 
 import { useReport } from "./report-context";
@@ -106,6 +107,7 @@ const pct = (bps: number) => `${(bps / 100).toFixed(bps % 100 === 0 ? 0 : 1)}%`;
 
 export function WhatIfControls({ compact = false }: { compact?: boolean }) {
   const { assumptions: a, setAssumption, view, reset, save, saveDefaults, dirty, saving } = useReport();
+  const t = useT();
   const set =
     <K extends keyof Assumptions>(k: K) =>
     (v: Assumptions[K]) =>
@@ -114,34 +116,43 @@ export function WhatIfControls({ compact = false }: { compact?: boolean }) {
   const exportAvailable = Boolean(view.base?.exportProfile);
   return (
     <div className={cn("space-y-5", compact && "space-y-4")}>
-      <SliderRow label="Labor rate" value={a.laborRate} min={40} max={150} step={5} format={(v) => `$${v}/h`} onChange={set("laborRate")} testId="labor-rate" />
       <SliderRow
-        label="Paint materials"
+        label={t("report.laborRate")}
+        value={a.laborRate}
+        min={40}
+        max={150}
+        step={5}
+        format={(v) => t("report.perHour", { v })}
+        onChange={set("laborRate")}
+        testId="labor-rate"
+      />
+      <SliderRow
+        label={t("report.paintMaterials")}
         value={a.paintMaterialsPerHour}
         min={20}
         max={80}
         step={5}
-        format={(v) => `$${v}/paint h`}
+        format={(v) => t("report.perPaintHour", { v })}
         onChange={set("paintMaterialsPerHour")}
       />
       <div className="space-y-2">
-        <Label className="text-muted-foreground text-xs font-normal">Parts source</Label>
+        <Label className="text-muted-foreground text-xs font-normal">{t("report.partsSource")}</Label>
         <SegmentedControl
-          ariaLabel="Preferred parts source"
+          ariaLabel={t("report.partsSourceAria")}
           value={a.partsSourcePreference}
           onValueChange={set("partsSourcePreference")}
           options={[
-            { value: "OEM_NEW", label: "OEM" },
-            { value: "AFTERMARKET", label: "Aftermarket" },
-            { value: "USED", label: "Used" },
+            { value: "OEM_NEW", label: t("domain.partSource.OEM_NEW") },
+            { value: "AFTERMARKET", label: t("domain.partSource.AFTERMARKET") },
+            { value: "USED", label: t("domain.partSource.USED") },
           ]}
         />
       </div>
-      <SliderRow label="Parts discount" value={a.partsDiscountBps} min={0} max={4000} step={100} format={pct} onChange={set("partsDiscountBps")} />
+      <SliderRow label={t("report.partsDiscount")} value={a.partsDiscountBps} min={0} max={4000} step={100} format={pct} onChange={set("partsDiscountBps")} />
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <Label htmlFor="wi-cont" className="text-muted-foreground text-xs font-normal">
-            Override contingency
+            {t("report.overrideContingency")}
           </Label>
           <Switch
             id="wi-cont"
@@ -151,7 +162,7 @@ export function WhatIfControls({ compact = false }: { compact?: boolean }) {
         </div>
         {a.contingencyOverrideBps !== null && (
           <SliderRow
-            label="Contingency (expected case)"
+            label={t("report.contingencyExpected")}
             value={a.contingencyOverrideBps}
             min={0}
             max={5000}
@@ -162,9 +173,9 @@ export function WhatIfControls({ compact = false }: { compact?: boolean }) {
         )}
       </div>
       <Separator />
-      <SliderRow label="Target profit (% of resale)" value={a.targetProfitBps} min={0} max={4000} step={100} format={pct} onChange={set("targetProfitBps")} />
+      <SliderRow label={t("report.targetProfit")} value={a.targetProfitBps} min={0} max={4000} step={100} format={pct} onChange={set("targetProfitBps")} />
       <SliderRow
-        label="Minimum profit"
+        label={t("report.minProfit")}
         value={a.targetProfitMin}
         min={0}
         max={10000}
@@ -174,7 +185,7 @@ export function WhatIfControls({ compact = false }: { compact?: boolean }) {
         testId="profit-min"
       />
       <SliderRow
-        label="Rebuilt-title value (× clean)"
+        label={t("report.rebuiltValue")}
         value={a.rebuiltFactorBps}
         min={5000}
         max={10000}
@@ -183,99 +194,104 @@ export function WhatIfControls({ compact = false }: { compact?: boolean }) {
         onChange={set("rebuiltFactorBps")}
       />
       <MoneyInput
-        label="Clean market value override (expected)"
+        label={t("report.mvOverride")}
         value={a.mvCleanOverride}
         placeholder={view.base ? formatUsd(view.base.mvClean.expected) : ""}
         onCommit={set("mvCleanOverride")}
       />
       <Separator />
       <SliderRow
-        label="Transport"
+        label={t("report.transport")}
         value={a.transportCentsPerMile}
         min={50}
         max={400}
         step={5}
-        format={(v) => `$${(v / 100).toFixed(2)}/mi`}
+        format={(v) => t("report.perMile", { v: (v / 100).toFixed(2) })}
         onChange={set("transportCentsPerMile")}
       />
       <div className="grid grid-cols-2 gap-3">
-        <MoneyInput label="Distance (mi)" value={a.distanceOverride} placeholder={String(view.base?.distanceMiles ?? "")} onCommit={set("distanceOverride")} />
         <MoneyInput
-          label="Current bid"
+          label={t("report.distanceMi")}
+          value={a.distanceOverride}
+          placeholder={String(view.base?.distanceMiles ?? "")}
+          onCommit={set("distanceOverride")}
+        />
+        <MoneyInput
+          label={t("report.currentBid")}
           value={a.currentBidOverride}
           placeholder={view.base?.currentBid !== null && view.base?.currentBid !== undefined ? String(view.base.currentBid) : "—"}
           onCommit={set("currentBidOverride")}
         />
       </div>
       <SliderRow
-        label="Holding time"
+        label={t("report.holdingTime")}
         value={a.holdingDaysExpected}
         min={0}
         max={120}
         step={5}
-        format={(v) => `${v} days`}
+        format={(v) => t("report.days", { n: v })}
         onChange={set("holdingDaysExpected")}
       />
       <div className="space-y-2">
-        <Label className="text-muted-foreground text-xs font-normal">Buyer type</Label>
+        <Label className="text-muted-foreground text-xs font-normal">{t("report.buyerType")}</Label>
         <SegmentedControl
-          ariaLabel="Buyer type"
+          ariaLabel={t("report.buyerType")}
           value={a.buyerType}
           onValueChange={set("buyerType")}
           options={[
-            { value: "LICENSED_DEALER", label: "Licensed dealer" },
-            { value: "PUBLIC_VIA_BROKER", label: "Public (broker)" },
+            { value: "LICENSED_DEALER", label: t("domain.buyerType.LICENSED_DEALER") },
+            { value: "PUBLIC_VIA_BROKER", label: t("report.publicBroker") },
           ]}
         />
       </div>
       <div className="grid grid-cols-2 gap-3">
-        <MoneyInput label="Broker fee ($)" value={a.brokerFee} onCommit={(v) => setAssumption("brokerFee", v ?? 0)} />
-        <SliderRow label="Sales tax" value={a.salesTaxBps} min={0} max={1200} step={25} format={pct} onChange={set("salesTaxBps")} />
+        <MoneyInput label={t("report.brokerFee")} value={a.brokerFee} onCommit={(v) => setAssumption("brokerFee", v ?? 0)} />
+        <SliderRow label={t("report.salesTax")} value={a.salesTaxBps} min={0} max={1200} step={25} format={pct} onChange={set("salesTaxBps")} />
       </div>
       <div className="space-y-2">
-        <Label className="text-muted-foreground text-xs font-normal">Exit strategy</Label>
+        <Label className="text-muted-foreground text-xs font-normal">{t("report.exitStrategy")}</Label>
         <SegmentedControl
-          ariaLabel="Exit strategy"
+          ariaLabel={t("report.exitStrategy")}
           value={a.exitStrategy}
           onValueChange={set("exitStrategy")}
           options={[
-            { value: "RETAIL_REBUILT", label: "Retail (rebuilt)" },
-            { value: "EXPORT", label: "Export" },
+            { value: "RETAIL_REBUILT", label: t("report.retailRebuilt") },
+            { value: "EXPORT", label: t("report.export") },
           ]}
         />
         {a.exitStrategy === "EXPORT" &&
           (exportAvailable ? (
             <div className="space-y-3">
               <MoneyInput
-                label="Destination resale value (USD)"
+                label={t("report.destinationResale")}
                 value={a.destinationResaleOverride}
-                placeholder="Enter to use export pricing"
+                placeholder={t("report.destinationPlaceholder")}
                 onCommit={set("destinationResaleOverride")}
               />
               <div className="flex items-center justify-between">
                 <Label htmlFor="wi-vat" className="text-muted-foreground text-xs font-normal">
-                  VAT recoverable (VAT-registered)
+                  {t("report.vatRecoverable")}
                 </Label>
                 <Switch id="wi-vat" checked={a.vatRecoverable} onCheckedChange={set("vatRecoverable")} />
               </div>
               {a.destinationResaleOverride === null && !view.base?.destinationResale && (
-                <p className="text-caution text-xs">Enter the destination resale value — until then the retail value is used.</p>
+                <p className="text-caution text-xs">{t("report.destinationMissing")}</p>
               )}
             </div>
           ) : (
-            <p className="text-muted-foreground text-xs">Choose an export profile in Settings, then re-run the analysis to price export costs.</p>
+            <p className="text-muted-foreground text-xs">{t("report.exportProfileMissing")}</p>
           ))}
       </div>
       {!readOnly && (
         <div className="bg-card sticky bottom-0 -mx-1 flex flex-wrap gap-2 border-t px-1 pt-3 pb-1">
           <Button size="sm" variant="ghost" onClick={reset} disabled={saving}>
-            <RotateCcwIcon /> Reset
+            <RotateCcwIcon /> {t("common.reset")}
           </Button>
           <Button size="sm" variant="outline" onClick={() => void saveDefaults()} disabled={saving}>
-            Save as my defaults
+            {t("report.saveDefaults")}
           </Button>
           <Button size="sm" onClick={() => void save()} disabled={!dirty || saving}>
-            <SaveIcon /> Save to report
+            <SaveIcon /> {t("report.saveToReport")}
           </Button>
         </div>
       )}
@@ -284,11 +300,12 @@ export function WhatIfControls({ compact = false }: { compact?: boolean }) {
 }
 
 export function WhatIfHeading() {
+  const t = useT();
   return (
     <div className="flex items-center gap-2">
       <SlidersHorizontalIcon className="text-muted-foreground size-4" />
-      <h2 className="font-semibold">What-if</h2>
-      <span className="text-muted-foreground text-xs">updates instantly</span>
+      <h2 className="font-semibold">{t("report.whatIf")}</h2>
+      <span className="text-muted-foreground text-xs">{t("report.updatesInstantly")}</span>
     </div>
   );
 }

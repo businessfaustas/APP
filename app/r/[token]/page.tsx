@@ -6,7 +6,9 @@ import { Logo } from "@/components/brand";
 import { SharedReport } from "@/components/report/report-view";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
+import { LanguageSwitcher } from "@/components/language-switcher";
 import { getAnalysisView } from "@/lib/analysis/view";
+import { getT } from "@/lib/i18n/server";
 
 export const dynamic = "force-dynamic";
 
@@ -14,8 +16,9 @@ export async function generateMetadata({ params }: { params: Promise<{ token: st
   const { token } = await params;
   const view = await getAnalysisView("", { shareToken: token });
   const l = view?.listing;
+  const t = await getT();
   return {
-    title: l ? `${[l.year, l.make, l.model].filter(Boolean).join(" ")} — deal report` : "Shared report",
+    title: l ? t("report.dealReport", { car: [l.year, l.make, l.model].filter(Boolean).join(" ") }) : t("report.sharedTitle"),
     robots: { index: false, follow: false },
   };
 }
@@ -25,21 +28,21 @@ export default async function SharedReportPage({ params }: { params: Promise<{ t
   if (!/^[\w-]{10,64}$/.test(token)) notFound();
   const view = await getAnalysisView("", { shareToken: token });
   if (!view || view.status !== "COMPLETED") notFound();
+  const t = await getT();
   return (
     <div className="min-h-dvh">
       <header className="flex items-center justify-between border-b px-4 py-3 sm:px-6">
         <Logo />
         <div className="flex items-center gap-2">
+          <LanguageSwitcher />
           <ThemeToggle />
           <Button asChild size="sm">
-            <Link href="/app">Analyze your own lot</Link>
+            <Link href="/app">{t("report.analyzeOwn")}</Link>
           </Button>
         </div>
       </header>
       <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
-        <p className="bg-muted text-muted-foreground mb-4 rounded-md px-3 py-2 text-xs">
-          Shared read-only report. You can move the What-if sliders, but nothing is saved. Auction photos are not included in shared reports.
-        </p>
+        <p className="bg-muted text-muted-foreground mb-4 rounded-md px-3 py-2 text-xs">{t("report.sharedNote")}</p>
         <SharedReport view={view} />
       </div>
     </div>

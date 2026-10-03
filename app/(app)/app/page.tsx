@@ -12,9 +12,14 @@ import { DEMO_LOTS } from "@/lib/config/demo";
 import { features } from "@/lib/config/env";
 import { prisma } from "@/lib/db/prisma";
 import type { NormalizedListing } from "@/lib/domain/schemas";
-import { formatCountdown, formatDate, formatUsd } from "@/lib/utils";
+import { countdownLabel, damageLabel } from "@/lib/i18n/labels";
+import { INTL_LOCALE } from "@/lib/i18n/locales";
+import { getT } from "@/lib/i18n/server";
+import { formatDate, formatUsd } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Dashboard" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getT())("dash.title") };
+}
 
 function title(l: NormalizedListing | null, fallback: string): string {
   if (!l) return fallback;
@@ -24,6 +29,8 @@ function title(l: NormalizedListing | null, fallback: string): string {
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ input?: string }> }) {
   const user = await requireUser();
   const sp = await searchParams;
+  const t = await getT();
+  const intl = INTL_LOCALE[t.locale];
   const [recent, watch, counts] = await Promise.all([
     prisma.analysis.findMany({
       where: { userId: user.id },
@@ -56,8 +63,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     <PageContainer>
       <section className="space-y-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">What are you bidding on?</h1>
-          <p className="text-muted-foreground mt-1 text-sm">Paste a listing and get your verdict, max bid, repair estimate and profit in about a minute.</p>
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{t("dash.heading")}</h1>
+          <p className="text-muted-foreground mt-1 text-sm">{t("dash.body")}</p>
         </div>
         <AnalyzeBar demoLots={features.demoMode() ? DEMO_LOTS : []} initialInput={sp.input ?? ""} />
       </section>
@@ -65,15 +72,15 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader className="flex-row items-center justify-between">
-            <CardTitle className="text-base">Recent analyses</CardTitle>
+            <CardTitle className="text-base">{t("dash.recent")}</CardTitle>
             <Link href="/app/history" className="text-muted-foreground hover:text-foreground text-xs">
-              View all
+              {t("dash.viewAll")}
             </Link>
           </CardHeader>
           <CardContent>
             {recent.length === 0 ? (
-              <EmptyState icon={<FileSearchIcon />} title="No analyses yet">
-                Paste your first listing above{features.demoMode() ? " or try a demo lot" : ""}.
+              <EmptyState icon={<FileSearchIcon />} title={t("dash.noAnalyses")}>
+                {features.demoMode() ? t("dash.pasteFirstDemo") : t("dash.pasteFirst")}
               </EmptyState>
             ) : (
               <ul className="divide-y">
@@ -85,8 +92,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                         <div className="min-w-0">
                           <div className="truncate text-sm font-medium">{title(l, a.inputValue)}</div>
                           <div className="text-muted-foreground text-xs">
-                            {l?.primaryDamage ? `${l.primaryDamage} · ` : ""}
-                            {formatDate(a.createdAt)}
+                            {l?.primaryDamage ? `${damageLabel(t, l.primaryDamage)} · ` : ""}
+                            {formatDate(a.createdAt, intl)}
                           </div>
                         </div>
                         <div className="flex shrink-0 items-center gap-3">
@@ -96,11 +103,11 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                               <VerdictBadge verdict={a.verdict} />
                             </>
                           ) : a.status === "FAILED" ? (
-                            <Badge variant="stop">Failed</Badge>
+                            <Badge variant="stop">{t("dash.failed")}</Badge>
                           ) : a.currentStep === "NEEDS_INPUT" ? (
-                            <Badge variant="caution">Needs details</Badge>
+                            <Badge variant="caution">{t("dash.needsDetails")}</Badge>
                           ) : (
-                            <Badge variant="info">Running…</Badge>
+                            <Badge variant="info">{t("dash.running")}</Badge>
                           )}
                         </div>
                       </Link>
@@ -115,33 +122,33 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         <div className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Your numbers</CardTitle>
+              <CardTitle className="text-base">{t("dash.yourNumbers")}</CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-3 gap-3 text-center">
               <div>
                 <div className="num text-2xl font-semibold">{total}</div>
-                <div className="text-muted-foreground text-xs">Reports</div>
+                <div className="text-muted-foreground text-xs">{t("dash.reports")}</div>
               </div>
               <div>
                 <div className="num text-go text-2xl font-semibold">{goCount}</div>
-                <div className="text-muted-foreground text-xs">GO deals</div>
+                <div className="text-muted-foreground text-xs">{t("dash.goDeals")}</div>
               </div>
               <div>
                 <div className="num text-2xl font-semibold">{user.creditsRemaining}</div>
-                <div className="text-muted-foreground text-xs">Credits</div>
+                <div className="text-muted-foreground text-xs">{t("common.credits")}</div>
               </div>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex-row items-center justify-between">
-              <CardTitle className="text-base">Upcoming sales</CardTitle>
+              <CardTitle className="text-base">{t("dash.upcoming")}</CardTitle>
               <Link href="/app/watchlist" className="text-muted-foreground hover:text-foreground text-xs">
-                Watchlist
+                {t("nav.watchlist")}
               </Link>
             </CardHeader>
             <CardContent>
               {watch.length === 0 ? (
-                <p className="text-muted-foreground text-sm">Save lots from a report to see their sale countdowns here.</p>
+                <p className="text-muted-foreground text-sm">{t("dash.noUpcoming")}</p>
               ) : (
                 <ul className="space-y-2.5">
                   {watch.map((w) => (
@@ -153,7 +160,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                         <span className="truncate">{[w.listing.year, w.listing.make, w.listing.model].filter(Boolean).join(" ")}</span>
                         <span className="text-muted-foreground flex shrink-0 items-center gap-1 text-xs">
                           <CalendarClockIcon className="size-3.5" />
-                          {formatCountdown(w.listing.saleDate)}
+                          {countdownLabel(t, w.listing.saleDate)}
                         </span>
                       </Link>
                     </li>

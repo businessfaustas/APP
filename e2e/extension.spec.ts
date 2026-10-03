@@ -33,6 +33,8 @@ test("extension: connect with a token, then analyze a Copart lot page in one cli
     await ctx.route("https://www.copart.com/**", (r) => r.fulfill({ contentType: "text/html", body: LOT_PAGE }));
     const worker = ctx.serviceWorkers()[0] ?? (await ctx.waitForEvent("serviceworker"));
     const extId = new URL(worker.url()).host;
+    // On install the extension opens its options page, sometimes in a tab we're about to use.
+    await expect.poll(() => ctx.pages().some((p) => p.url().includes("options.html")), { timeout: 10_000 }).toBe(true);
 
     const app = await ctx.newPage();
     await app.goto(`${baseURL}/login`);

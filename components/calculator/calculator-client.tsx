@@ -17,19 +17,20 @@ import { calculate } from "@/lib/calc/calculator";
 import { contingencyForSeverity, scenarioContingencyBps } from "@/lib/calc/repair";
 import type { FeeSchedule, ScenarioKey } from "@/lib/calc/types";
 import type { BuyerType } from "@/lib/domain/schemas";
+import { useT } from "@/lib/i18n/client";
 import { formatBps, formatUsd } from "@/lib/utils";
 
 type Field = "mvClean" | "parts" | "body" | "paint" | "mech" | "sublets";
 type Grid = Record<Field, Record<ScenarioKey, number>>;
 
-const FIELDS: { key: Field; label: string; step: number }[] = [
-  { key: "mvClean", label: "Clean market value ($)", step: 1 },
-  { key: "parts", label: "Parts ($)", step: 1 },
-  { key: "body", label: "Body labor (h)", step: 0.1 },
-  { key: "paint", label: "Paint labor (h)", step: 0.1 },
-  { key: "mech", label: "Mechanical labor (h)", step: 0.1 },
-  { key: "sublets", label: "Sublets ($)", step: 1 },
-];
+const FIELDS = [
+  { key: "mvClean", label: "mvClean", step: 1 },
+  { key: "parts", label: "parts", step: 1 },
+  { key: "body", label: "body_", step: 0.1 },
+  { key: "paint", label: "paint", step: 0.1 },
+  { key: "mech", label: "mech", step: 0.1 },
+  { key: "sublets", label: "sublets", step: 1 },
+] as const satisfies readonly { key: Field; label: string; step: number }[];
 
 /** Starts from the 2019 Audi A3 reference case so the numbers can be checked by hand. */
 const EXAMPLE: Grid = {
@@ -79,6 +80,7 @@ export function CalculatorClient({
   defaults: Assumptions;
   feeSchedules: Record<"COPART" | "IAAI", Record<BuyerType, FeeSchedule>>;
 }) {
+  const t = useT();
   const [grid, setGrid] = useState<Grid>(EXAMPLE);
   const [severity, setSeverity] = useState(5);
   const [auction, setAuction] = useState<"COPART" | "IAAI">("COPART");
@@ -122,7 +124,7 @@ export function CalculatorClient({
       const next = { ...g };
       for (const f of FIELDS) {
         const e = g[f.key].expected;
-        const r = (x: number) => (f.step < 1 ? Math.round(x * 10) / 10 : Math.round(x / 10) * 10);
+        const r = (x: number) => ((f.step as number) < 1 ? Math.round(x * 10) / 10 : Math.round(x / 10) * 10);
         next[f.key] = { best: r(e * SPREAD[f.key].best), expected: e, worst: r(e * SPREAD[f.key].worst) };
       }
       return next;
@@ -134,13 +136,13 @@ export function CalculatorClient({
         <DealSummary calc={calc} currentBid={currentBid} />
         <Card>
           <CardHeader className="flex-row flex-wrap items-center justify-between gap-2">
-            <CardTitle className="text-base">Your numbers</CardTitle>
+            <CardTitle className="text-base">{t("calc.yourNumbers")}</CardTitle>
             <div className="flex gap-2">
               <Button size="sm" variant="outline" onClick={fillFromExpected}>
-                <WandSparklesIcon /> Fill best/worst from expected
+                <WandSparklesIcon /> {t("calc.fill")}
               </Button>
               <Button size="sm" variant="ghost" onClick={() => setGrid(EXAMPLE)}>
-                <RotateCcwIcon /> Example
+                <RotateCcwIcon /> {t("calc.example")}
               </Button>
             </div>
           </CardHeader>
@@ -149,19 +151,19 @@ export function CalculatorClient({
               <TableHeader>
                 <TableRow>
                   <TableHead />
-                  <TableHead className="text-right">Best</TableHead>
-                  <TableHead className="text-right">Expected</TableHead>
-                  <TableHead className="text-right">Worst</TableHead>
+                  <TableHead className="text-right">{t("domain.scenario.best")}</TableHead>
+                  <TableHead className="text-right">{t("domain.scenario.expected")}</TableHead>
+                  <TableHead className="text-right">{t("domain.scenario.worst")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {FIELDS.map((f) => (
                   <TableRow key={f.key}>
-                    <TableCell className="text-sm">{f.label}</TableCell>
+                    <TableCell className="text-sm">{t(`calc.${f.label}`)}</TableCell>
                     {(["best", "expected", "worst"] as const).map((k) => (
                       <TableCell key={k} className="min-w-24">
                         <GridInput
-                          label={`${f.label} — ${k}`}
+                          label={`${t(`calc.${f.label}`)} — ${t(`domain.scenario.${k}`)}`}
                           step={f.step}
                           value={grid[f.key][k]}
                           onCommit={(v) => setGrid((g) => ({ ...g, [f.key]: { ...g[f.key], [k]: v } }))}
@@ -174,9 +176,9 @@ export function CalculatorClient({
             </Table>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <div className="space-y-1.5">
-                <Label className="text-muted-foreground text-xs font-normal">Auction fee table</Label>
+                <Label className="text-muted-foreground text-xs font-normal">{t("calc.feeTable")}</Label>
                 <SegmentedControl
-                  ariaLabel="Auction"
+                  ariaLabel={t("calc.auction")}
                   value={auction}
                   onValueChange={setAuction}
                   options={[
@@ -185,10 +187,10 @@ export function CalculatorClient({
                   ]}
                 />
               </div>
-              <MoneyInput label="Current bid ($)" value={currentBid} onCommit={setCurrentBid} />
-              <MoneyInput label="Distance to you (mi)" value={distance} onCommit={(v) => setDistance(v ?? 0)} />
+              <MoneyInput label={t("calc.currentBid")} value={currentBid} onCommit={setCurrentBid} />
+              <MoneyInput label={t("calc.distance")} value={distance} onCommit={(v) => setDistance(v ?? 0)} />
               <SliderRow
-                label="Severity → contingency"
+                label={t("calc.severity")}
                 value={severity}
                 min={1}
                 max={10}
@@ -201,13 +203,16 @@ export function CalculatorClient({
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Where the money goes (expected case at max bid)</CardTitle>
+            <CardTitle className="text-base">{t("calc.whereMoney")}</CardTitle>
           </CardHeader>
           <CardContent>
             <CostWaterfall rows={calc.waterfall} />
             <p className="text-muted-foreground mt-2 text-xs">
-              Repair (expected) {formatUsd(calc.scenarios.expected.repair)} · fees at max bid {formatUsd(calc.feesAtMaxBid?.total ?? null)} · resale{" "}
-              {formatUsd(calc.scenarios.expected.resale)}
+              {t("calc.footnote", {
+                repair: formatUsd(calc.scenarios.expected.repair),
+                fees: formatUsd(calc.feesAtMaxBid?.total ?? null),
+                resale: formatUsd(calc.scenarios.expected.resale),
+              })}
             </p>
           </CardContent>
         </Card>
@@ -215,19 +220,27 @@ export function CalculatorClient({
       <aside>
         <Card className="lg:sticky lg:top-4">
           <CardContent className="space-y-5">
-            <h2 className="font-semibold">Assumptions</h2>
-            <SliderRow label="Labor rate" value={a.laborRate} min={40} max={150} step={5} format={(v) => `$${v}/h`} onChange={set("laborRate")} />
+            <h2 className="font-semibold">{t("calc.assumptions")}</h2>
             <SliderRow
-              label="Paint materials"
+              label={t("report.laborRate")}
+              value={a.laborRate}
+              min={40}
+              max={150}
+              step={5}
+              format={(v) => t("report.perHour", { v })}
+              onChange={set("laborRate")}
+            />
+            <SliderRow
+              label={t("report.paintMaterials")}
               value={a.paintMaterialsPerHour}
               min={20}
               max={80}
               step={5}
-              format={(v) => `$${v}/paint h`}
+              format={(v) => t("report.perPaintHour", { v })}
               onChange={set("paintMaterialsPerHour")}
             />
             <SliderRow
-              label="Parts discount"
+              label={t("report.partsDiscount")}
               value={a.partsDiscountBps}
               min={0}
               max={4000}
@@ -237,7 +250,7 @@ export function CalculatorClient({
             />
             <Separator />
             <SliderRow
-              label="Target profit (% of resale)"
+              label={t("report.targetProfit")}
               value={a.targetProfitBps}
               min={0}
               max={4000}
@@ -246,7 +259,7 @@ export function CalculatorClient({
               onChange={set("targetProfitBps")}
             />
             <SliderRow
-              label="Minimum profit"
+              label={t("report.minProfit")}
               value={a.targetProfitMin}
               min={0}
               max={10000}
@@ -255,7 +268,7 @@ export function CalculatorClient({
               onChange={set("targetProfitMin")}
             />
             <SliderRow
-              label="Rebuilt-title value (× clean)"
+              label={t("report.rebuiltValue")}
               value={a.rebuiltFactorBps}
               min={5000}
               max={10000}
@@ -265,39 +278,47 @@ export function CalculatorClient({
             />
             <Separator />
             <SliderRow
-              label="Transport"
+              label={t("report.transport")}
               value={a.transportCentsPerMile}
               min={50}
               max={400}
               step={5}
-              format={(v) => `$${(v / 100).toFixed(2)}/mi`}
+              format={(v) => t("report.perMile", { v: (v / 100).toFixed(2) })}
               onChange={set("transportCentsPerMile")}
             />
             <SliderRow
-              label="Holding time"
+              label={t("report.holdingTime")}
               value={a.holdingDaysExpected}
               min={0}
               max={120}
               step={5}
-              format={(v) => `${v} days`}
+              format={(v) => t("report.days", { n: v })}
               onChange={set("holdingDaysExpected")}
             />
             <div className="space-y-2">
-              <Label className="text-muted-foreground text-xs font-normal">Buyer type</Label>
+              <Label className="text-muted-foreground text-xs font-normal">{t("report.buyerType")}</Label>
               <SegmentedControl
-                ariaLabel="Buyer type"
+                ariaLabel={t("report.buyerType")}
                 value={a.buyerType}
                 onValueChange={set("buyerType")}
                 options={[
-                  { value: "LICENSED_DEALER", label: "Licensed dealer" },
-                  { value: "PUBLIC_VIA_BROKER", label: "Public (broker)" },
+                  { value: "LICENSED_DEALER", label: t("domain.buyerType.LICENSED_DEALER") },
+                  { value: "PUBLIC_VIA_BROKER", label: t("report.publicBroker") },
                 ]}
               />
             </div>
-            <MoneyInput label="Broker fee ($)" value={a.brokerFee} onCommit={(v) => set("brokerFee")(v ?? 0)} />
-            <SliderRow label="Sales tax" value={a.salesTaxBps} min={0} max={1200} step={25} format={(v) => formatBps(v, 2)} onChange={set("salesTaxBps")} />
+            <MoneyInput label={t("report.brokerFee")} value={a.brokerFee} onCommit={(v) => set("brokerFee")(v ?? 0)} />
+            <SliderRow
+              label={t("report.salesTax")}
+              value={a.salesTaxBps}
+              min={0}
+              max={1200}
+              step={25}
+              format={(v) => formatBps(v, 2)}
+              onChange={set("salesTaxBps")}
+            />
             <Button size="sm" variant="ghost" onClick={() => setA(defaults)}>
-              <RotateCcwIcon /> Reset to my defaults
+              <RotateCcwIcon /> {t("calc.resetDefaults")}
             </Button>
           </CardContent>
         </Card>

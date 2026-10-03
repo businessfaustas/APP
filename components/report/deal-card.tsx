@@ -8,6 +8,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tooltip } from "@/components/ui/misc";
 import type { CalculationResult } from "@/lib/calc/types";
+import { useT } from "@/lib/i18n/client";
+import { trText } from "@/lib/i18n/generated";
 import { cn, formatBps, formatUsd } from "@/lib/utils";
 
 import { useReport } from "./report-context";
@@ -18,11 +20,12 @@ export function scoreTone(score: number): "go" | "caution" | "stop" {
 }
 
 export function ScoreMeter({ score }: { score: number }) {
+  const t = useT();
   const tone = scoreTone(score);
   return (
-    <div className="space-y-1.5" role="meter" aria-valuemin={0} aria-valuemax={100} aria-valuenow={score} aria-label="Deal score">
+    <div className="space-y-1.5" role="meter" aria-valuemin={0} aria-valuemax={100} aria-valuenow={score} aria-label={t("report.dealScore")}>
       <div className="flex items-baseline justify-between">
-        <span className="text-muted-foreground text-xs">Deal score</span>
+        <span className="text-muted-foreground text-xs">{t("report.dealScore")}</span>
         <span className="text-sm font-semibold">
           {score}
           <span className="text-muted-foreground">/100</span>
@@ -40,6 +43,7 @@ export function ScoreMeter({ score }: { score: number }) {
 
 /** Horizontal bid scale: comfort / max / break-even zones with the current-bid marker. */
 export function BidLadder({ calc, currentBid }: { calc: CalculationResult; currentBid: number | null }) {
+  const t = useT();
   const { comfortBid, maxBid, breakEvenBid } = calc;
   const ref = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
@@ -56,15 +60,15 @@ export function BidLadder({ calc, currentBid }: { calc: CalculationResult; curre
   const pct = (v: number) => `${Math.min(100, Math.max(0, (v / top) * 100))}%`;
   const comfort = comfortBid ?? 0;
   const zones = [
-    { from: 0, to: comfort, cls: "bg-go", label: "Safe even in the worst case" },
-    { from: comfort, to: maxBid, cls: "bg-go/45", label: "Hits your profit target" },
-    { from: maxBid, to: be, cls: "bg-caution/70", label: "Profit below your target" },
-    { from: be, to: top, cls: "bg-stop/60", label: "Loses money (expected case)" },
+    { from: 0, to: comfort, cls: "bg-go", label: t("report.zoneSafe") },
+    { from: comfort, to: maxBid, cls: "bg-go/45", label: t("report.zoneTarget") },
+    { from: maxBid, to: be, cls: "bg-caution/70", label: t("report.zoneBelow") },
+    { from: be, to: top, cls: "bg-stop/60", label: t("report.zoneLoss") },
   ].filter((z) => z.to > z.from);
   const marks = [
-    ...(comfortBid !== null ? [{ v: comfortBid, label: "Comfort" }] : []),
-    { v: maxBid, label: "Max" },
-    ...(breakEvenBid !== null && breakEvenBid !== maxBid ? [{ v: breakEvenBid, label: "Break-even" }] : []),
+    ...(comfortBid !== null ? [{ v: comfortBid, label: t("report.ladderComfort") }] : []),
+    { v: maxBid, label: t("report.ladderMax") },
+    ...(breakEvenBid !== null && breakEvenBid !== maxBid ? [{ v: breakEvenBid, label: t("report.breakEven") }] : []),
   ];
   // stagger labels that would collide (closer than ~84px) onto a second row
   const minGapPct = width > 0 ? (84 / width) * 100 : 20;
@@ -82,13 +86,13 @@ export function BidLadder({ calc, currentBid }: { calc: CalculationResult; curre
       <div className="relative pt-7">
         {currentBid !== null && (
           <div className="absolute top-0 -translate-x-1/2 text-center" style={{ left: pct(currentBid) }}>
-            <div className="text-[11px] font-medium whitespace-nowrap">Current {formatUsd(currentBid)}</div>
+            <div className="text-[11px] font-medium whitespace-nowrap">{t("report.ladderCurrent", { amount: formatUsd(currentBid) })}</div>
             <div className="bg-foreground mx-auto h-3 w-0.5" />
           </div>
         )}
         <div className="flex h-3 w-full gap-0.5 overflow-hidden rounded-full">
           {zones.map((z) => (
-            <Tooltip key={z.label} content={`${z.label}: ${formatUsd(z.from)} – ${z.to >= top ? "and up" : formatUsd(z.to)}`}>
+            <Tooltip key={z.label} content={`${z.label}: ${formatUsd(z.from)} – ${z.to >= top ? t("report.andUp") : formatUsd(z.to)}`}>
               <div className={cn("h-full", z.cls)} style={{ width: `${((z.to - z.from) / top) * 100}%` }} />
             </Tooltip>
           ))}
@@ -108,6 +112,7 @@ export function BidLadder({ calc, currentBid }: { calc: CalculationResult; curre
 
 function MarketMissing() {
   const { setAssumption } = useReport();
+  const t = useT();
   const [value, setValue] = useState("");
   return (
     <Card>
@@ -115,11 +120,8 @@ function MarketMissing() {
         <div className="flex items-start gap-2">
           <InfoIcon className="text-caution mt-0.5 size-5 shrink-0" />
           <div>
-            <div className="font-semibold">Enter the market value to get your max bid</div>
-            <p className="text-muted-foreground text-sm">
-              No market-data source is configured, so we can&apos;t price this car yet. Enter what it sells for with a clean title in your area (median of local
-              listings).
-            </p>
+            <div className="font-semibold">{t("report.mvTitle")}</div>
+            <p className="text-muted-foreground text-sm">{t("report.mvBody")}</p>
           </div>
         </div>
         <form
@@ -132,12 +134,12 @@ function MarketMissing() {
         >
           <Input
             inputMode="numeric"
-            placeholder="e.g. 17,700"
+            placeholder={t("report.mvPlaceholder")}
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            aria-label="Clean retail market value"
+            aria-label={t("report.mvLabel")}
           />
-          <Button type="submit">Calculate</Button>
+          <Button type="submit">{t("report.calculate")}</Button>
         </form>
       </CardContent>
     </Card>
@@ -154,6 +156,7 @@ export function DealCard() {
 
 /** Verdict, max bid, profit range, score and bid ladder for a calculation result. */
 export function DealSummary({ calc, currentBid }: { calc: CalculationResult; currentBid: number | null }) {
+  const t = useT();
   const e = calc.scenarios.expected;
   return (
     <Card className="overflow-hidden" data-testid="deal-card">
@@ -163,52 +166,54 @@ export function DealSummary({ calc, currentBid }: { calc: CalculationResult; cur
             <VerdictBadge verdict={calc.verdict} size="lg" />
             {calc.maxBid !== null ? (
               <div>
-                <div className="text-muted-foreground text-sm">Do not bid above</div>
+                <div className="text-muted-foreground text-sm">{t("report.doNotBidAbove")}</div>
                 <div className="text-5xl font-semibold tracking-tight" data-testid="max-bid">
                   {formatUsd(calc.maxBid)}
                 </div>
                 <div className="text-muted-foreground mt-1 text-sm">
                   {currentBid !== null ? (
                     <>
-                      Current bid <span className="num text-foreground">{formatUsd(currentBid)}</span>
+                      {t("report.currentBid")} <span className="num text-foreground">{formatUsd(currentBid)}</span>
                       {calc.headroomBps !== null && (
                         <>
                           {" · "}
-                          <span className={cn(calc.headroomBps < 1500 ? "text-caution" : "text-foreground")}>{formatBps(calc.headroomBps, 0)} headroom</span>
+                          <span className={cn(calc.headroomBps < 1500 ? "text-caution" : "text-foreground")}>
+                            {t("report.headroom", { pct: formatBps(calc.headroomBps, 0) })}
+                          </span>
                         </>
                       )}
                     </>
                   ) : (
-                    "No current bid yet"
+                    t("report.noCurrentBid")
                   )}
                 </div>
               </div>
             ) : (
-              <div className="text-lg font-semibold">No bid reaches your profit target</div>
+              <div className="text-lg font-semibold">{t("report.noBidReaches")}</div>
             )}
           </div>
           <div className="bg-muted/50 space-y-3 rounded-lg p-4">
             <div>
-              <div className="text-muted-foreground text-xs">Expected profit at max bid</div>
+              <div className="text-muted-foreground text-xs">{t("report.expectedProfitAtMax")}</div>
               <div className={cn("text-2xl font-semibold", (e.profitAtMaxBid ?? 0) < 0 && "text-stop")}>{formatUsd(e.profitAtMaxBid)}</div>
               <div className="text-muted-foreground text-xs">
-                ROI {formatBps(e.roiAtMaxBidBps)} · target {formatUsd(calc.targetProfit)}
+                {t("report.roiTarget", { roi: formatBps(e.roiAtMaxBidBps), target: formatUsd(calc.targetProfit) })}
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div>
-                <div className="text-muted-foreground">Worst case</div>
+                <div className="text-muted-foreground">{t("domain.scenario.worstCase")}</div>
                 <div className={cn("num font-medium", (calc.scenarios.worst.profitAtMaxBid ?? 0) < 0 && "text-stop")}>
                   {formatUsd(calc.scenarios.worst.profitAtMaxBid)}
                 </div>
               </div>
               <div>
-                <div className="text-muted-foreground">Best case</div>
+                <div className="text-muted-foreground">{t("domain.scenario.bestCase")}</div>
                 <div className="num font-medium">{formatUsd(calc.scenarios.best.profitAtMaxBid)}</div>
               </div>
               {e.profitAtCurrentBid !== null && (
                 <div className="col-span-2">
-                  <div className="text-muted-foreground">If you win at the current bid</div>
+                  <div className="text-muted-foreground">{t("report.ifWinAtCurrent")}</div>
                   <div className="num font-medium">{formatUsd(e.profitAtCurrentBid)}</div>
                 </div>
               )}
@@ -225,7 +230,7 @@ export function DealSummary({ calc, currentBid }: { calc: CalculationResult; cur
                       calc.verdict === "GO" ? "bg-go" : calc.verdict === "BE_CAUTIOUS" ? "bg-caution" : "bg-stop",
                     )}
                   />
-                  <span>{r}</span>
+                  <span>{trText(t, r)}</span>
                 </li>
               ))}
             </ul>

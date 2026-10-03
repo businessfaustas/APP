@@ -20,6 +20,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { AnalysisView } from "@/lib/analysis/view";
+import { useT } from "@/lib/i18n/client";
+import { trText } from "@/lib/i18n/generated";
 import { formatUsd } from "@/lib/utils";
 
 import { AnalysisProgress, NeedsInputForm } from "./analysis-progress";
@@ -36,35 +38,36 @@ import { LogisticsTab, VehicleTab } from "./vehicle-tab";
 import { WhatIfControls, WhatIfHeading } from "./what-if-panel";
 
 export function Disclaimer() {
+  const t = useT();
   return (
     <p className="text-muted-foreground text-xs" data-testid="disclaimer">
-      Estimates only — not an appraisal, insurance estimate or guarantee. Verify fees, title rules and vehicle condition before bidding. You are responsible for
-      your bids.
+      {t("report.disclaimer")}
     </p>
   );
 }
 
 function MobileBar() {
   const { calc, marketMissing } = useReport();
+  const t = useT();
   if (!calc || marketMissing) return null;
   return (
     <div className="bg-background/95 fixed inset-x-0 bottom-[calc(3.6rem+env(safe-area-inset-bottom))] z-20 border-t px-4 py-2 backdrop-blur md:bottom-0 lg:hidden">
       <div className="flex items-center justify-between gap-3">
         <VerdictBadge verdict={calc.verdict} />
         <div className="text-sm">
-          Max <span className="num font-semibold">{calc.maxBid !== null ? formatUsd(calc.maxBid) : "—"}</span>
+          {t("report.max")} <span className="num font-semibold">{calc.maxBid !== null ? formatUsd(calc.maxBid) : "—"}</span>
         </div>
         <Drawer>
           <DrawerTrigger asChild>
             <Button size="sm" variant="outline">
-              <SlidersHorizontalIcon /> What-if
+              <SlidersHorizontalIcon /> {t("report.whatIf")}
             </Button>
           </DrawerTrigger>
           <DrawerContent>
             <DrawerHeader>
-              <DrawerTitle>What-if</DrawerTitle>
+              <DrawerTitle>{t("report.whatIf")}</DrawerTitle>
               <DrawerDescription>
-                Max bid: <span className="text-foreground font-semibold">{calc.maxBid !== null ? formatUsd(calc.maxBid) : "—"}</span> ·{" "}
+                {t("report.maxBid")}: <span className="text-foreground font-semibold">{calc.maxBid !== null ? formatUsd(calc.maxBid) : "—"}</span> ·{" "}
                 <VerdictBadge verdict={calc.verdict} />
               </DrawerDescription>
             </DrawerHeader>
@@ -80,6 +83,7 @@ function MobileBar() {
 
 function CompletedReport() {
   const [tab, setTab] = useState("overview");
+  const t = useT();
   return (
     <div className="space-y-5 pb-16 lg:pb-0">
       <ReportHeader />
@@ -87,27 +91,27 @@ function CompletedReport() {
         <div className="min-w-0 space-y-5">
           <DealCard />
           <Tabs value={tab} onValueChange={setTab}>
-            <TabsList>
+            <TabsList className="lg:h-auto lg:flex-wrap">
               <TabsTrigger value="overview">
-                <LayoutDashboardIcon /> Overview
+                <LayoutDashboardIcon /> {t("report.tabOverview")}
               </TabsTrigger>
               <TabsTrigger value="damage">
-                <FileWarningIcon /> Damage
+                <FileWarningIcon /> {t("report.tabDamage")}
               </TabsTrigger>
               <TabsTrigger value="repair">
-                <WrenchIcon /> Repair
+                <WrenchIcon /> {t("report.tabRepair")}
               </TabsTrigger>
               <TabsTrigger value="market">
-                <TrendingUpIcon /> Market
+                <TrendingUpIcon /> {t("report.tabMarket")}
               </TabsTrigger>
               <TabsTrigger value="costs">
-                <ReceiptIcon /> Costs & profit
+                <ReceiptIcon /> {t("report.tabCosts")}
               </TabsTrigger>
               <TabsTrigger value="vehicle">
-                <CarIcon /> Vehicle
+                <CarIcon /> {t("report.tabVehicle")}
               </TabsTrigger>
               <TabsTrigger value="logistics">
-                <TruckIcon /> Logistics
+                <TruckIcon /> {t("report.tabLogistics")}
               </TabsTrigger>
             </TabsList>
             <TabsContent value="overview">
@@ -155,11 +159,12 @@ function isActive(v: AnalysisView): boolean {
 /** Polls while the analysis runs, then renders the full interactive report. */
 export function ReportView({ initial }: { initial: AnalysisView }) {
   const [resumed, setResumed] = useState(0);
+  const t = useT();
   const { data } = useQuery({
     queryKey: ["analysis", initial.id, resumed],
     queryFn: async () => {
       const res = await fetch(`/api/analyses/${initial.id}`, { cache: "no-store" });
-      if (!res.ok) throw new Error("Failed to load");
+      if (!res.ok) throw new Error(t("report.loadFailed"));
       return (await res.json()) as AnalysisView;
     },
     initialData: resumed === 0 ? initial : undefined,
@@ -172,11 +177,13 @@ export function ReportView({ initial }: { initial: AnalysisView }) {
       <Card className="mx-auto max-w-xl">
         <CardContent className="space-y-3">
           <div className="flex items-center gap-2 font-semibold">
-            <ClipboardListIcon className="text-stop size-5" /> The analysis failed
+            <ClipboardListIcon className="text-stop size-5" /> {t("report.failedTitle")}
           </div>
-          <p className="text-muted-foreground text-sm">{view.error ?? "Unknown error."} Your credit was refunded.</p>
+          <p className="text-muted-foreground text-sm">
+            {view.error ? trText(t, view.error) : t("report.unknownError")} {t("report.refunded")}
+          </p>
           <Button asChild>
-            <Link href="/app">Try again</Link>
+            <Link href="/app">{t("report.tryAgain")}</Link>
           </Button>
         </CardContent>
       </Card>

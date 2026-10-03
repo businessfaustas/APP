@@ -10,10 +10,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input, Textarea } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { DemoLot } from "@/lib/config/demo";
+import { useT } from "@/lib/i18n/client";
+import { trText } from "@/lib/i18n/generated";
 import { parseInput } from "@/lib/input/parseInput";
 
 export function NewBatchForm({ demoLots }: { demoLots: DemoLot[] }) {
   const router = useRouter();
+  const t = useT();
   const [text, setText] = useState("");
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
@@ -32,10 +35,10 @@ export function NewBatchForm({ demoLots }: { demoLots: DemoLot[] }) {
         body: JSON.stringify({ inputs, name: name || null }),
       });
       const body = (await res.json()) as { batchId?: string; error?: string };
-      if (!res.ok || !body.batchId) throw new Error(body.error ?? "Couldn't start the comparison");
+      if (!res.ok || !body.batchId) throw new Error(body.error ?? t("compare.couldNotStart"));
       router.push(`/app/compare/${body.batchId}`);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed");
+      toast.error(err instanceof Error ? trText(t, err.message) : t("dash.failed"));
       setBusy(false);
     }
   }
@@ -44,7 +47,7 @@ export function NewBatchForm({ demoLots }: { demoLots: DemoLot[] }) {
     <Card>
       <CardContent className="space-y-4">
         <div className="space-y-1.5">
-          <Label htmlFor="batch-links">Links or VINs — one per line, up to 10</Label>
+          <Label htmlFor="batch-links">{t("compare.linksLabel")}</Label>
           <Textarea
             id="batch-links"
             rows={7}
@@ -53,21 +56,22 @@ export function NewBatchForm({ demoLots }: { demoLots: DemoLot[] }) {
             placeholder={"https://www.copart.com/lot/…\nhttps://www.iaai.com/VehicleDetail/…\nhttps://bid.cars/en/lot/…"}
           />
           <div className="text-muted-foreground flex justify-between text-xs">
-            <span>{lines.length}/10 lots · 1 credit each</span>
-            {invalid.length > 0 && <span className="text-caution">{invalid.length} line(s) aren&apos;t links or VINs</span>}
+            <span>{t("compare.count", { n: lines.length })}</span>
+            {invalid.length > 0 && <span className="text-caution">{t("compare.invalid", { n: invalid.length })}</span>}
           </div>
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="batch-name">Name (optional)</Label>
-          <Input id="batch-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. A3s this week" />
+          <Label htmlFor="batch-name">{t("compare.name")}</Label>
+          <Input id="batch-name" value={name} onChange={(e) => setName(e.target.value)} placeholder={t("compare.namePlaceholder")} />
         </div>
         <div className="flex flex-wrap gap-2">
           <Button onClick={() => void submit(lines)} disabled={busy || lines.length === 0 || lines.length > 10 || invalid.length > 0}>
-            {busy ? <Loader2Icon className="animate-spin" /> : <LayoutGridIcon />} Compare {lines.length || ""} lots
+            {busy ? <Loader2Icon className="animate-spin" /> : <LayoutGridIcon />}{" "}
+            {lines.length ? t("compare.compareN", { n: lines.length }) : t("compare.compareLots")}
           </Button>
           {demoLots.length > 0 && (
             <Button variant="outline" disabled={busy} onClick={() => void submit(demoLots.slice(0, 3).map((d) => d.url))}>
-              Compare 3 demo lots
+              {t("compare.compareDemo")}
             </Button>
           )}
         </div>

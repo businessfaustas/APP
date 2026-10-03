@@ -11,7 +11,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import type { VerdictValue } from "@/lib/calc/types";
-import { cn, formatCountdown, formatDateTime, formatUsd, isPast } from "@/lib/utils";
+import { useLocale, useT } from "@/lib/i18n/client";
+import { countdownLabel } from "@/lib/i18n/labels";
+import { INTL_LOCALE } from "@/lib/i18n/locales";
+import { cn, formatDateTime, formatUsd, isPast } from "@/lib/utils";
 
 export interface WatchItemView {
   id: string;
@@ -33,6 +36,8 @@ export interface WatchItemView {
 
 function Item({ item }: { item: WatchItemView }) {
   const router = useRouter();
+  const t = useT();
+  const intl = INTL_LOCALE[useLocale()];
   const [myMax, setMyMax] = useState(item.myMaxBid !== null ? String(item.myMaxBid) : "");
   const [notes, setNotes] = useState(item.notes ?? "");
   const ended = isPast(item.saleDate);
@@ -43,12 +48,12 @@ function Item({ item }: { item: WatchItemView }) {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ id: item.id, notes, myMaxBid: myMax ? Number(myMax.replace(/[^\d]/g, "")) : null }),
     });
-    if (res.ok) toast.success("Saved");
-    else toast.error("Couldn't save");
+    if (res.ok) toast.success(t("common.saved"));
+    else toast.error(t("watch.couldNotSave"));
   }
   async function remove() {
     await fetch(`/api/watchlist?id=${item.id}`, { method: "DELETE" });
-    toast.success("Removed");
+    toast.success(t("watch.removed"));
     router.refresh();
   }
 
@@ -73,14 +78,15 @@ function Item({ item }: { item: WatchItemView }) {
             {item.verdict && <VerdictBadge verdict={item.verdict} />}
           </div>
           <div className="text-muted-foreground text-xs">
-            {item.source} {item.lotNumber ? `lot ${item.lotNumber}` : ""} ·{" "}
-            {item.saleDate ? `sale ${formatCountdown(item.saleDate)} (${formatDateTime(item.saleDate)})` : "sale date unknown"}
+            {item.source} {item.lotNumber ? t("watch.lot", { lot: item.lotNumber }) : ""} ·{" "}
+            {item.saleDate ? t("watch.sale", { when: countdownLabel(t, item.saleDate), date: formatDateTime(item.saleDate, intl) }) : t("watch.saleUnknown")}
           </div>
           <div className="text-muted-foreground text-xs">
-            Current bid {formatUsd(item.currentBid)} · report max {formatUsd(item.maxBid)}
+            {t("watch.bids", { current: formatUsd(item.currentBid), max: formatUsd(item.maxBid) })}
             {item.remindAt && (
               <span className="ml-2 inline-flex items-center gap-1">
-                <BellIcon className="size-3" /> {item.remindedAt ? "reminder sent" : `reminder ${formatDateTime(item.remindAt)}`}
+                <BellIcon className="size-3" />{" "}
+                {item.remindedAt ? t("watch.reminderSent") : t("watch.reminderAt", { date: formatDateTime(item.remindAt, intl) })}
               </span>
             )}
           </div>
@@ -88,7 +94,7 @@ function Item({ item }: { item: WatchItemView }) {
         <div className="flex flex-wrap items-end gap-2">
           <div className="w-28">
             <label className="text-muted-foreground text-[11px]" htmlFor={`max-${item.id}`}>
-              My max bid
+              {t("watch.myMax")}
             </label>
             <Input
               id={`max-${item.id}`}
@@ -101,11 +107,11 @@ function Item({ item }: { item: WatchItemView }) {
           </div>
           <div className="w-48">
             <label className="text-muted-foreground text-[11px]" htmlFor={`notes-${item.id}`}>
-              Notes
+              {t("watch.notes")}
             </label>
             <Input id={`notes-${item.id}`} value={notes} onChange={(e) => setNotes(e.target.value)} onBlur={() => void save()} className="h-8" />
           </div>
-          <Button size="icon" variant="ghost" aria-label="Remove from watchlist" onClick={() => void remove()}>
+          <Button size="icon" variant="ghost" aria-label={t("watch.remove")} onClick={() => void remove()}>
             <Trash2Icon className="size-4" />
           </Button>
         </div>

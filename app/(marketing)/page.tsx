@@ -18,107 +18,42 @@ import Link from "next/link";
 
 import { PricingTable } from "@/components/marketing/pricing-table";
 import { BidLadder, ScoreMeter } from "@/components/report/deal-card";
-import { RiskFlagsList } from "@/components/report/overview-tab";
+import { ChecklistItems, RiskFlagsList } from "@/components/report/overview-tab";
 import { VerdictBadge } from "@/components/report/verdict-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DEFAULT_SETTINGS } from "@/lib/calc/build";
 import type { ScenarioKey } from "@/lib/calc/types";
-import { TITLE_LABELS } from "@/lib/domain/titles";
 import { runDemoFixtureOffline } from "@/lib/demo/offline";
+import { titleLabel } from "@/lib/i18n/labels";
+import { getT } from "@/lib/i18n/server";
+import type { Translator } from "@/lib/i18n/translate";
 import { cn, formatNumber, formatUsd } from "@/lib/utils";
 
 const STEPS = [
-  {
-    Icon: LinkIcon,
-    title: "Paste a link",
-    body: "Drop in a Copart, IAAI or Bid.cars lot URL, a VIN, or the listing text. The browser extension adds an Analyze button right on the lot page.",
-  },
-  {
-    Icon: ScanSearchIcon,
-    title: "We do the homework",
-    body: "VIN decode, title brand, photo-by-photo damage review, an itemized repair estimate, comparable retail listings, auction fees, transport and holding costs.",
-  },
-  {
-    Icon: GaugeIcon,
-    title: "Bid with a number",
-    body: "A GO / BE CAUTIOUS / WALK AWAY verdict, your maximum bid for your profit target, a comfort bid that survives the worst case, and what to inspect first.",
-  },
-];
+  { Icon: LinkIcon, n: 1 },
+  { Icon: ScanSearchIcon, n: 2 },
+  { Icon: GaugeIcon, n: 3 },
+] as const;
 
 const FEATURES = [
-  {
-    Icon: WrenchIcon,
-    title: "Itemized repair estimate",
-    body: "Parts by source (OEM, aftermarket, used), body, paint and mechanical hours at your labor rate, plus hidden-damage probabilities.",
-  },
-  {
-    Icon: ChartScatterIcon,
-    title: "Market value from comps",
-    body: "Retail comparables adjusted for mileage and title brand, with best / expected / worst resale instead of one optimistic number.",
-  },
-  {
-    Icon: ShieldAlertIcon,
-    title: "Risk flags",
-    body: "Non-repairable titles, flood signs, deployed airbags, EV battery exposure, frame damage, odometer issues and seller-specific traps.",
-  },
-  {
-    Icon: CalculatorIcon,
-    title: "What-if sliders",
-    body: "Change labor rate, parts preference, resale, profit target or buyer type and the max bid updates instantly — no extra credit.",
-  },
-  { Icon: LayersIcon, title: "Batch compare", body: "Paste up to 10 lots and rank them side by side by deal score, max bid headroom and expected profit." },
-  {
-    Icon: BellIcon,
-    title: "Watchlist reminders",
-    body: "Save lots you like and get an email before the sale with your max bid, so you don't overpay in the heat of the auction.",
-  },
-  {
-    Icon: GlobeIcon,
-    title: "Export mode",
-    body: "Landed cost to the EU — inland to port, ocean freight, insurance, duty and VAT on CIF — against destination resale prices.",
-  },
-  { Icon: FileTextIcon, title: "PDF & share links", body: "Send a clean report to a partner, a body shop or a buyer with one read-only link." },
-  {
-    Icon: PuzzleIcon,
-    title: "Browser extension",
-    body: "Analyze straight from the auction page, including photos and details that only show when you're signed in.",
-  },
-];
+  { Icon: WrenchIcon, n: 1 },
+  { Icon: ChartScatterIcon, n: 2 },
+  { Icon: ShieldAlertIcon, n: 3 },
+  { Icon: CalculatorIcon, n: 4 },
+  { Icon: LayersIcon, n: 5 },
+  { Icon: BellIcon, n: 6 },
+  { Icon: GlobeIcon, n: 7 },
+  { Icon: FileTextIcon, n: 8 },
+  { Icon: PuzzleIcon, n: 9 },
+] as const;
 
-const FAQ = [
-  {
-    q: "How accurate is the repair estimate?",
-    a: "It's a structured estimate, not a body-shop quote. Every line shows its source, hours and probability, and the report gives a best / expected / worst range rather than one number. Photos can't show everything, so hidden damage is priced as probability-weighted lines and an extra contingency in the worst case. Calibrate labor rates and part prices to your own shop in Settings.",
-  },
-  {
-    q: "Where does the max bid come from?",
-    a: "We solve for the highest bid where the expected-case profit still meets your target after auction fees, broker fee, transport, repairs, holding and selling costs. The comfort bid is where even the worst case breaks even; break-even is where the expected case makes zero.",
-  },
-  {
-    q: "Which auctions are supported?",
-    a: "Copart, IAAI and Bid.cars links, plus any listing you paste as text or enter by hand. Some auction pages hide details behind a login — the browser extension sends what you can see so nothing is missed.",
-  },
-  {
-    q: "Are auction fees up to date?",
-    a: "Fee tables are editable by your team and clearly marked when they're placeholders. Auctions change fees often and by buyer type, so confirm the current schedule before you rely on a number.",
-  },
-  {
-    q: "Can I use it if I export cars?",
-    a: "Yes. Export mode adds inland transport to the port, ocean freight, marine insurance, customs duty and VAT on the CIF value, registration and compliance costs, and compares against destination resale prices.",
-  },
-  {
-    q: "What happens to my data?",
-    a: "Reports are private to your account unless you create a share link. You can export or delete everything from Settings. See the Privacy Policy for details.",
-  },
-];
-
-const SCENARIO_LABEL: Record<ScenarioKey, string> = { best: "Best", expected: "Expected", worst: "Worst" };
+const FAQ = [1, 2, 3, 4, 5, 6] as const;
 
 type Sample = ReturnType<typeof runDemoFixtureOffline>;
 
-function SampleSummaryCard({ sample, className }: { sample: Sample; className?: string }) {
+function SampleSummaryCard({ sample, t, className }: { sample: Sample; t: Translator; className?: string }) {
   const { listing, calc } = sample;
   return (
     <Card className={cn("shadow-lg", className)}>
@@ -129,22 +64,23 @@ function SampleSummaryCard({ sample, className }: { sample: Sample; className?: 
               {listing.year} {listing.make === "AUDI" ? "Audi" : listing.make} {listing.model} {listing.trim}
             </div>
             <div className="text-muted-foreground text-xs">
-              {listing.location.yardName} · {TITLE_LABELS[listing.titleCategory]} · Front end · {formatNumber(listing.odometer)} mi
+              {listing.location.yardName} · {titleLabel(t, listing.titleCategory)} · {t("landing.sampleDamage")} · {formatNumber(listing.odometer)}{" "}
+              {t("domain.mi")}
             </div>
           </div>
           <VerdictBadge verdict={calc.verdict} />
         </div>
         <div className="grid grid-cols-3 gap-3">
           <div>
-            <div className="text-muted-foreground text-xs">Max bid</div>
+            <div className="text-muted-foreground text-xs">{t("report.maxBid")}</div>
             <div className="num text-2xl font-semibold tracking-tight">{formatUsd(calc.maxBid)}</div>
           </div>
           <div>
-            <div className="text-muted-foreground text-xs">Comfort bid</div>
+            <div className="text-muted-foreground text-xs">{t("report.comfortBid")}</div>
             <div className="num text-lg font-medium">{formatUsd(calc.comfortBid)}</div>
           </div>
           <div>
-            <div className="text-muted-foreground text-xs">Break-even</div>
+            <div className="text-muted-foreground text-xs">{t("report.breakEven")}</div>
             <div className="num text-lg font-medium">{formatUsd(calc.breakEvenBid)}</div>
           </div>
         </div>
@@ -155,7 +91,7 @@ function SampleSummaryCard({ sample, className }: { sample: Sample; className?: 
   );
 }
 
-function SampleReport({ sample }: { sample: Sample }) {
+function SampleReport({ sample, t }: { sample: Sample; t: Translator }) {
   const { listing, assembled, calc } = sample;
   const flags = assembled.flags.filter((f) => f.level !== "INFO").concat(assembled.flags.filter((f) => f.level === "INFO").slice(0, 2));
   const keys: ScenarioKey[] = ["best", "expected", "worst"];
@@ -163,17 +99,17 @@ function SampleReport({ sample }: { sample: Sample }) {
     <div className="grid gap-4 lg:grid-cols-[1.2fr_1fr]">
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Three scenarios at the max bid of {formatUsd(calc.maxBid)}</CardTitle>
+          <CardTitle className="text-base">{t("landing.scenariosTitle", { amount: formatUsd(calc.maxBid) })}</CardTitle>
         </CardHeader>
         <CardContent>
           <table className="w-full text-sm">
-            <caption className="sr-only">Resale, repair, other costs and profit per scenario</caption>
+            <caption className="sr-only">{t("landing.scenariosCaption")}</caption>
             <thead>
               <tr className="text-muted-foreground border-b text-left text-xs">
                 <th scope="col" className="py-2 font-medium" />
                 {keys.map((k) => (
                   <th key={k} scope="col" className="py-2 pl-3 text-right font-medium">
-                    {SCENARIO_LABEL[k]}
+                    {t(`domain.scenario.${k}`)}
                   </th>
                 ))}
               </tr>
@@ -181,7 +117,7 @@ function SampleReport({ sample }: { sample: Sample }) {
             <tbody className="num">
               <tr className="border-b">
                 <th scope="row" className="text-muted-foreground py-2 text-left font-normal">
-                  Resale
+                  {t("report.resale")}
                 </th>
                 {keys.map((k) => (
                   <td key={k} className="py-2 pl-3 text-right">
@@ -191,7 +127,7 @@ function SampleReport({ sample }: { sample: Sample }) {
               </tr>
               <tr className="border-b">
                 <th scope="row" className="text-muted-foreground py-2 text-left font-normal">
-                  Repair
+                  {t("report.repair")}
                 </th>
                 {keys.map((k) => (
                   <td key={k} className="py-2 pl-3 text-right">
@@ -201,7 +137,7 @@ function SampleReport({ sample }: { sample: Sample }) {
               </tr>
               <tr className="border-b">
                 <th scope="row" className="text-muted-foreground py-2 text-left font-normal">
-                  Bid, fees & other
+                  {t("landing.bidFeesOther")}
                 </th>
                 {keys.map((k) => {
                   const s = calc.scenarios[k];
@@ -214,7 +150,7 @@ function SampleReport({ sample }: { sample: Sample }) {
               </tr>
               <tr>
                 <th scope="row" className="py-2 text-left font-medium">
-                  Profit
+                  {t("report.profit")}
                 </th>
                 {keys.map((k) => {
                   const p = calc.scenarios[k].profitAtMaxBid;
@@ -228,15 +164,14 @@ function SampleReport({ sample }: { sample: Sample }) {
             </tbody>
           </table>
           <p className="text-muted-foreground mt-4 text-xs">
-            Current bid {formatUsd(listing.currentBid)}. Repair includes parts, labor at {formatUsd(DEFAULT_SETTINGS.laborRate)}/h, paint materials,
-            probability-weighted hidden damage (like a front radar calibration) and a contingency that grows in the worst case.
+            {t("landing.sampleNote", { bid: formatUsd(listing.currentBid), rate: formatUsd(DEFAULT_SETTINGS.laborRate) })}
           </p>
         </CardContent>
       </Card>
       <div className="space-y-4">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">What we flagged</CardTitle>
+            <CardTitle className="text-base">{t("landing.whatWeFlagged")}</CardTitle>
           </CardHeader>
           <CardContent>
             <RiskFlagsList flags={flags} />
@@ -245,14 +180,12 @@ function SampleReport({ sample }: { sample: Sample }) {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <ClipboardCheckIcon className="text-primary size-4" aria-hidden="true" /> Inspect first
+              <ClipboardCheckIcon className="text-primary size-4" aria-hidden="true" /> {t("landing.inspectFirst")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <ol className="list-decimal space-y-1.5 pl-5 text-sm">
-              {assembled.checklist.slice(0, 3).map((c) => (
-                <li key={c}>{c}</li>
-              ))}
+              <ChecklistItems items={assembled.checklist.slice(0, 3)} />
             </ol>
           </CardContent>
         </Card>
@@ -261,7 +194,8 @@ function SampleReport({ sample }: { sample: Sample }) {
   );
 }
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const t = await getT();
   const sample = runDemoFixtureOffline("audi-a3", new Date());
   return (
     <>
@@ -275,44 +209,41 @@ export default function LandingPage() {
             <Badge variant="outline" className="gap-1.5 py-1">
               Copart · IAAI · Bid.cars
             </Badge>
-            <h1 className="text-4xl font-semibold tracking-tight text-balance sm:text-5xl">Know your max bid before you bid.</h1>
-            <p className="text-muted-foreground max-w-xl text-lg text-pretty">
-              Paste a salvage auction link. AuctionPulse reads the VIN, title and every photo, prices the repair line by line, checks what the car sells for
-              fixed, and tells you exactly where to stop bidding.
-            </p>
+            <h1 className="text-4xl font-semibold tracking-tight text-balance sm:text-5xl">{t("landing.heroTitle")}</h1>
+            <p className="text-muted-foreground max-w-xl text-lg text-pretty">{t("landing.heroBody")}</p>
             <div className="flex flex-wrap gap-3">
               <Button asChild size="lg">
                 <Link href="/app">
-                  Analyze a lot <ArrowRightIcon />
+                  {t("common.analyzeLot")} <ArrowRightIcon />
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline">
-                <Link href="#sample">See a sample report</Link>
+                <Link href="#sample">{t("landing.seeSample")}</Link>
               </Button>
             </div>
-            <p className="text-muted-foreground text-sm">3 free reports every month. No card needed.</p>
+            <p className="text-muted-foreground text-sm">{t("landing.freeNote")}</p>
           </div>
-          <SampleSummaryCard sample={sample} className="w-full lg:max-w-md lg:justify-self-end" />
+          <SampleSummaryCard sample={sample} t={t} className="w-full lg:max-w-md lg:justify-self-end" />
         </div>
       </section>
 
       <section id="how-it-works" className="scroll-mt-16 border-b">
         <div className="mx-auto max-w-6xl space-y-10 px-4 py-16">
           <div className="max-w-2xl space-y-2">
-            <h2 className="text-3xl font-semibold tracking-tight">From lot page to bid limit in about a minute</h2>
-            <p className="text-muted-foreground">The research a careful flipper does by hand — done the same way, every time, before every bid.</p>
+            <h2 className="text-3xl font-semibold tracking-tight">{t("landing.howTitle")}</h2>
+            <p className="text-muted-foreground">{t("landing.howBody")}</p>
           </div>
           <ol className="grid gap-4 md:grid-cols-3">
-            {STEPS.map((s, i) => (
-              <li key={s.title} className="bg-card rounded-xl border p-5">
+            {STEPS.map((s) => (
+              <li key={s.n} className="bg-card rounded-xl border p-5">
                 <div className="mb-4 flex items-center gap-3">
                   <span className="bg-primary/12 text-primary flex size-9 items-center justify-center rounded-lg">
                     <s.Icon className="size-5" aria-hidden="true" />
                   </span>
-                  <span className="text-muted-foreground text-xs font-medium">Step {i + 1}</span>
+                  <span className="text-muted-foreground text-xs font-medium">{t("landing.step", { n: s.n })}</span>
                 </div>
-                <h3 className="font-semibold">{s.title}</h3>
-                <p className="text-muted-foreground mt-1.5 text-sm">{s.body}</p>
+                <h3 className="font-semibold">{t(`landing.step${s.n}Title`)}</h3>
+                <p className="text-muted-foreground mt-1.5 text-sm">{t(`landing.step${s.n}Body`)}</p>
               </li>
             ))}
           </ol>
@@ -323,34 +254,32 @@ export default function LandingPage() {
         <div className="mx-auto max-w-6xl space-y-8 px-4 py-16">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div className="max-w-2xl space-y-2">
-              <h2 className="text-3xl font-semibold tracking-tight">A real report, not a vibe</h2>
-              <p className="text-muted-foreground">
-                A 2019 Audi A3 with front-end damage on a Texas salvage title. Every number below comes from the same engine your reports use.
-              </p>
+              <h2 className="text-3xl font-semibold tracking-tight">{t("landing.sampleTitle")}</h2>
+              <p className="text-muted-foreground">{t("landing.sampleBody")}</p>
             </div>
             <Button asChild variant="outline">
               <Link href="/app">
-                Analyze your own lot <ArrowRightIcon />
+                {t("landing.analyzeYourOwn")} <ArrowRightIcon />
               </Link>
             </Button>
           </div>
-          <SampleReport sample={sample} />
+          <SampleReport sample={sample} t={t} />
         </div>
       </section>
 
       <section className="border-b">
         <div className="mx-auto max-w-6xl space-y-10 px-4 py-16">
           <div className="max-w-2xl space-y-2">
-            <h2 className="text-3xl font-semibold tracking-tight">Everything that decides whether a flip makes money</h2>
-            <p className="text-muted-foreground">Built for people who buy damaged cars to fix and resell — from first-timers to dealers and exporters.</p>
+            <h2 className="text-3xl font-semibold tracking-tight">{t("landing.featuresTitle")}</h2>
+            <p className="text-muted-foreground">{t("landing.featuresBody")}</p>
           </div>
           <div className="grid gap-x-8 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map((f) => (
-              <div key={f.title} className="flex gap-3">
+              <div key={f.n} className="flex gap-3">
                 <f.Icon className="text-primary mt-0.5 size-5 shrink-0" aria-hidden="true" />
                 <div>
-                  <h3 className="font-medium">{f.title}</h3>
-                  <p className="text-muted-foreground mt-1 text-sm">{f.body}</p>
+                  <h3 className="font-medium">{t(`landing.f${f.n}Title`)}</h3>
+                  <p className="text-muted-foreground mt-1 text-sm">{t(`landing.f${f.n}Body`)}</p>
                 </div>
               </div>
             ))}
@@ -361,8 +290,8 @@ export default function LandingPage() {
       <section id="pricing" className="scroll-mt-16 border-b">
         <div className="mx-auto max-w-6xl space-y-10 px-4 py-16">
           <div className="mx-auto max-w-2xl space-y-2 text-center">
-            <h2 className="text-3xl font-semibold tracking-tight">One bad bid costs more than a year of Pro</h2>
-            <p className="text-muted-foreground">Start free. Upgrade when you&apos;re bidding every week.</p>
+            <h2 className="text-3xl font-semibold tracking-tight">{t("landing.pricingTitle")}</h2>
+            <p className="text-muted-foreground">{t("landing.pricingBody")}</p>
           </div>
           <PricingTable />
         </div>
@@ -370,17 +299,17 @@ export default function LandingPage() {
 
       <section id="faq" className="scroll-mt-16 border-b">
         <div className="mx-auto max-w-3xl space-y-8 px-4 py-16">
-          <h2 className="text-3xl font-semibold tracking-tight">Questions</h2>
+          <h2 className="text-3xl font-semibold tracking-tight">{t("landing.faqTitle")}</h2>
           <div className="divide-y rounded-xl border">
-            {FAQ.map((f) => (
-              <details key={f.q} className="group px-5 py-4 [&_summary::-webkit-details-marker]:hidden">
+            {FAQ.map((n) => (
+              <details key={n} className="group px-5 py-4 [&_summary::-webkit-details-marker]:hidden">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-medium">
-                  {f.q}
+                  {t(`landing.q${n}`)}
                   <span aria-hidden="true" className="text-muted-foreground transition-transform group-open:rotate-45">
                     +
                   </span>
                 </summary>
-                <p className="text-muted-foreground mt-3 text-sm leading-relaxed">{f.a}</p>
+                <p className="text-muted-foreground mt-3 text-sm leading-relaxed">{t(`landing.a${n}`)}</p>
               </details>
             ))}
           </div>
@@ -389,10 +318,10 @@ export default function LandingPage() {
 
       <section>
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-5 px-4 py-20 text-center">
-          <h2 className="max-w-2xl text-3xl font-semibold tracking-tight text-balance">Your next lot closes soon. Know your number first.</h2>
+          <h2 className="max-w-2xl text-3xl font-semibold tracking-tight text-balance">{t("landing.ctaTitle")}</h2>
           <Button asChild size="lg">
             <Link href="/app">
-              Analyze a lot <ArrowRightIcon />
+              {t("common.analyzeLot")} <ArrowRightIcon />
             </Link>
           </Button>
         </div>

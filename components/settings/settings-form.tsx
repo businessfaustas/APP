@@ -13,6 +13,8 @@ import { Label } from "@/components/ui/label";
 import { SegmentedControl } from "@/components/ui/misc";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { useT } from "@/lib/i18n/client";
+import { rich } from "@/lib/i18n/rich";
 
 export interface SettingsValues {
   homeZip: string;
@@ -100,6 +102,7 @@ export function SettingsForm({
   hasToken: boolean;
 }) {
   const router = useRouter();
+  const t = useT();
   const [v, setV] = useState<SettingsValues>(initial);
   const [busy, setBusy] = useState(false);
   const [token, setToken] = useState<string | null>(null);
@@ -112,9 +115,9 @@ export function SettingsForm({
     const res = await fetch("/api/settings", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify(v) });
     setBusy(false);
     if (res.ok) {
-      toast.success("Settings saved — new reports will use them");
+      toast.success(t("settings.saved"));
       router.refresh();
-    } else toast.error(((await res.json()) as { error?: string }).error ?? "Couldn't save");
+    } else toast.error(((await res.json()) as { error?: string }).error ?? t("settings.couldNotSave"));
   }
 
   async function createToken() {
@@ -133,76 +136,82 @@ export function SettingsForm({
     await fetch("/api/settings", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: "revoke-token" }) });
     setToken(null);
     setTokenExists(false);
-    toast.success("Token revoked");
+    toast.success(t("settings.tokenRevoked"));
   }
   async function deleteAccount() {
-    if (!confirm("Delete your account and all reports permanently? This can't be undone.")) return;
+    if (!confirm(t("settings.confirmDelete"))) return;
     const res = await fetch("/api/account", { method: "DELETE" });
     // Full reload on purpose: drops every client-side cache of the deleted account.
     // eslint-disable-next-line @next/next/no-location-assign-relative-destination
     if (res.ok) window.location.href = "/";
-    else toast.error("Couldn't delete the account");
+    else toast.error(t("settings.couldNotDelete"));
   }
 
   return (
     <div className="space-y-5">
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Business profile</CardTitle>
-          <CardDescription>Where cars are delivered and how you buy.</CardDescription>
+          <CardTitle className="text-base">{t("settings.business")}</CardTitle>
+          <CardDescription>{t("settings.businessBody")}</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-3">
           <div className="space-y-1.5">
-            <Label htmlFor="s-zip">Your ZIP code</Label>
+            <Label htmlFor="s-zip">{t("settings.zip")}</Label>
             <Input id="s-zip" inputMode="numeric" maxLength={5} value={v.homeZip} onChange={(e) => set("homeZip", e.target.value.replace(/\D/g, ""))} />
-            <p className="text-muted-foreground text-xs">Used for transport distance and local comps.</p>
+            <p className="text-muted-foreground text-xs">{t("settings.zipHint")}</p>
           </div>
           <div className="space-y-1.5 sm:col-span-2">
-            <Label>Buyer type</Label>
+            <Label>{t("settings.buyerType")}</Label>
             <SegmentedControl
-              ariaLabel="Buyer type"
+              ariaLabel={t("settings.buyerType")}
               value={v.buyerType}
               onValueChange={(x) => set("buyerType", x)}
               options={[
-                { value: "LICENSED_DEALER", label: "Licensed dealer" },
-                { value: "PUBLIC_VIA_BROKER", label: "Public buyer (via broker)" },
+                { value: "LICENSED_DEALER", label: t("domain.buyerType.LICENSED_DEALER") },
+                { value: "PUBLIC_VIA_BROKER", label: t("settings.publicBroker") },
               ]}
             />
-            <p className="text-muted-foreground text-xs">Public buyers usually pay a broker fee and sales tax — set them below.</p>
+            <p className="text-muted-foreground text-xs">{t("settings.buyerHint")}</p>
           </div>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Repair costs</CardTitle>
+          <CardTitle className="text-base">{t("settings.repairCosts")}</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-3">
-          <NumField id="s-labor" label="Labor rate (per hour)" value={v.laborRate} onChange={num("laborRate")} />
-          <NumField id="s-paint" label="Paint materials (per paint hour)" value={v.paintMaterialsPerHour} onChange={num("paintMaterialsPerHour")} />
-          <NumField id="s-disc" label="Parts discount" kind="bps" value={v.partsDiscountBps} onChange={num("partsDiscountBps")} />
+          <NumField id="s-labor" label={t("settings.laborRate")} value={v.laborRate} onChange={num("laborRate")} />
+          <NumField id="s-paint" label={t("settings.paint")} value={v.paintMaterialsPerHour} onChange={num("paintMaterialsPerHour")} />
+          <NumField id="s-disc" label={t("settings.partsDiscount")} kind="bps" value={v.partsDiscountBps} onChange={num("partsDiscountBps")} />
           <div className="space-y-1.5 sm:col-span-2">
-            <Label>Preferred parts source</Label>
+            <Label>{t("settings.partsSource")}</Label>
             <SegmentedControl
-              ariaLabel="Preferred parts source"
+              ariaLabel={t("settings.partsSource")}
               value={v.partsSourcePreference}
               onValueChange={(x) => set("partsSourcePreference", x)}
               options={[
-                { value: "OEM_NEW", label: "OEM" },
-                { value: "AFTERMARKET", label: "Aftermarket" },
-                { value: "USED", label: "Used" },
+                { value: "OEM_NEW", label: t("domain.partSource.OEM_NEW") },
+                { value: "AFTERMARKET", label: t("domain.partSource.AFTERMARKET") },
+                { value: "USED", label: t("domain.partSource.USED") },
               ]}
             />
           </div>
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <Label htmlFor="s-cont">Fixed contingency</Label>
+              <Label htmlFor="s-cont">{t("settings.fixedContingency")}</Label>
               <Switch id="s-cont" checked={v.contingencyOverrideBps !== null} onCheckedChange={(on) => set("contingencyOverrideBps", on ? 1500 : null)} />
             </div>
             {v.contingencyOverrideBps !== null ? (
-              <NumField id="s-cont-v" label="Contingency" kind="bps" value={v.contingencyOverrideBps} onChange={(x) => set("contingencyOverrideBps", x)} />
+              <NumField
+                id="s-cont-v"
+                label={t("settings.contingency")}
+                kind="bps"
+                value={v.contingencyOverrideBps}
+                onChange={(x) => set("contingencyOverrideBps", x)}
+              />
             ) : (
-              <p className="text-muted-foreground text-xs">Off: 10–35% by damage severity.</p>
+              <p className="text-muted-foreground text-xs">{t("settings.contingencyOff")}</p>
             )}
           </div>
         </CardContent>
@@ -210,72 +219,100 @@ export function SettingsForm({
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Profit & resale</CardTitle>
+          <CardTitle className="text-base">{t("settings.profitResale")}</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-4">
-          <NumField id="s-tp" label="Target profit" kind="bps" hint="% of resale" value={v.targetProfitBps} onChange={num("targetProfitBps")} />
-          <NumField id="s-tpm" label="Minimum profit" value={v.targetProfitMin} onChange={num("targetProfitMin")} />
-          <NumField id="s-rb" label="Rebuilt-title value" kind="bps" hint="% of clean value" value={v.rebuiltFactorBps} onChange={num("rebuiltFactorBps")} />
-          <NumField id="s-lts" label="List-to-sale ratio" kind="bps" hint="sale price ÷ asking" value={v.listToSaleBps} onChange={num("listToSaleBps")} />
+          <NumField
+            id="s-tp"
+            label={t("settings.targetProfit")}
+            kind="bps"
+            hint={t("settings.ofResale")}
+            value={v.targetProfitBps}
+            onChange={num("targetProfitBps")}
+          />
+          <NumField id="s-tpm" label={t("settings.minProfit")} value={v.targetProfitMin} onChange={num("targetProfitMin")} />
+          <NumField
+            id="s-rb"
+            label={t("settings.rebuilt")}
+            kind="bps"
+            hint={t("settings.ofClean")}
+            value={v.rebuiltFactorBps}
+            onChange={num("rebuiltFactorBps")}
+          />
+          <NumField
+            id="s-lts"
+            label={t("settings.listToSale")}
+            kind="bps"
+            hint={t("settings.listToSaleHint")}
+            value={v.listToSaleBps}
+            onChange={num("listToSaleBps")}
+          />
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Other costs</CardTitle>
+          <CardTitle className="text-base">{t("settings.otherCosts")}</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-4">
-          <NumField id="s-tr" label="Transport per mile" kind="cents" value={v.transportCentsPerMile} onChange={num("transportCentsPerMile")} />
-          <NumField id="s-trm" label="Transport minimum" value={v.transportMin} onChange={num("transportMin")} />
-          <NumField id="s-title" label="Title / inspection / registration" value={v.titleRegInspection} onChange={num("titleRegInspection")} />
-          <NumField id="s-broker" label="Broker fee" value={v.brokerFee} onChange={num("brokerFee")} />
-          <NumField id="s-hcd" label="Holding cost per day" value={v.holdingCostPerDay} onChange={num("holdingCostPerDay")} />
-          <NumField id="s-hd" label="Days to sell (expected)" kind="int" value={v.holdingDaysExpected} onChange={num("holdingDaysExpected")} />
-          <NumField id="s-sd" label="Storage days" kind="int" value={v.storageDays} onChange={num("storageDays")} />
-          <NumField id="s-spd" label="Storage per day" value={v.storagePerDay} onChange={num("storagePerDay")} />
-          <NumField id="s-sell" label="Selling cost" kind="bps" hint="% of resale" value={v.sellingCostBps} onChange={num("sellingCostBps")} />
-          <NumField id="s-sellf" label="Selling cost (fixed)" value={v.sellingCostFixed} onChange={num("sellingCostFixed")} />
-          <NumField id="s-tax" label="Sales tax on purchase" kind="bps" value={v.salesTaxBps} onChange={num("salesTaxBps")} />
+          <NumField id="s-tr" label={t("settings.transportMile")} kind="cents" value={v.transportCentsPerMile} onChange={num("transportCentsPerMile")} />
+          <NumField id="s-trm" label={t("settings.transportMin")} value={v.transportMin} onChange={num("transportMin")} />
+          <NumField id="s-title" label={t("settings.titleFees")} value={v.titleRegInspection} onChange={num("titleRegInspection")} />
+          <NumField id="s-broker" label={t("settings.brokerFee")} value={v.brokerFee} onChange={num("brokerFee")} />
+          <NumField id="s-hcd" label={t("settings.holdingDay")} value={v.holdingCostPerDay} onChange={num("holdingCostPerDay")} />
+          <NumField id="s-hd" label={t("settings.daysToSell")} kind="int" value={v.holdingDaysExpected} onChange={num("holdingDaysExpected")} />
+          <NumField id="s-sd" label={t("settings.storageDays")} kind="int" value={v.storageDays} onChange={num("storageDays")} />
+          <NumField id="s-spd" label={t("settings.storageDay")} value={v.storagePerDay} onChange={num("storagePerDay")} />
+          <NumField
+            id="s-sell"
+            label={t("settings.sellingCost")}
+            kind="bps"
+            hint={t("settings.ofResale")}
+            value={v.sellingCostBps}
+            onChange={num("sellingCostBps")}
+          />
+          <NumField id="s-sellf" label={t("settings.sellingFixed")} value={v.sellingCostFixed} onChange={num("sellingCostFixed")} />
+          <NumField id="s-tax" label={t("settings.salesTax")} kind="bps" value={v.salesTaxBps} onChange={num("salesTaxBps")} />
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Export mode</CardTitle>
-          <CardDescription>For buyers shipping cars abroad (e.g. US → EU): freight, customs duty, VAT and conversion.</CardDescription>
+          <CardTitle className="text-base">{t("settings.exportMode")}</CardTitle>
+          <CardDescription>{t("settings.exportBody")}</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-3">
           <div className="space-y-1.5">
-            <Label>Default exit</Label>
+            <Label>{t("settings.defaultExit")}</Label>
             <SegmentedControl
-              ariaLabel="Default exit strategy"
+              ariaLabel={t("settings.defaultExitAria")}
               value={v.exitStrategy}
               onValueChange={(x) => set("exitStrategy", x)}
               options={[
-                { value: "RETAIL_REBUILT", label: "Retail" },
-                { value: "EXPORT", label: "Export" },
+                { value: "RETAIL_REBUILT", label: t("settings.retail") },
+                { value: "EXPORT", label: t("settings.export") },
               ]}
             />
           </div>
           <div className="space-y-1.5">
-            <Label>Export profile</Label>
+            <Label>{t("settings.exportProfile")}</Label>
             <Select value={v.exportProfileId ?? "none"} onValueChange={(x) => set("exportProfileId", x === "none" ? null : x)}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">None</SelectItem>
+                <SelectItem value="none">{t("settings.none")}</SelectItem>
                 {exportProfiles.map((p) => (
                   <SelectItem key={p.id} value={p.id}>
                     {p.name}
-                    {p.isPlaceholder ? " (placeholder)" : ""}
+                    {p.isPlaceholder ? t("settings.placeholder") : ""}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <div className="flex items-center justify-between gap-2 pt-6">
-            <Label htmlFor="s-vat">VAT recoverable (VAT-registered business)</Label>
+            <Label htmlFor="s-vat">{t("settings.vat")}</Label>
             <Switch id="s-vat" checked={v.vatRecoverable} onCheckedChange={(x) => set("vatRecoverable", x)} />
           </div>
         </CardContent>
@@ -283,31 +320,28 @@ export function SettingsForm({
 
       <div className="sticky bottom-20 z-10 flex justify-end md:bottom-4">
         <Button size="lg" onClick={() => void save()} disabled={busy} className="shadow-lg">
-          {busy && <Loader2Icon className="animate-spin" />} Save settings
+          {busy && <Loader2Icon className="animate-spin" />} {t("settings.save")}
         </Button>
       </div>
 
       <Card id="extension">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <KeyRoundIcon className="size-4" /> Browser extension
+            <KeyRoundIcon className="size-4" /> {t("settings.extension")}
           </CardTitle>
-          <CardDescription>
-            The Chrome extension adds an &ldquo;Analyze with AuctionPulse&rdquo; button to Copart, IAAI and Bid.cars lot pages. Create a token and paste it into
-            the extension&apos;s settings. See <code>extension/README.md</code> to install it.
-          </CardDescription>
+          <CardDescription>{rich(t("settings.extensionBody"), { readme: <code>extension/README.md</code> })}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           {token && (
             <div className="bg-muted space-y-2 rounded-md p-3">
-              <p className="text-xs">Copy this token now — it won&apos;t be shown again.</p>
+              <p className="text-xs">{t("settings.copyNow")}</p>
               <div className="flex gap-2">
                 <Input readOnly value={token} className="font-mono text-xs" onFocus={(e) => e.currentTarget.select()} />
                 <Button
                   size="icon"
                   variant="outline"
-                  aria-label="Copy token"
-                  onClick={() => void navigator.clipboard.writeText(token).then(() => toast.success("Copied"))}
+                  aria-label={t("settings.copyToken")}
+                  onClick={() => void navigator.clipboard.writeText(token).then(() => toast.success(t("settings.copied")))}
                 >
                   <CopyIcon />
                 </Button>
@@ -316,11 +350,11 @@ export function SettingsForm({
           )}
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => void createToken()}>
-              {tokenExists ? "Rotate token" : "Create token"}
+              {tokenExists ? t("settings.rotate") : t("settings.create")}
             </Button>
             {tokenExists && (
               <Button variant="ghost" onClick={() => void revokeToken()}>
-                Revoke
+                {t("settings.revoke")}
               </Button>
             )}
           </div>
@@ -329,8 +363,8 @@ export function SettingsForm({
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Integrations</CardTitle>
-          <CardDescription>Configured by the server administrator in the environment variables.</CardDescription>
+          <CardTitle className="text-base">{t("settings.integrations")}</CardTitle>
+          <CardDescription>{t("settings.integrationsBody")}</CardDescription>
         </CardHeader>
         <CardContent>
           <ul className="grid gap-2 sm:grid-cols-2">
@@ -343,9 +377,10 @@ export function SettingsForm({
                 )}
                 <div>
                   <div className="font-medium">
-                    {i.label} {i.key === "demo" && i.enabled && <Badge variant="info">on</Badge>}
+                    {i.key === "ai" ? i.label : t.dyn(`settings.int.${i.key}.label`, undefined, i.label)}{" "}
+                    {i.key === "demo" && i.enabled && <Badge variant="info">{t("settings.on")}</Badge>}
                   </div>
-                  <div className="text-muted-foreground text-xs">{i.note}</div>
+                  <div className="text-muted-foreground text-xs">{t.dyn(`settings.int.${i.key}.note`, undefined, i.note)}</div>
                 </div>
               </li>
             ))}
@@ -355,14 +390,14 @@ export function SettingsForm({
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Your data</CardTitle>
+          <CardTitle className="text-base">{t("settings.yourData")}</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-2">
           <Button variant="outline" asChild>
-            <a href="/api/account">Export my data (JSON)</a>
+            <a href="/api/account">{t("settings.exportData")}</a>
           </Button>
           <Button variant="destructive" onClick={() => void deleteAccount()}>
-            Delete my account
+            {t("settings.deleteAccount")}
           </Button>
         </CardContent>
       </Card>

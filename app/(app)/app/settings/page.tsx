@@ -5,12 +5,16 @@ import { SettingsForm } from "@/components/settings/settings-form";
 import { requireUser } from "@/lib/auth/session";
 import { integrationStatus } from "@/lib/config/env";
 import { prisma } from "@/lib/db/prisma";
+import { getT } from "@/lib/i18n/server";
 import { loadSettings } from "@/lib/settings";
 
-export const metadata: Metadata = { title: "Settings" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getT())("settings.title") };
+}
 
 export default async function SettingsPage() {
   const user = await requireUser();
+  const t = await getT();
   const [{ row }, profiles, account] = await Promise.all([
     loadSettings(user.id),
     prisma.exportProfile.findMany({ select: { id: true, name: true, isPlaceholder: true }, orderBy: { name: "asc" } }),
@@ -18,7 +22,7 @@ export default async function SettingsPage() {
   ]);
   return (
     <PageContainer className="max-w-4xl">
-      <PageHeader title="Settings" description="Your defaults for every new report. You can still change any of them per report with the What-if panel." />
+      <PageHeader title={t("settings.title")} description={t("settings.body")} />
       <SettingsForm
         initial={{
           homeZip: row.homeZip,

@@ -3,6 +3,7 @@
 import { Bar, BarChart, CartesianGrid, Cell, LabelList, ReferenceLine, ResponsiveContainer, Scatter, ScatterChart, Tooltip, XAxis, YAxis } from "recharts";
 
 import type { Comp } from "@/lib/domain/schemas";
+import { useT } from "@/lib/i18n/client";
 import { formatNumber, formatUsd } from "@/lib/utils";
 
 const AXIS_TICK = { fontSize: 11, fill: "var(--muted-foreground)" };
@@ -47,20 +48,23 @@ const KIND_COLOR = { resale: "var(--series-1)", cost: "var(--series-2)" } as con
 
 /** Resale → each cost → net profit (expected case at the max bid). */
 export function CostWaterfall({ rows }: { rows: { key: string; label: string; amount: number }[] }) {
-  const data = toWaterfallRows(rows);
+  const t = useT();
+  const data = toWaterfallRows(rows.map((r) => ({ ...r, label: t.dyn(`gen.waterfall.${r.key}`, undefined, r.label) })));
   const height = data.length * 30 + 36;
+  // Room for the longest label (Lithuanian ones run longer), within sensible bounds.
+  const labelWidth = Math.min(180, Math.max(128, Math.max(...data.map((d) => d.label.length)) * 6.6));
   return (
-    <figure className="space-y-3" aria-label="Cost waterfall from resale value to net profit">
+    <figure className="space-y-3" aria-label={t("report.waterfallAria")}>
       <div className="text-muted-foreground flex flex-wrap gap-4 text-xs">
         <span className="flex items-center gap-1.5">
-          <span className="size-2.5 rounded-sm" style={{ background: "var(--series-1)" }} /> Resale value
+          <span className="size-2.5 rounded-sm" style={{ background: "var(--series-1)" }} /> {t("gen.waterfall.resale")}
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="size-2.5 rounded-sm" style={{ background: "var(--series-2)" }} /> Costs
+          <span className="size-2.5 rounded-sm" style={{ background: "var(--series-2)" }} /> {t("report.costs")}
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="size-2.5 rounded-sm" style={{ background: "var(--status-good)" }} /> Net profit
-          <span className="text-muted-foreground">(red if a loss)</span>
+          <span className="size-2.5 rounded-sm" style={{ background: "var(--status-good)" }} /> {t("gen.waterfall.profit")}
+          <span className="text-muted-foreground">{t("report.redIfLoss")}</span>
         </span>
       </div>
       <div style={{ height }} className="w-full">
@@ -68,7 +72,7 @@ export function CostWaterfall({ rows }: { rows: { key: string; label: string; am
           <BarChart layout="vertical" data={data} margin={{ top: 0, right: 56, bottom: 0, left: 0 }} barCategoryGap={6}>
             <CartesianGrid horizontal={false} stroke="var(--chart-grid)" strokeWidth={1} />
             <XAxis type="number" tickFormatter={compactUsd} tick={AXIS_TICK} axisLine={{ stroke: "var(--chart-axis)" }} tickLine={false} />
-            <YAxis type="category" dataKey="label" width={128} tick={AXIS_TICK} axisLine={false} tickLine={false} interval={0} />
+            <YAxis type="category" dataKey="label" width={labelWidth} tick={AXIS_TICK} axisLine={false} tickLine={false} interval={0} />
             <Tooltip
               cursor={{ fill: "var(--muted)", opacity: 0.5 }}
               content={({ active, payload }) => {
@@ -78,7 +82,7 @@ export function CostWaterfall({ rows }: { rows: { key: string; label: string; am
                   <TooltipBox>
                     <div className="font-medium">{row.label}</div>
                     <div className="num">{formatUsd(row.amount)}</div>
-                    {row.kind === "cost" && <div className="text-muted-foreground">Remaining: {formatUsd(row.running)}</div>}
+                    {row.kind === "cost" && <div className="text-muted-foreground">{t("report.remaining", { amount: formatUsd(row.running) })}</div>}
                   </TooltipBox>
                 );
               }}
@@ -110,11 +114,12 @@ export function CostWaterfall({ rows }: { rows: { key: string; label: string; am
 
 /** Comparable listings: asking price vs mileage, with this car's mileage marked. */
 export function CompsScatter({ comps, subjectMileage, medianAsking }: { comps: Comp[]; subjectMileage: number | null; medianAsking: number | null }) {
+  const t = useT();
   const data = comps.filter((c) => c.mileage !== null).map((c) => ({ x: c.mileage!, y: c.price, comp: c }));
   if (data.length === 0) return null;
   return (
-    <figure className="space-y-2" aria-label="Comparable listings: asking price versus mileage">
-      <figcaption className="text-muted-foreground text-xs">Asking price vs. mileage — each dot is a comparable listing</figcaption>
+    <figure className="space-y-2" aria-label={t("report.compsAria")}>
+      <figcaption className="text-muted-foreground text-xs">{t("report.compsCaption")}</figcaption>
       <div className="h-64 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <ScatterChart margin={{ top: 22, right: 16, bottom: 8, left: 0 }}>
@@ -122,7 +127,7 @@ export function CompsScatter({ comps, subjectMileage, medianAsking }: { comps: C
             <XAxis
               type="number"
               dataKey="x"
-              name="Mileage"
+              name={t("report.miles")}
               tickFormatter={(v: number) => `${Math.round(v / 1000)}k mi`}
               tick={AXIS_TICK}
               axisLine={{ stroke: "var(--chart-axis)" }}
@@ -132,7 +137,7 @@ export function CompsScatter({ comps, subjectMileage, medianAsking }: { comps: C
             <YAxis
               type="number"
               dataKey="y"
-              name="Price"
+              name={t("report.price")}
               tickFormatter={compactUsd}
               tick={AXIS_TICK}
               axisLine={false}
@@ -145,7 +150,12 @@ export function CompsScatter({ comps, subjectMileage, medianAsking }: { comps: C
                 y={medianAsking}
                 stroke="var(--muted-foreground)"
                 strokeWidth={1}
-                label={{ value: `Median ${compactUsd(medianAsking)}`, position: "insideTopRight", fontSize: 11, fill: "var(--muted-foreground)" }}
+                label={{
+                  value: t("report.median", { amount: compactUsd(medianAsking) }),
+                  position: "insideTopRight",
+                  fontSize: 11,
+                  fill: "var(--muted-foreground)",
+                }}
               />
             )}
             {subjectMileage !== null && (
@@ -153,7 +163,7 @@ export function CompsScatter({ comps, subjectMileage, medianAsking }: { comps: C
                 x={subjectMileage}
                 stroke="var(--foreground)"
                 strokeWidth={1.5}
-                label={{ value: "This car", position: "top", fontSize: 11, fill: "var(--foreground)" }}
+                label={{ value: t("report.thisCar"), position: "top", fontSize: 11, fill: "var(--foreground)" }}
               />
             )}
             <Tooltip
@@ -170,9 +180,9 @@ export function CompsScatter({ comps, subjectMileage, medianAsking }: { comps: C
                     </div>
                     <div className="text-muted-foreground">
                       {[c.city, c.state].filter(Boolean).join(", ")}
-                      {c.distanceMiles !== null ? ` · ${c.distanceMiles} mi away` : ""}
+                      {c.distanceMiles !== null ? ` · ${t("report.milesAway", { n: c.distanceMiles })}` : ""}
                     </div>
-                    <div className="text-muted-foreground">Adjusted to this car: {formatUsd(c.adjustedPrice)}</div>
+                    <div className="text-muted-foreground">{t("report.adjustedTo", { amount: formatUsd(c.adjustedPrice) })}</div>
                   </TooltipBox>
                 );
               }}

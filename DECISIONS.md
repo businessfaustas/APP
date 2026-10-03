@@ -44,6 +44,13 @@ This file records where the code departs from [`docs/02-AI-MASTER-PROMPT.md`](./
 - **Contingency by severity.** The base contingency is 10% / 15% / 25% / 35% for damage severity 1–3 / 4–6 / 7–8 / 9–10. The best case is 5 points lower (minimum 5%) and the worst case 10 points higher.
 - **Demo fixtures reproduce the reference case.** The Audi A3 demo lot gives exactly the prompt's reference numbers: max bid $3,100, comfort $2,375, break-even $5,500, expected profit $2,518, verdict GO, score 73. This is asserted in `lib/pipeline/__tests__/demoLots.test.ts` and in the e2e suite. The landing page renders its sample report from the same engine.
 
+## Languages
+
+- **Cookie, not URL prefix.** The language is a cookie (`ap_locale`) with an `Accept-Language` fallback, not `/lt/…` routes. Report links, share links and the extension's URLs stay the same in both languages.
+- **The engine stays English; translation happens at display time.** Flags, reasons, checklist items and repair lines are stored as English text (and the AI may write them). Translating the stored text means old reports switch language too, and nothing in the database or the pure engine depends on the language. Engine sentences are matched against English templates (`lib/i18n/messages/en/generated.ts`); anything unrecognised, such as what the AI wrote about photos, is shown as written.
+- **The summary is rebuilt, not translated.** In Lithuanian, the Overview summary is regenerated from the stored calculation with the same rules as `templateNarrative`, so the numbers always match the English one.
+- **Money stays in US format** (`$3,100`) in both languages, because the amounts are US-auction dollars. Dates use the language's format.
+
 ## Security and accounts
 
 - **The demo account is never an admin in production.** With `DEMO_MODE=true`, every visitor shares one account. It keeps the ADMIN role in development, so the admin pages can be explored, but production builds treat it as a regular user (`lib/auth/session.ts`).

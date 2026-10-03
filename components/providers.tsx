@@ -6,8 +6,11 @@ import { useEffect, useState } from "react";
 import { Toaster } from "sonner";
 
 import { TooltipProvider } from "@/components/ui/misc";
+import { I18nProvider } from "@/lib/i18n/client";
+import type { Locale } from "@/lib/i18n/locales";
+import type { Messages } from "@/lib/i18n/messages";
 
-export function Providers({ children }: { children: React.ReactNode }) {
+export function Providers({ locale, messages, children }: { locale: Locale; messages: Messages; children: React.ReactNode }) {
   const [client] = useState(
     () =>
       new QueryClient({
@@ -19,13 +22,15 @@ export function Providers({ children }: { children: React.ReactNode }) {
     document.documentElement.dataset.hydrated = "true";
   }, []);
   return (
-    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-      <QueryClientProvider client={client}>
-        <TooltipProvider>
-          {children}
-          <Toaster richColors position="top-center" closeButton />
-        </TooltipProvider>
-      </QueryClientProvider>
-    </ThemeProvider>
+    <I18nProvider locale={locale} messages={messages}>
+      <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
+        <QueryClientProvider client={client}>
+          <TooltipProvider>
+            {children}
+            <Toaster richColors position="top-center" closeButton />
+          </TooltipProvider>
+        </QueryClientProvider>
+      </ThemeProvider>
+    </I18nProvider>
   );
 }
