@@ -167,7 +167,7 @@ export async function runAnalysis(analysisId: string, step: StepRunner, now: Dat
             : await prisma.listing.create({ data });
         return { ok: true as const, listingId: row.id, listing, provider: res.provider, isDemo: res.isDemo };
       } catch (err) {
-        if (err instanceof NeedsInputError) return { ok: false as const, message: err.message };
+        if (err instanceof NeedsInputError) return { ok: false as const, message: err.message, prefill: err.prefill };
         throw err;
       }
     });
@@ -175,7 +175,14 @@ export async function runAnalysis(analysisId: string, step: StepRunner, now: Dat
     if (!fetched.ok) {
       await prisma.analysis.update({
         where: { id: analysisId },
-        data: { status: "RUNNING", currentStep: "NEEDS_INPUT", progress: 10, error: fetched.message },
+        data: {
+          status: "RUNNING",
+          currentStep: "NEEDS_INPUT",
+          progress: 10,
+          error: fetched.message,
+          // Keep what the link told us so the form can prefill it.
+          ...(fetched.prefill ? { inputPayload: json({ ...payload, hints: { ...fetched.prefill, ...(payload.hints ?? {}) } }) } : {}),
+        },
       });
       return;
     }

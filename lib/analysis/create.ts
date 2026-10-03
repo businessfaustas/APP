@@ -142,7 +142,8 @@ export async function resumeAnalysis(
   const photos = (add.photos ?? []).filter((p) => p.startsWith(`store:uploads/${user.id.replace(/[^\w-]/g, "")}/`));
   const next: InputPayload = {
     ...payload,
-    parsed: { ...payload.parsed, type: add.text ? "TEXT" : payload.parsed.type === "URL" && !add.text ? "MANUAL" : payload.parsed.type },
+    // A link stays a link (so the report keeps the lot number and source); pasted text switches to text extraction.
+    parsed: { ...payload.parsed, type: add.text ? "TEXT" : payload.parsed.type },
     text: add.text?.trim() ? add.text.trim() : payload.text,
     manual: add.manual ? { ...(payload.manual ?? {}), ...add.manual } : payload.manual,
     photos: [...payload.photos, ...photos].slice(0, 40),

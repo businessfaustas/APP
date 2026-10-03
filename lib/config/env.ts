@@ -34,6 +34,8 @@ const EnvSchema = z.object({
   AI_PRICE_VISION: z.string().default("3,15"),
   AI_PRICE_TEXT: z.string().default("1,5"),
   SCRAPINGBEE_API_KEY: opt,
+  // "false" turns off the free direct read of auction pages (used when no scraping key is set).
+  LISTING_DIRECT_FETCH: opt,
   APIFY_TOKEN: opt,
   APIFY_ACTOR_ID: opt,
   VINAUDIT_API_KEY: opt,

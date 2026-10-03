@@ -55,3 +55,27 @@ test("batch of three demo lots fills the compare table", async ({ page }) => {
   await expect(table.getByTestId("verdict-badge")).toHaveCount(3, { timeout: 45_000 });
   await expect(table).toContainText(/audi a3/i);
 });
+
+test("a real Copart link the site won't let us read: four details from the lot page give a report", async ({ page }) => {
+  await open(page, "/app");
+  await page
+    .getByRole("textbox", { name: "Auction link, VIN or listing text" })
+    .fill("https://www.copart.com/lot/41258394/salvage-2019-honda-civic-lx-tx-dallas");
+  await page.getByRole("button", { name: "Analyze", exact: true }).click();
+  await expectNavigation(page, /\/app\/analyses\/[^/]+$/);
+
+  const form = page.getByTestId("needs-input");
+  await expect(form).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByTestId("prefill-summary")).toHaveText("2019 HONDA CIVIC LX · salvage · Dallas, TX");
+  await page.getByTestId("quick-damage").click();
+  await page.getByRole("option", { name: "FRONT END" }).click();
+  await page.locator("#q-odo").fill("48000");
+  await page.locator("#q-bid").fill("1800");
+  await page.locator("#q-acv").fill("16900");
+  await page.getByRole("button", { name: "Analyze this lot" }).click();
+
+  await expect(page.getByTestId("deal-card")).toBeVisible({ timeout: 45_000 });
+  await expect(page.getByTestId("report-title")).toContainText(/honda civic/i);
+  await expect(page.getByText("Lot 41258394")).toBeVisible();
+  await expect(dealVerdict(page)).toHaveText(/GO|BE CAUTIOUS|WALK AWAY/);
+});

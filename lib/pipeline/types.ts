@@ -15,6 +15,8 @@ export const ManualListingSchema = z.object({
   runCondition: z.string().max(40).nullish(),
   hasKeys: z.boolean().nullish(),
   currentBid: z.number().int().min(0).max(5_000_000).nullish(),
+  /** The auction's "estimated retail value" (ACV) shown on the lot page. */
+  listedRetailValue: z.number().int().min(0).max(5_000_000).nullish(),
   zip: z.string().max(10).nullish(),
   state: z.string().max(2).nullish(),
   city: z.string().max(60).nullish(),
@@ -42,6 +44,8 @@ export const InputPayloadSchema = z.object({
   manual: ManualListingSchema.nullable(),
   photos: z.array(z.string()).max(40),
   extension: ExtensionCaptureSchema.nullable(),
+  /** Details read from the link when the page itself couldn't be read (form prefill). */
+  hints: ManualListingSchema.nullish(),
 });
 export type InputPayload = z.infer<typeof InputPayloadSchema>;
 

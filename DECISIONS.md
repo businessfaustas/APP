@@ -33,6 +33,10 @@ This file records where the code departs from [`docs/02-AI-MASTER-PROMPT.md`](./
 ## Data and estimates
 
 - **Fallback chains instead of hard dependencies.** Every external provider has a fallback, and the report's _Data sources_ panel names which one was used. Market value, for example: Marketcheck comps → VinAudit → AI estimate → listing ACV × 0.85 → ask the user. A missing key lowers confidence; it never fails the analysis.
+- **Pasted links without a page-reading service.** Copart and IAAI block automated requests from cloud servers, so without ScrapingBee or Apify:
+  - The app makes one browser-like read of the lot page (8-second timeout, known auction hosts only, bot-protection pages detected). It's free and sometimes succeeds.
+  - When the read is blocked, the analysis pauses with a short form prefilled from the link itself: Copart slugs carry year, make, model, trim, title and yard; Bid.cars slugs carry the VIN.
+  - The user adds damage, odometer, current bid and the auction's estimated retail value, or pastes the page text. The browser extension avoids the problem entirely because it reads the page the user already has open.
 - **Placeholder fee tables.** Real auction fee schedules change often, and copying them into a repo invites stale numbers.
   - The seed ships clearly marked placeholders (`isPlaceholder`). Every report raises an INFO flag while one is in use.
   - Admins replace them in **Admin → Fee tables**.

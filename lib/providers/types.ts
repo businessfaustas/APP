@@ -6,9 +6,24 @@ export interface ProviderResult<T> {
 }
 
 /** Thrown when automatic ingestion fails and the user must paste text or fill a form. */
+/** Vehicle details already known (e.g. read from the link) to prefill the form. */
+export type InputPrefill = Partial<{
+  vin: string | null;
+  year: number | null;
+  make: string | null;
+  model: string | null;
+  trim: string | null;
+  titleRaw: string | null;
+  state: string | null;
+  city: string | null;
+}>;
+
 export class NeedsInputError extends Error {
   readonly needsInput = true;
-  constructor(message: string) {
+  constructor(
+    message: string,
+    readonly prefill: InputPrefill | null = null,
+  ) {
     super(message);
     this.name = "NeedsInputError";
   }

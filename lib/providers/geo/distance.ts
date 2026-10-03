@@ -20,11 +20,33 @@ export function zipPoint(zip: string | null | undefined): { lat: number; lon: nu
   return z ? { lat: z.latitude, lon: z.longitude } : null;
 }
 
+const DIRECTION = /^(north|south|east|west|central|n|s|e|w|so|no|ne|nw|se|sw)$/i;
+
+/**
+ * Spellings to try for a city. Auction yards are named like "Atlanta East", "So Sacramento"
+ * or "Ft Worth", which aren't postal city names.
+ */
+export function cityCandidates(city: string): string[] {
+  const words = city
+    .replace(/[.,]/g, " ")
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((w) => (/^ft$/i.test(w) ? "Fort" : /^st$/i.test(w) ? "Saint" : /^mt$/i.test(w) ? "Mount" : w));
+  const out = [city.trim(), words.join(" ")];
+  const trimmed = [...words];
+  while (trimmed.length > 1 && DIRECTION.test(trimmed[0]!)) trimmed.shift();
+  while (trimmed.length > 1 && DIRECTION.test(trimmed[trimmed.length - 1]!)) trimmed.pop();
+  out.push(trimmed.join(" "));
+  return [...new Set(out.filter(Boolean))];
+}
+
 export function cityStatePoint(city: string | null | undefined, state: string | null | undefined): { lat: number; lon: number } | null {
   if (!city || !state) return null;
-  const matches = zipcodes.lookupByName(city.trim(), state.trim().toUpperCase());
-  const first = matches[0];
-  return first ? { lat: first.latitude, lon: first.longitude } : null;
+  for (const name of cityCandidates(city)) {
+    const first = zipcodes.lookupByName(name, state.trim().toUpperCase())[0];
+    if (first) return { lat: first.latitude, lon: first.longitude };
+  }
+  return null;
 }
 
 export function zipInfo(zip: string): { city: string; state: string } | null {

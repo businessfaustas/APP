@@ -14,7 +14,7 @@ import type {
   RiskFlag,
   VehicleInfo,
 } from "@/lib/domain/schemas";
-import { STEP_LABELS } from "@/lib/pipeline/types";
+import { InputPayloadSchema, STEP_LABELS, type ManualListing } from "@/lib/pipeline/types";
 import type { SettingsSnapshot } from "@/lib/settings";
 
 import { UserOverridesSchema, type UserOverrides } from "./overrides";
@@ -25,6 +25,14 @@ export interface PhotoView {
   url: string;
 }
 
+function prefillFrom(raw: unknown): ManualListing | null {
+  const p = InputPayloadSchema.safeParse(raw);
+  if (!p.success || (!p.data.hints && !p.data.manual)) return null;
+  const merged: ManualListing = { ...(p.data.hints ?? {}) };
+  for (const [k, v] of Object.entries(p.data.manual ?? {})) if (v !== null && v !== undefined && v !== "") (merged as Record<string, unknown>)[k] = v;
+  return merged;
+}
+
 /** Everything the report UI needs, JSON-serializable. */
 export interface AnalysisView {
   id: string;
@@ -33,6 +41,8 @@ export interface AnalysisView {
   currentStep: string | null;
   stepLabel: string;
   needsInput: boolean;
+  /** Details already known when the analysis is waiting for input (from the link and earlier entries). */
+  inputPrefill: ManualListing | null;
   error: string | null;
   createdAt: string;
   completedAt: string | null;
@@ -89,6 +99,7 @@ export async function getAnalysisView(id: string, access: { userId: string } | {
     currentStep: a.currentStep,
     stepLabel: STEP_LABELS[step] ?? step,
     needsInput: a.currentStep === "NEEDS_INPUT",
+    inputPrefill: prefillFrom(a.inputPayload),
     error: a.error,
     createdAt: a.createdAt.toISOString(),
     completedAt: a.completedAt?.toISOString() ?? null,

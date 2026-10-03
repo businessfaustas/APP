@@ -32,6 +32,8 @@ jobs:
       DIRECT_URL: postgresql://postgres:postgres@localhost:5432/auctionpulse
       NEXT_PUBLIC_APP_URL: http://localhost:3000
       DEMO_MODE: "true"
+      # Keep e2e independent of live auction sites.
+      LISTING_DIRECT_FETCH: "false"
       NEXT_TELEMETRY_DISABLED: "1"
     steps:
       - uses: actions/checkout@v4

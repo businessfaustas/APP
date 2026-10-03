@@ -5,12 +5,12 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { ManualFields } from "@/components/input/manual-fields";
+import { ManualFields, QuickFields } from "@/components/input/manual-fields";
 import { PhotoUpload } from "@/components/input/photo-upload";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/input";
-import { Progress } from "@/components/ui/misc";
+import { Progress, SegmentedControl } from "@/components/ui/misc";
 import type { AnalysisView } from "@/lib/analysis/view";
 import { PROGRESS_STEPS } from "@/lib/pipeline/types";
 import type { ManualListing } from "@/lib/pipeline/types";
@@ -55,20 +55,34 @@ export function AnalysisProgress({ view }: { view: AnalysisView }) {
   );
 }
 
+function describePrefill(p: ManualListing): string {
+  const car = [p.year, p.make, p.model, p.trim].filter(Boolean).join(" ");
+  const place = p.city && p.state ? `${p.city}, ${p.state}` : (p.state ?? "");
+  return [car || (p.vin ? `VIN ${p.vin}` : ""), p.titleRaw?.toLowerCase(), place].filter(Boolean).join(" · ");
+}
+
 export function NeedsInputForm({ view, onResumed }: { view: AnalysisView; onResumed: () => void }) {
   const router = useRouter();
+  const prefill = view.inputPrefill;
+  const known = Boolean(prefill && (prefill.vin || (prefill.year && prefill.make && prefill.model)));
+  const [mode, setMode] = useState<"details" | "text">(known ? "details" : "text");
   const [text, setText] = useState("");
-  const [manual, setManual] = useState<ManualListing>({ vin: view.listing?.vin ?? null });
+  const [manual, setManual] = useState<ManualListing>({ ...(prefill ?? {}), vin: prefill?.vin ?? view.listing?.vin ?? null });
   const [photos, setPhotos] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
+
   async function submit() {
+    if (mode === "text" && !text.trim()) return void toast.error("Paste the lot page text first.");
+    if (mode === "details") {
+      if (!manual.vin && !(manual.year && manual.make && manual.model)) return void toast.error("Add the VIN, or the year, make and model.");
+      if (!manual.primaryDamage && photos.length === 0) return void toast.error("Choose the primary damage so we can estimate repairs.");
+    }
     setBusy(true);
     try {
-      const filled = Object.values(manual).some((v) => v !== null && v !== undefined && v !== "");
       const res = await fetch(`/api/analyses/${view.id}/resume`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ text: text || null, manual: filled ? manual : null, photos }),
+        body: JSON.stringify(mode === "text" ? { text, manual: null, photos } : { text: null, manual, photos }),
       });
       const body = (await res.json()) as { error?: string };
       if (!res.ok) throw new Error(body.error ?? "Couldn't continue");
@@ -80,29 +94,59 @@ export function NeedsInputForm({ view, onResumed }: { view: AnalysisView; onResu
       setBusy(false);
     }
   }
+
   return (
     <Card className="mx-auto max-w-2xl" data-testid="needs-input">
       <CardHeader>
-        <CardTitle className="text-lg">We need the listing details</CardTitle>
+        <CardTitle className="text-lg">{known ? "Add a few details to finish" : "We need the listing details"}</CardTitle>
         <p className="text-muted-foreground text-sm">{view.error}</p>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-1.5">
-          <div className="text-sm font-medium">Paste the listing text</div>
-          <p className="text-muted-foreground text-xs">
-            On the lot page press Ctrl+A then Ctrl+C (⌘A, ⌘C on Mac) and paste here. You don&apos;t need to clean it up.
+        {known && prefill && (
+          <p className="bg-muted mt-2 rounded-md px-3 py-2 text-sm font-medium" data-testid="prefill-summary">
+            {describePrefill(prefill)}
           </p>
-          <Textarea value={text} onChange={(e) => setText(e.target.value)} rows={6} placeholder="Lot #… VIN… Odometer… Primary damage…" />
-        </div>
-        <PhotoUpload value={photos} onChange={setPhotos} />
-        <details className="rounded-lg border p-3">
-          <summary className="cursor-pointer text-sm font-medium">Or fill in the details</summary>
-          <div className="pt-3">
+        )}
+      </CardHeader>
+      <CardContent className="space-y-5">
+        <SegmentedControl
+          ariaLabel="How to add the details"
+          value={mode}
+          onValueChange={setMode}
+          options={[
+            { value: "details", label: "Fill in details" },
+            { value: "text", label: "Paste page text" },
+          ]}
+        />
+        {mode === "details" ? (
+          known ? (
+            <div className="space-y-3">
+              <QuickFields value={manual} onChange={setManual} />
+              <details className="rounded-lg border p-3">
+                <summary className="cursor-pointer text-sm font-medium">More details (optional)</summary>
+                <div className="pt-3">
+                  <ManualFields value={manual} onChange={setManual} />
+                </div>
+              </details>
+            </div>
+          ) : (
             <ManualFields value={manual} onChange={setManual} />
+          )
+        ) : (
+          <div className="space-y-1.5">
+            <p className="text-muted-foreground text-xs">
+              On the lot page press Ctrl+A then Ctrl+C (⌘A, ⌘C on Mac) and paste here. You don&apos;t need to clean it up.
+            </p>
+            <Textarea
+              aria-label="Lot page text"
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              rows={8}
+              placeholder="Lot #… VIN… Odometer… Primary damage… Est. retail value…"
+            />
           </div>
-        </details>
+        )}
+        <PhotoUpload value={photos} onChange={setPhotos} />
         <Button onClick={() => void submit()} disabled={busy} className="w-full sm:w-auto">
-          {busy && <Loader2Icon className="animate-spin" />} Continue analysis
+          {busy && <Loader2Icon className="animate-spin" />} Analyze this lot
         </Button>
       </CardContent>
     </Card>

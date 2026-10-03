@@ -1,7 +1,7 @@
 import "server-only";
 
 import { env } from "@/lib/config/env";
-import { detectAuctionUrl } from "@/lib/input/urls";
+import { detectAuctionUrl, KNOWN_AUCTION_HOSTS } from "@/lib/input/urls";
 
 import { assertPublicUrl, fetchWithTimeout } from "../http";
 
@@ -15,9 +15,48 @@ async function politeDelay(host: string): Promise<void> {
   lastFetchByHost.set(host, Date.now());
 }
 
+// Bot-protection pages (Imperva/Incapsula, Cloudflare, Akamai, PerimeterX) instead of the listing.
+const BOT_WALL =
+  /(_Incapsula_Resource|Incapsula incident|cf-chl-|challenge-platform|<title>\s*Just a moment|Attention Required! \| Cloudflare|Access Denied|Pardon Our Interruption|px-captcha|captcha-delivery|Request unsuccessful)/i;
+
+const BROWSER_HEADERS = {
+  "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36",
+  accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+  "accept-language": "en-US,en;q=0.9",
+};
+
+/**
+ * Free first attempt: reads the lot page the way a browser would. Many auction sites block
+ * cloud servers, so callers must expect this to fail and fall back to asking the user.
+ * Only known auction hosts, at most 3 same-site redirects, short timeout.
+ */
+export async function fetchListingPageDirect(url: string): Promise<{ html: string; provider: string }> {
+  if (env().LISTING_DIRECT_FETCH === "false") throw new Error("Direct page reads are turned off");
+  let target = await assertPublicUrl(url);
+  const isAuctionHost = (host: string) => KNOWN_AUCTION_HOSTS.some((re) => re.test(host));
+  if (!isAuctionHost(target.hostname)) throw new Error("Not an auction site");
+  await politeDelay(target.hostname);
+  for (let hop = 0; hop < 4; hop++) {
+    const res = await fetchWithTimeout(target.toString(), { headers: BROWSER_HEADERS, redirect: "manual", timeoutMs: 8000 });
+    const location = res.headers.get("location");
+    if (res.status >= 300 && res.status < 400 && location) {
+      const next = await assertPublicUrl(new URL(location, target).toString());
+      if (!isAuctionHost(next.hostname)) throw new Error("Redirected off the auction site");
+      target = next;
+      continue;
+    }
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const html = await res.text();
+    if (html.length < 2000 || BOT_WALL.test(html.slice(0, 30000))) throw new Error("Blocked by the site's bot protection");
+    const detected = detectAuctionUrl(target.toString());
+    return { html, provider: `Direct read (${detected?.source ?? "page"})` };
+  }
+  throw new Error("Too many redirects");
+}
+
 /**
  * Fetches a rendered listing page via ScrapingBee (or an Apify actor). Server fetches of
- * auction sites only ever go through these providers, with per-host rate limiting.
+ * auction sites go through these providers or the direct read above, with per-host rate limiting.
  */
 export async function fetchListingPage(url: string): Promise<{ html: string; provider: string }> {
   const target = await assertPublicUrl(url);

@@ -4,12 +4,14 @@ import { llmExtractListing } from "@/lib/ai/prompts/extractListing";
 import { features } from "@/lib/config/env";
 import { findDemoFixture } from "@/lib/demo/fixtures";
 import type { AuctionSource, NormalizedListing } from "@/lib/domain/schemas";
+import { describeHints, hintsFromAuctionUrl, hintsIdentifyVehicle, type UrlHints } from "@/lib/input/urlHints";
+import { sourceLabel } from "@/lib/input/urls";
 
 import { NeedsInputError, type ProviderResult } from "../types";
 import { extractionScore, heuristicExtract } from "./heuristicExtract";
 import { extractFromHtml } from "./htmlExtract";
 import { finalizeListing, hasVehicleIdentity, mergeRaw, type RawListing } from "./normalize";
-import { fetchListingPage } from "./scrapingApi";
+import { fetchListingPage, fetchListingPageDirect } from "./scrapingApi";
 
 export interface ManualListingInput {
   vin?: string | null;
@@ -24,6 +26,7 @@ export interface ManualListingInput {
   runCondition?: string | null;
   hasKeys?: boolean | null;
   currentBid?: number | null;
+  listedRetailValue?: number | null;
   zip?: string | null;
   state?: string | null;
   city?: string | null;
@@ -66,6 +69,7 @@ function fromManual(m: ManualListingInput | null | undefined): RawListing | null
     runConditionRaw: m.runCondition ?? null,
     hasKeys: m.hasKeys ?? null,
     currentBid: m.currentBid ?? null,
+    listedRetailValue: m.listedRetailValue ?? null,
     saleDate: m.saleDate ?? null,
     location: { zip: m.zip ?? null, state: m.state ?? null, city: m.city ?? null, yardName: null },
   };
@@ -83,6 +87,42 @@ async function extractText(text: string, analysisId: string): Promise<{ raw: Raw
     }
   }
   return { raw: heuristic, method: "PARSER", provider: "Text parser" };
+}
+
+function rawFromHints(h: UrlHints): RawListing {
+  return {
+    vin: h.vin,
+    year: h.year,
+    make: h.make,
+    model: h.model,
+    trim: h.trim,
+    titleRaw: h.titleRaw,
+    location: { zip: null, state: h.state, city: h.city, yardName: null },
+  };
+}
+
+/** Why the page couldn't be read, what we already know, and what the user should add. */
+function needsDetails(source: AuctionSource | null | undefined, hints: UrlHints, fetchConfigured: boolean): NeedsInputError {
+  const site = source && source !== "OTHER" && source !== "MANUAL" ? sourceLabel(source) : "This site";
+  const why = fetchConfigured ? `${site} didn't return the listing to our page reader.` : `${site} blocks automatic reading of lot pages.`;
+  const clip = (v: string | null, n: number) => (v ? v.slice(0, n) : null);
+  const prefill = {
+    vin: clip(hints.vin, 17),
+    year: hints.year,
+    make: clip(hints.make, 40),
+    model: clip(hints.model, 60),
+    trim: clip(hints.trim, 80),
+    titleRaw: clip(hints.titleRaw, 80),
+    state: clip(hints.state, 2),
+    city: clip(hints.city, 60),
+  };
+  if (hintsIdentifyVehicle(hints)) {
+    return new NeedsInputError(
+      `${why} From the link we have: ${describeHints(hints)}. Add the damage, odometer, current bid and the auction's estimated retail value from the lot page, or paste the whole page text.`,
+      prefill,
+    );
+  }
+  return new NeedsInputError(`${why} Paste the page text (on the lot page press Ctrl+A, then Ctrl+C), or fill in the details below.`, prefill);
 }
 
 /**
@@ -116,7 +156,7 @@ export async function fetchListing(req: ListingRequest, now: Date = new Date()):
   // 3. Pasted text (optionally with a URL / manual fields)
   if (req.text && req.text.trim().length > 0) {
     const t = await extractText(req.text, req.analysisId);
-    const raw = mergeRaw(manualRaw, t.raw, { photoUrls: uploaded });
+    const raw = mergeRaw(manualRaw, t.raw, req.url ? rawFromHints(hintsFromAuctionUrl(req.url)) : null, { photoUrls: uploaded });
     raw.source = req.source ?? raw.source ?? "OTHER";
     raw.sourceUrl = req.url ?? null;
     raw.lotNumber = raw.lotNumber ?? req.lotNumber ?? null;
@@ -126,44 +166,56 @@ export async function fetchListing(req: ListingRequest, now: Date = new Date()):
     return { data: listing, provider: t.provider, isDemo: false };
   }
 
-  // 4. Fetch the URL through the scraping provider
+  // 4. A link: details the user already gave → paid page reader → free direct read → ask
   if (req.type === "URL" && req.url) {
-    if (!features.scraping()) {
-      if (manualRaw && hasVehicleIdentity(finalizeListing(manualRaw, "MANUAL"))) {
-        const raw = mergeRaw(manualRaw, { photoUrls: uploaded, source: req.source ?? "OTHER", sourceUrl: req.url, lotNumber: req.lotNumber ?? null });
-        return { data: finalizeListing(raw, "MANUAL"), provider: "Manual entry", isDemo: false };
-      }
-      throw new NeedsInputError(
-        "Automatic fetching isn't configured. Open the listing, press Ctrl+A then Ctrl+C, and paste the text here (or use the browser extension).",
-      );
+    const hints = hintsFromAuctionUrl(req.url);
+    const withLinkDetails = (raw: RawListing) => {
+      const merged = mergeRaw(raw, rawFromHints(hints), { photoUrls: uploaded });
+      merged.source = req.source ?? "OTHER";
+      merged.sourceUrl = req.url ?? null;
+      merged.lotNumber = merged.lotNumber ?? req.lotNumber ?? null;
+      return merged;
+    };
+
+    if (manualRaw && (manualRaw.primaryDamage || uploaded.length > 0)) {
+      const listing = finalizeListing(withLinkDetails(manualRaw), "MANUAL");
+      if (hasVehicleIdentity(listing)) return { data: listing, provider: "Manual entry", isDemo: false };
     }
-    let page: Awaited<ReturnType<typeof fetchListingPage>>;
-    try {
-      page = await fetchListingPage(req.url);
-    } catch (err) {
-      console.error("Listing fetch failed", err);
-      throw new NeedsInputError("The auction site didn't return the listing. Paste the listing text (Ctrl+A, Ctrl+C on the lot page) instead.");
-    }
-    const html = extractFromHtml(page.html, req.source ?? "OTHER", req.url);
-    let raw = mergeRaw(manualRaw, html.raw, { photoUrls: uploaded });
-    let method: NormalizedListing["extractionMethod"] = "PARSER";
-    let provider = page.provider;
-    if (features.ai() && extractionScore(raw) < 0.8) {
+
+    let page: Awaited<ReturnType<typeof fetchListingPage>> | null = null;
+    if (features.scraping()) {
       try {
-        const llm = await llmExtractListing(`${html.title ?? ""}\n${html.pageText}`, req.analysisId);
-        raw = mergeRaw(manualRaw, html.raw, llm, { photoUrls: uploaded });
-        method = "LLM";
-        provider = `${page.provider} + AI extraction`;
+        page = await fetchListingPage(req.url);
       } catch (err) {
-        console.error("LLM extraction of fetched page failed", err);
+        console.error("Listing fetch via page reader failed", err);
       }
     }
-    raw.source = req.source ?? "OTHER";
-    raw.sourceUrl = req.url;
-    raw.lotNumber = raw.lotNumber ?? req.lotNumber ?? null;
-    const listing = finalizeListing(raw, method);
-    if (!hasVehicleIdentity(listing)) throw new NeedsInputError("The fetched page didn't include the vehicle details. Paste the listing text instead.");
-    return { data: listing, provider, isDemo: false };
+    if (!page) {
+      try {
+        page = await fetchListingPageDirect(req.url);
+      } catch (err) {
+        console.warn("Direct listing read failed:", err instanceof Error ? err.message : err);
+      }
+    }
+    if (page) {
+      const html = extractFromHtml(page.html, req.source ?? "OTHER", req.url);
+      let raw = mergeRaw(manualRaw, html.raw);
+      let method: NormalizedListing["extractionMethod"] = "PARSER";
+      let provider = page.provider;
+      if (features.ai() && extractionScore(raw) < 0.8) {
+        try {
+          const llm = await llmExtractListing(`${html.title ?? ""}\n${html.pageText}`, req.analysisId);
+          raw = mergeRaw(manualRaw, html.raw, llm);
+          method = "LLM";
+          provider = `${page.provider} + AI extraction`;
+        } catch (err) {
+          console.error("LLM extraction of fetched page failed", err);
+        }
+      }
+      const listing = finalizeListing(withLinkDetails(raw), method);
+      if (hasVehicleIdentity(listing) && (listing.primaryDamage || listing.photoUrls.length > 0)) return { data: listing, provider, isDemo: false };
+    }
+    throw needsDetails(req.source, hints, features.scraping());
   }
 
   // 5. VIN and/or manual form

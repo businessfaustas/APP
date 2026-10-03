@@ -28,6 +28,51 @@ function num(v: string): number | null {
   return v.trim() === "" || Number.isNaN(n) ? null : n;
 }
 
+/** The few details that decide the numbers, for when the link already identified the car. */
+export function QuickFields({ value, onChange }: { value: ManualListing; onChange: (v: ManualListing) => void }) {
+  const set = (patch: Partial<ManualListing>) => onChange({ ...value, ...patch });
+  return (
+    <div className="grid grid-cols-2 gap-3">
+      <div className="col-span-2 space-y-1.5">
+        <Label htmlFor="q-damage">Primary damage</Label>
+        <Select value={value.primaryDamage ?? ""} onValueChange={(v) => set({ primaryDamage: v })}>
+          <SelectTrigger id="q-damage" data-testid="quick-damage">
+            <SelectValue placeholder="Choose what the lot page says…" />
+          </SelectTrigger>
+          <SelectContent>
+            {DAMAGE_OPTIONS.map((d) => (
+              <SelectItem key={d} value={d}>
+                {d}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="q-odo">Odometer (mi)</Label>
+        <Input id="q-odo" inputMode="numeric" value={value.odometer ?? ""} onChange={(e) => set({ odometer: num(e.target.value) })} placeholder="61200" />
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="q-bid">Current bid ($)</Label>
+        <Input id="q-bid" inputMode="numeric" value={value.currentBid ?? ""} onChange={(e) => set({ currentBid: num(e.target.value) })} placeholder="2100" />
+      </div>
+      <div className="col-span-2 space-y-1.5">
+        <Label htmlFor="q-acv">Estimated retail value ($)</Label>
+        <Input
+          id="q-acv"
+          inputMode="numeric"
+          value={value.listedRetailValue ?? ""}
+          onChange={(e) => set({ listedRetailValue: num(e.target.value) })}
+          placeholder="21450"
+        />
+        <p className="text-muted-foreground text-xs">
+          Shown on Copart as &ldquo;Est. Retail Value&rdquo; and on IAAI as &ldquo;ACV&rdquo;. Used to estimate resale.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 /** Compact manual-entry form for a vehicle when the listing can't be fetched. */
 export function ManualFields({ value, onChange }: { value: ManualListing; onChange: (v: ManualListing) => void }) {
   const set = (patch: Partial<ManualListing>) => onChange({ ...value, ...patch });
@@ -106,6 +151,16 @@ export function ManualFields({ value, onChange }: { value: ManualListing; onChan
       <div className="space-y-1.5">
         <Label htmlFor="m-bid">Current bid ($)</Label>
         <Input id="m-bid" inputMode="numeric" value={value.currentBid ?? ""} onChange={(e) => set({ currentBid: num(e.target.value) })} placeholder="2100" />
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="m-acv">Est. retail value ($)</Label>
+        <Input
+          id="m-acv"
+          inputMode="numeric"
+          value={value.listedRetailValue ?? ""}
+          onChange={(e) => set({ listedRetailValue: num(e.target.value) })}
+          placeholder="21450"
+        />
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="m-zip">Yard ZIP</Label>
