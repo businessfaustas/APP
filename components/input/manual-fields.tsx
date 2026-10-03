@@ -50,11 +50,23 @@ export function QuickFields({ value, onChange }: { value: ManualListing; onChang
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="q-odo">Odometer (mi)</Label>
-        <Input id="q-odo" inputMode="numeric" value={value.odometer ?? ""} onChange={(e) => set({ odometer: num(e.target.value) })} placeholder="61200" />
+        <Input
+          id="q-odo"
+          inputMode="numeric"
+          value={value.odometer ?? ""}
+          onChange={(e) => set({ odometer: num(e.target.value) })}
+          placeholder="From the lot page"
+        />
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="q-bid">Current bid ($)</Label>
-        <Input id="q-bid" inputMode="numeric" value={value.currentBid ?? ""} onChange={(e) => set({ currentBid: num(e.target.value) })} placeholder="2100" />
+        <Input
+          id="q-bid"
+          inputMode="numeric"
+          value={value.currentBid ?? ""}
+          onChange={(e) => set({ currentBid: num(e.target.value) })}
+          placeholder="From the lot page"
+        />
       </div>
       <div className="col-span-2 space-y-1.5">
         <Label htmlFor="q-acv">Estimated retail value ($)</Label>
@@ -63,7 +75,7 @@ export function QuickFields({ value, onChange }: { value: ManualListing; onChang
           inputMode="numeric"
           value={value.listedRetailValue ?? ""}
           onChange={(e) => set({ listedRetailValue: num(e.target.value) })}
-          placeholder="21450"
+          placeholder="From the lot page"
         />
         <p className="text-muted-foreground text-xs">
           Shown on Copart as &ldquo;Est. Retail Value&rdquo; and on IAAI as &ldquo;ACV&rdquo;. Used to estimate resale.
