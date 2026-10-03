@@ -26,7 +26,8 @@ const MULTI_WORD_MAKES = [
   ["mini", "cooper"],
 ];
 
-const MAKES = new Set(
+/** Lower-case makes as they appear in slugs and listing headings. */
+export const MAKES = new Set(
   (
     "acura audi bentley bmw buick cadillac chevrolet chevy chrysler dodge ferrari fiat ford genesis gmc honda hummer hyundai " +
     "infiniti isuzu jaguar jeep kia lamborghini lexus lincoln lucid maserati mazda mclaren mercedes mercury mini mitsubishi " +

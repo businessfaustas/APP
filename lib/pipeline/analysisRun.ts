@@ -83,7 +83,13 @@ export async function runAnalysis(analysisId: string, step: StepRunner, now: Dat
         });
         const fresh = existing && now.getTime() - existing.fetchedAt.getTime() < TTL.hours(6);
         const parsedRaw = existing ? NormalizedListingSchema.safeParse(existing.rawData) : null;
-        if (fresh && parsedRaw?.success && (!demoFixture || existing.extractionMethod === "FIXTURE")) {
+        // Listings can hold details a user typed in or captured with the extension, so only
+        // the built-in samples are shared; anything else is reused for the same user only.
+        const reusable =
+          existing &&
+          (existing.extractionMethod === "FIXTURE" ||
+            Boolean(await prisma.analysis.findFirst({ where: { userId: a.userId, listingId: existing.id, id: { not: analysisId } }, select: { id: true } })));
+        if (fresh && reusable && parsedRaw?.success && (!demoFixture || existing.extractionMethod === "FIXTURE")) {
           return {
             ok: true as const,
             listingId: existing.id,

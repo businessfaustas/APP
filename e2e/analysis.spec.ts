@@ -57,10 +57,12 @@ test("batch of three demo lots fills the compare table", async ({ page }) => {
 });
 
 test("a real Copart link the site won't let us read: four details from the lot page give a report", async ({ page }) => {
+  // A fresh lot number each run, so nothing from an earlier run is reused.
+  const lot = String(40_000_000 + Math.floor(Math.random() * 9_000_000));
   await open(page, "/app");
   await page
     .getByRole("textbox", { name: "Auction link, VIN or listing text" })
-    .fill("https://www.copart.com/lot/41258394/salvage-2019-honda-civic-lx-tx-dallas");
+    .fill(`https://www.copart.com/lot/${lot}/salvage-2019-honda-civic-lx-tx-dallas`);
   await page.getByRole("button", { name: "Analyze", exact: true }).click();
   await expectNavigation(page, /\/app\/analyses\/[^/]+$/);
 
@@ -76,6 +78,6 @@ test("a real Copart link the site won't let us read: four details from the lot p
 
   await expect(page.getByTestId("deal-card")).toBeVisible({ timeout: 45_000 });
   await expect(page.getByTestId("report-title")).toContainText(/honda civic/i);
-  await expect(page.getByText("Lot 41258394")).toBeVisible();
+  await expect(page.getByText(`Lot ${lot}`)).toBeVisible();
   await expect(dealVerdict(page)).toHaveText(/GO|BE CAUTIOUS|WALK AWAY/);
 });

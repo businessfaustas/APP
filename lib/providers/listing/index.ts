@@ -101,12 +101,16 @@ function rawFromHints(h: UrlHints): RawListing {
   };
 }
 
-/** Why the page couldn't be read, what we already know, and what the user should add. */
-function needsDetails(source: AuctionSource | null | undefined, hints: UrlHints, fetchConfigured: boolean): NeedsInputError {
-  const site = source && source !== "OTHER" && source !== "MANUAL" ? sourceLabel(source) : "This site";
-  const why = fetchConfigured ? `${site} didn't return the listing to our page reader.` : `${site} blocks automatic reading of lot pages.`;
+/** The lot's own link names its vehicle; that beats guessing from page text. */
+function identityFromHints(h: UrlHints): RawListing | null {
+  if (!hintsIdentifyVehicle(h)) return null;
+  return { vin: h.vin, year: h.year, make: h.make, model: h.model, trim: h.trim };
+}
+
+/** Link details as form prefill, clipped to the form's limits. */
+function prefillFromHints(hints: UrlHints) {
   const clip = (v: string | null, n: number) => (v ? v.slice(0, n) : null);
-  const prefill = {
+  return {
     vin: clip(hints.vin, 17),
     year: hints.year,
     make: clip(hints.make, 40),
@@ -116,6 +120,13 @@ function needsDetails(source: AuctionSource | null | undefined, hints: UrlHints,
     state: clip(hints.state, 2),
     city: clip(hints.city, 60),
   };
+}
+
+/** Why the page couldn't be read, what we already know, and what the user should add. */
+function needsDetails(source: AuctionSource | null | undefined, hints: UrlHints, fetchConfigured: boolean): NeedsInputError {
+  const site = source && source !== "OTHER" && source !== "MANUAL" ? sourceLabel(source) : "This site";
+  const why = fetchConfigured ? `${site} didn't return the listing to our page reader.` : `${site} blocks automatic reading of lot pages.`;
+  const prefill = prefillFromHints(hints);
   if (hintsIdentifyVehicle(hints)) {
     return new NeedsInputError(
       `${why} From the link we have: ${describeHints(hints)}. Add the damage, odometer, current bid and the auction's estimated retail value from the lot page, or paste the whole page text.`,
@@ -144,19 +155,26 @@ export async function fetchListing(req: ListingRequest, now: Date = new Date()):
     const cap = req.extension;
     const fromHtml = cap.html ? extractFromHtml(cap.html, req.source ?? "OTHER", cap.url).raw : null;
     const text = await extractText(`${(cap.jsonLd ?? []).join("\n")}\n${cap.pageText}`, req.analysisId);
-    const raw = mergeRaw(manualRaw, fromHtml, text.raw, { photoUrls: [...cap.imageUrls, ...uploaded] });
+    const hints = hintsFromAuctionUrl(cap.url);
+    const raw = mergeRaw(manualRaw, identityFromHints(hints), fromHtml, text.raw, rawFromHints(hints), { photoUrls: [...cap.imageUrls, ...uploaded] });
     raw.source = req.source ?? "OTHER";
     raw.sourceUrl = cap.url;
     raw.lotNumber = raw.lotNumber ?? req.lotNumber ?? null;
     const listing = finalizeListing(raw, "EXTENSION");
-    if (!hasVehicleIdentity(listing)) throw new NeedsInputError("The page didn't contain enough vehicle details. Paste the listing text instead.");
+    if (!hasVehicleIdentity(listing)) {
+      throw new NeedsInputError(
+        "The extension couldn't find the year, make and model on that page. Fill in the details below, or paste the page text.",
+        prefillFromHints(hints),
+      );
+    }
     return { data: listing, provider: "Browser extension", isDemo: false };
   }
 
   // 3. Pasted text (optionally with a URL / manual fields)
   if (req.text && req.text.trim().length > 0) {
     const t = await extractText(req.text, req.analysisId);
-    const raw = mergeRaw(manualRaw, t.raw, req.url ? rawFromHints(hintsFromAuctionUrl(req.url)) : null, { photoUrls: uploaded });
+    const linkHints = req.url ? hintsFromAuctionUrl(req.url) : null;
+    const raw = mergeRaw(manualRaw, linkHints && identityFromHints(linkHints), t.raw, linkHints && rawFromHints(linkHints), { photoUrls: uploaded });
     raw.source = req.source ?? raw.source ?? "OTHER";
     raw.sourceUrl = req.url ?? null;
     raw.lotNumber = raw.lotNumber ?? req.lotNumber ?? null;

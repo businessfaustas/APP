@@ -34,7 +34,11 @@ function capture(): Capture {
     .slice(0, LIMITS.jsonLdItems);
   return {
     url: location.href,
-    pageText: truncate(document.body.innerText, LIMITS.pageText),
+    // Heading and title first: the vehicle name can be far down a page full of menus.
+    pageText: truncate(
+      [document.querySelector("h1")?.textContent?.trim(), document.title, document.body.innerText].filter(Boolean).join("\n"),
+      LIMITS.pageText,
+    ),
     html: html.length <= LIMITS.html ? html : null,
     jsonLd,
     imageUrls: selectImageUrls(collectImages(), location.href),
@@ -46,18 +50,7 @@ async function analyzeHere(): Promise<AnalyzeResult> {
   return (await chrome.runtime.sendMessage({ type: "AP_ANALYZE", capture: capture() } satisfies Message)) as AnalyzeResult;
 }
 
-// ── Floating button (in a shadow root so the auction site's CSS can't touch it) ──
-let host: HTMLElement | null = null;
-let button: HTMLButtonElement | null = null;
-let status: HTMLElement | null = null;
-
-function mount() {
-  if (host) return;
-  host = document.createElement("div");
-  host.id = "auctionpulse-root";
-  const root = host.attachShadow({ mode: "closed" });
-  root.innerHTML = `
-    <style>
+const STYLES = `
       .wrap { position: fixed; right: 20px; bottom: 20px; z-index: 2147483646; display: flex; flex-direction: column; align-items: flex-end; gap: 8px;
         font: 500 14px/1.3 system-ui, -apple-system, "Segoe UI", sans-serif; }
       button { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; padding: 11px 16px; border-radius: 10px;
@@ -69,7 +62,23 @@ function mount() {
       .status { max-width: 280px; padding: 8px 12px; border-radius: 8px; background: #fff; color: #1d2433; box-shadow: 0 4px 14px rgba(0,0,0,.18); }
       .status[hidden] { display: none; }
       .status.error { background: #fdecec; color: #8a1c1c; }
-    </style>
+`;
+
+// ── Floating button (in a shadow root so the auction site's CSS can't touch it) ──
+let host: HTMLElement | null = null;
+let button: HTMLButtonElement | null = null;
+let status: HTMLElement | null = null;
+
+function mount() {
+  if (host) return;
+  host = document.createElement("div");
+  host.id = "auctionpulse-root";
+  const root = host.attachShadow({ mode: "closed" });
+  const sheet = new CSSStyleSheet();
+  sheet.replaceSync(STYLES);
+  // Constructable stylesheets aren't affected by the site's Content-Security-Policy, unlike <style>.
+  root.adoptedStyleSheets = [sheet];
+  root.innerHTML = `
     <div class="wrap">
       <div class="status" role="status" aria-live="polite" hidden></div>
       <button type="button">

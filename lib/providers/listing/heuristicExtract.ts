@@ -4,6 +4,7 @@
  */
 import { parseMoney, parseOdometer } from "@/lib/domain/titles";
 import { findVinInText } from "@/lib/input/parseInput";
+import { MAKES } from "@/lib/input/urlHints";
 
 import type { RawListing } from "./normalize";
 
@@ -109,11 +110,22 @@ export function parseLocation(raw: string): RawListing["location"] {
   return { yardName: raw.trim(), city: null, state: null, zip };
 }
 
+const isMake = (word: string) => {
+  const w = word.toLowerCase();
+  return MAKES.has(w.split(/[\s-]/)[0]!) || /^(land|alfa|aston|rolls)[\s-]/.test(w);
+};
+
+/**
+ * "2019 AUDI A3 PREMIUM" headings. Whole lot pages start with menus and search boxes, so the
+ * scan covers the page, takes the first line whose make is a real make, and skips footers.
+ */
 function parseYmm(text: string): Pick<RawListing, "year" | "make" | "model" | "trim"> {
   const lines = text.split(/\r?\n/).map((l) => l.trim());
-  for (const l of lines.slice(0, 40)) {
+  for (const l of lines.slice(0, 600)) {
+    // Past this point pages list other cars.
+    if (/^(similar|related|recommended|you may also|other vehicles|more like this)/i.test(l)) break;
     const m = l.match(/^(?:.*?\b)?((?:19|20)\d{2})\s+([A-Z][A-Za-z-]+(?:\s+(?:BENZ|ROVER|ROMEO|MARTIN))?)\s+([A-Za-z0-9-]+)(?:\s+(.{1,40}))?$/);
-    if (m && !/lot|vin|odometer|sale/i.test(l)) {
+    if (m && isMake(m[2]!) && !/lot|vin|odometer|sale|©|copyright/i.test(l)) {
       const year = Number(m[1]);
       if (year >= 1980 && year <= new Date().getFullYear() + 1) {
         return { year, make: m[2]!, model: m[3]!, trim: m[4]?.replace(/[|•].*$/, "").trim() || null };

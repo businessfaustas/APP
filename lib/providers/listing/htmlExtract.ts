@@ -155,7 +155,9 @@ export function extractFromHtml(html: string, source: AuctionSource, pageUrl: st
     .replace(/[ \t]+/g, " ")
     .replace(/\n\s*\n+/g, "\n")
     .trim();
-  const fromPairs = heuristicExtract(`${pairLines.join("\n")}\n${pageText.slice(0, 20000)}`);
+  // The main heading and page title usually name the vehicle ("2019 AUDI A3 PREMIUM").
+  const headings = [$("h1").first().text().trim(), $("title").text().trim()].filter(Boolean).join("\n");
+  const fromPairs = heuristicExtract(`${headings}\n${pairLines.join("\n")}\n${pageText.slice(0, 20000)}`);
 
   const imgs = new Set<string>();
   const og = $('meta[property="og:image"]').attr("content");
