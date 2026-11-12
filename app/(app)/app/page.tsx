@@ -1,4 +1,4 @@
-import { CalendarClockIcon, FileSearchIcon } from "lucide-react";
+import { CalendarClockIcon, CarFrontIcon, FileSearchIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -7,6 +7,7 @@ import { EmptyState, PageContainer } from "@/components/page-header";
 import { VerdictBadge } from "@/components/report/verdict-badge";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Stat } from "@/components/ui/misc";
 import { requireUser } from "@/lib/auth/session";
 import { DEMO_LOTS } from "@/lib/config/demo";
 import { features } from "@/lib/config/env";
@@ -15,7 +16,7 @@ import type { NormalizedListing } from "@/lib/domain/schemas";
 import { countdownLabel, damageLabel } from "@/lib/i18n/labels";
 import { INTL_LOCALE } from "@/lib/i18n/locales";
 import { getT } from "@/lib/i18n/server";
-import { formatDate, formatUsd } from "@/lib/utils";
+import { cn, formatDate, formatUsd } from "@/lib/utils";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getT())("dash.title") };
@@ -61,19 +62,31 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
   return (
     <PageContainer>
-      <section className="space-y-4">
+      <section className="brand-glow bg-card space-y-5 rounded-3xl border p-5 sm:p-8">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{t("dash.heading")}</h1>
-          <p className="text-muted-foreground mt-1 text-sm">{t("dash.body")}</p>
+          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{t("dash.heading")}</h1>
+          <p className="text-muted-foreground mt-2 max-w-2xl">{t("dash.body")}</p>
         </div>
         <AnalyzeBar demoLots={features.demoMode() ? DEMO_LOTS : []} initialInput={sp.input ?? ""} />
       </section>
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid grid-cols-3 gap-4">
+        <div className="bg-card rounded-2xl border p-5">
+          <Stat label={t("dash.reports")} value={total} />
+        </div>
+        <div className="bg-card rounded-2xl border p-5">
+          <Stat label={t("dash.goDeals")} value={goCount} tone={goCount > 0 ? "go" : undefined} />
+        </div>
+        <Link href="/app/billing" className="bg-card hover:border-primary/40 rounded-2xl border p-5 transition-colors">
+          <Stat label={t("common.credits")} value={user.creditsRemaining} />
+        </Link>
+      </div>
+
+      <div className="grid items-start gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader className="flex-row items-center justify-between">
-            <CardTitle className="text-base">{t("dash.recent")}</CardTitle>
-            <Link href="/app/history" className="text-muted-foreground hover:text-foreground text-xs">
+            <CardTitle>{t("dash.recent")}</CardTitle>
+            <Link href="/app/history" className="text-primary text-sm font-medium hover:underline">
               {t("dash.viewAll")}
             </Link>
           </CardHeader>
@@ -83,13 +96,28 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                 {features.demoMode() ? t("dash.pasteFirstDemo") : t("dash.pasteFirst")}
               </EmptyState>
             ) : (
-              <ul className="divide-y">
+              <ul className="-mx-3 space-y-1">
                 {recent.map((a) => {
                   const l = a.listingSnapshot as NormalizedListing | null;
                   return (
                     <li key={a.id}>
-                      <Link href={`/app/analyses/${a.id}`} className="flex items-center justify-between gap-3 py-2.5 hover:opacity-80">
-                        <div className="min-w-0">
+                      <Link href={`/app/analyses/${a.id}`} className="hover:bg-muted/70 flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors">
+                        <span
+                          className={cn(
+                            "grid size-10 shrink-0 place-items-center rounded-xl",
+                            a.verdict === "GO"
+                              ? "bg-go-soft text-go"
+                              : a.verdict === "BE_CAUTIOUS"
+                                ? "bg-caution-soft text-caution"
+                                : a.verdict === "WALK_AWAY"
+                                  ? "bg-stop-soft text-stop"
+                                  : "bg-muted text-muted-foreground",
+                          )}
+                          aria-hidden="true"
+                        >
+                          <CarFrontIcon className="size-5" />
+                        </span>
+                        <div className="min-w-0 flex-1">
                           <div className="truncate text-sm font-medium">{title(l, a.inputValue)}</div>
                           <div className="text-muted-foreground text-xs">
                             {l?.primaryDamage ? `${damageLabel(t, l.primaryDamage)} · ` : ""}
@@ -99,7 +127,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                         <div className="flex shrink-0 items-center gap-3">
                           {a.status === "COMPLETED" && a.verdict ? (
                             <>
-                              <span className="num hidden text-sm sm:inline">{a.maxBid !== null ? `≤ ${formatUsd(a.maxBid)}` : "—"}</span>
+                              <span className="num hidden text-sm font-medium sm:inline">{a.maxBid !== null ? `≤ ${formatUsd(a.maxBid)}` : "—"}</span>
                               <VerdictBadge verdict={a.verdict} />
                             </>
                           ) : a.status === "FAILED" ? (
@@ -121,28 +149,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
         <div className="space-y-4">
           <Card>
-            <CardHeader>
-              <CardTitle className="text-base">{t("dash.yourNumbers")}</CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-3 gap-3 text-center">
-              <div>
-                <div className="num text-2xl font-semibold">{total}</div>
-                <div className="text-muted-foreground text-xs">{t("dash.reports")}</div>
-              </div>
-              <div>
-                <div className="num text-go text-2xl font-semibold">{goCount}</div>
-                <div className="text-muted-foreground text-xs">{t("dash.goDeals")}</div>
-              </div>
-              <div>
-                <div className="num text-2xl font-semibold">{user.creditsRemaining}</div>
-                <div className="text-muted-foreground text-xs">{t("common.credits")}</div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
             <CardHeader className="flex-row items-center justify-between">
-              <CardTitle className="text-base">{t("dash.upcoming")}</CardTitle>
-              <Link href="/app/watchlist" className="text-muted-foreground hover:text-foreground text-xs">
+              <CardTitle>{t("dash.upcoming")}</CardTitle>
+              <Link href="/app/watchlist" className="text-primary text-sm font-medium hover:underline">
                 {t("nav.watchlist")}
               </Link>
             </CardHeader>

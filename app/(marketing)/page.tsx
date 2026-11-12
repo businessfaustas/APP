@@ -174,7 +174,7 @@ function SampleReport({ sample, t }: { sample: Sample; t: Translator }) {
             <CardTitle className="text-base">{t("landing.whatWeFlagged")}</CardTitle>
           </CardHeader>
           <CardContent>
-            <RiskFlagsList flags={flags} />
+            <RiskFlagsList flags={flags} interactive={false} />
           </CardContent>
         </Card>
         <Card>

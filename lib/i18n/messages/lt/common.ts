@@ -51,5 +51,9 @@ export const common: Pick<Messages, "common" | "nav"> = {
     billing: "Planas ir mokėjimai",
     admin: "Administravimas",
     main: "Pagrindinis meniu",
+    newAnalysis: "Nauja analizė",
+    groupAnalyze: "Analizė",
+    groupTrack: "Sekimas",
+    groupAccount: "Paskyra",
   },
 };

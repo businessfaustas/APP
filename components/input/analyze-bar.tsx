@@ -75,7 +75,7 @@ export function AnalyzeBar({ demoLots, initialInput = "" }: { demoLots: DemoLot[
           e.preventDefault();
           if (canSubmit) void submit();
         }}
-        className="bg-card focus-within:ring-ring/40 rounded-xl border p-2 shadow-sm focus-within:ring-[3px]"
+        className="bg-background focus-within:ring-ring/40 focus-within:border-primary/50 rounded-2xl border p-2.5 shadow-sm transition-shadow focus-within:ring-[3px]"
       >
         <Textarea
           aria-label={t("analyze.inputLabel")}

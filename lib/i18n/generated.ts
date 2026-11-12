@@ -133,17 +133,20 @@ function lowerFirst(s: string): string {
  * The deterministic summary (`templateNarrative`) in the active language. Used instead of
  * the stored English summary, so the bullets match the rest of the translated report.
  */
+export type SummaryPart = "verdict" | "costs" | "risks" | "beforeBid";
+
 export function localizedSummary(
   t: Translator,
   args: { calc: CalculationResult; currentBid: number | null; flags: RiskFlag[]; checklist: string[] },
+  parts: readonly SummaryPart[] = ["verdict", "costs", "risks", "beforeBid"],
 ): string[] {
   const { calc: c } = args;
   const e = c.scenarios.expected;
   const verdict = t(`domain.verdict.${c.verdict}`);
   const bullets: string[] = [];
-  if (c.maxBid === null) {
+  if (parts.includes("verdict") && c.maxBid === null) {
     bullets.push(t("gen.summary.verdictNoBid", { verdict, target: usd(c.targetProfit) }));
-  } else {
+  } else if (parts.includes("verdict") && c.maxBid !== null) {
     bullets.push(
       args.currentBid !== null
         ? t("gen.summary.verdictMaxCurrent", { verdict, max: usd(c.maxBid), bid: usd(args.currentBid) })
@@ -160,18 +163,19 @@ export function localizedSummary(
       );
     if (c.comfortBid !== null) bullets.push(t("gen.summary.comfort", { comfort: usd(c.comfortBid) }));
   }
-  bullets.push(
-    t("gen.summary.costs", {
-      repair: usd(e.repair),
-      parts: usd(e.repairBreakdown.parts),
-      labor: usd(e.repairBreakdown.labor),
-      transport: usd(e.logistics),
-      fees: c.feesAtMaxBid ? t("gen.summary.fees", { fees: usd(c.feesAtMaxBid.total) }) : "",
-    }),
-  );
+  if (parts.includes("costs"))
+    bullets.push(
+      t("gen.summary.costs", {
+        repair: usd(e.repair),
+        parts: usd(e.repairBreakdown.parts),
+        labor: usd(e.repairBreakdown.labor),
+        transport: usd(e.logistics),
+        fees: c.feesAtMaxBid ? t("gen.summary.fees", { fees: usd(c.feesAtMaxBid.total) }) : "",
+      }),
+    );
   const risks = args.flags.filter((f) => f.level === "HARD_STOP" || f.level === "HIGH" || f.level === "MEDIUM").slice(0, 3);
-  if (risks.length) bullets.push(t("gen.summary.risks", { risks: risks.map((r) => lowerFirst(trText(t, r.title))).join("; ") }));
-  if (args.checklist.length)
+  if (risks.length && parts.includes("risks")) bullets.push(t("gen.summary.risks", { risks: risks.map((r) => lowerFirst(trText(t, r.title))).join("; ") }));
+  if (args.checklist.length && parts.includes("beforeBid"))
     bullets.push(
       t("gen.summary.beforeBid", {
         items: args.checklist

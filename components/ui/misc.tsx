@@ -7,7 +7,7 @@ import {
   ToggleGroup as ToggleGroupPrimitive,
   Tooltip as TooltipPrimitive,
 } from "radix-ui";
-import { CheckIcon } from "lucide-react";
+import { CheckIcon, ChevronRightIcon } from "lucide-react";
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
@@ -92,13 +92,13 @@ export function SegmentedControl<T extends string>({
       onValueChange={(v) => {
         if (v) onValueChange(v as T);
       }}
-      className={cn("bg-muted inline-flex w-full rounded-md p-0.5", className)}
+      className={cn("bg-muted inline-flex w-full rounded-lg p-1", className)}
     >
       {options.map((o) => (
         <ToggleGroupPrimitive.Item
           key={o.value}
           value={o.value}
-          className="text-muted-foreground focus-visible:ring-ring/50 data-[state=on]:bg-background data-[state=on]:text-foreground dark:data-[state=on]:bg-input/50 flex-1 rounded-[5px] px-2 py-1 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none data-[state=on]:shadow-sm"
+          className="text-muted-foreground focus-visible:ring-ring/50 data-[state=on]:bg-card data-[state=on]:text-foreground dark:data-[state=on]:bg-surface-2 hover:text-foreground flex-1 cursor-pointer rounded-md px-2 py-1.5 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none data-[state=on]:shadow-sm"
         >
           {o.label}
         </ToggleGroupPrimitive.Item>
@@ -124,5 +124,68 @@ export function Alert({ className, variant = "default", ...props }: React.Compon
       )}
       {...props}
     />
+  );
+}
+
+/** A section that opens and closes (native <details>, so it works without JavaScript and keeps its content in the page). */
+export function Disclosure({
+  title,
+  meta,
+  defaultOpen = false,
+  className,
+  children,
+  testId,
+}: {
+  title: React.ReactNode;
+  meta?: React.ReactNode;
+  defaultOpen?: boolean;
+  className?: string;
+  children: React.ReactNode;
+  testId?: string;
+}) {
+  return (
+    <details open={defaultOpen} className={cn("group", className)} data-testid={testId}>
+      <summary className="hover:text-foreground flex cursor-pointer list-none items-center gap-2 py-2 text-sm font-medium select-none [&::-webkit-details-marker]:hidden">
+        <ChevronRightIcon className="text-muted-foreground size-4 shrink-0 transition-transform duration-200 group-open:rotate-90" aria-hidden="true" />
+        <span className="flex-1">{title}</span>
+        {meta && <span className="text-muted-foreground text-xs font-normal">{meta}</span>}
+      </summary>
+      <div className="pt-2 pb-1">{children}</div>
+    </details>
+  );
+}
+
+/** Label over a big number, with an optional line under it. */
+export function Stat({
+  label,
+  value,
+  sub,
+  tone,
+  className,
+  testId,
+}: {
+  label: React.ReactNode;
+  value: React.ReactNode;
+  sub?: React.ReactNode;
+  tone?: "go" | "stop" | "caution";
+  className?: string;
+  testId?: string;
+}) {
+  return (
+    <div className={cn("min-w-0", className)}>
+      <div className="eyebrow">{label}</div>
+      <div
+        className={cn(
+          "num mt-1.5 text-2xl font-semibold tracking-tight",
+          tone === "go" && "text-go",
+          tone === "stop" && "text-stop",
+          tone === "caution" && "text-caution",
+        )}
+        data-testid={testId}
+      >
+        {value}
+      </div>
+      {sub && <div className="text-muted-foreground mt-0.5 text-xs">{sub}</div>}
+    </div>
   );
 }

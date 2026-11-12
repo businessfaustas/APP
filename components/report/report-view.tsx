@@ -1,17 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import {
-  CarIcon,
-  ClipboardListIcon,
-  FileWarningIcon,
-  LayoutDashboardIcon,
-  ReceiptIcon,
-  SlidersHorizontalIcon,
-  TrendingUpIcon,
-  TruckIcon,
-  WrenchIcon,
-} from "lucide-react";
+import { ClipboardListIcon, SlidersHorizontalIcon } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -35,7 +25,7 @@ import { ReportHeader } from "./report-header";
 import { ReportProvider, useReport } from "./report-context";
 import { VerdictBadge } from "./verdict-badge";
 import { LogisticsTab, VehicleTab } from "./vehicle-tab";
-import { WhatIfControls, WhatIfHeading } from "./what-if-panel";
+import { WhatIfActions, WhatIfControls, WhatIfHeading } from "./what-if-panel";
 
 export function Disclaimer() {
   const t = useT();
@@ -84,35 +74,22 @@ function MobileBar() {
 function CompletedReport() {
   const [tab, setTab] = useState("overview");
   const t = useT();
+  const { view } = useReport();
   return (
-    <div className="space-y-5 pb-16 lg:pb-0">
+    <div className="space-y-6 pb-16 lg:pb-0">
       <ReportHeader />
-      <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
-        <div className="min-w-0 space-y-5">
+      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+        <div className="min-w-0 space-y-6">
           <DealCard />
           <Tabs value={tab} onValueChange={setTab}>
-            <TabsList className="lg:h-auto lg:flex-wrap">
-              <TabsTrigger value="overview">
-                <LayoutDashboardIcon /> {t("report.tabOverview")}
-              </TabsTrigger>
-              <TabsTrigger value="damage">
-                <FileWarningIcon /> {t("report.tabDamage")}
-              </TabsTrigger>
-              <TabsTrigger value="repair">
-                <WrenchIcon /> {t("report.tabRepair")}
-              </TabsTrigger>
-              <TabsTrigger value="market">
-                <TrendingUpIcon /> {t("report.tabMarket")}
-              </TabsTrigger>
-              <TabsTrigger value="costs">
-                <ReceiptIcon /> {t("report.tabCosts")}
-              </TabsTrigger>
-              <TabsTrigger value="vehicle">
-                <CarIcon /> {t("report.tabVehicle")}
-              </TabsTrigger>
-              <TabsTrigger value="logistics">
-                <TruckIcon /> {t("report.tabLogistics")}
-              </TabsTrigger>
+            <TabsList className="gap-5">
+              <TabsTrigger value="overview">{t("report.tabOverview")}</TabsTrigger>
+              <TabsTrigger value="damage">{t("report.tabDamage")}</TabsTrigger>
+              <TabsTrigger value="repair">{t("report.tabRepair")}</TabsTrigger>
+              <TabsTrigger value="market">{t("report.tabMarket")}</TabsTrigger>
+              <TabsTrigger value="costs">{t("report.tabCosts")}</TabsTrigger>
+              <TabsTrigger value="vehicle">{t("report.tabVehicle")}</TabsTrigger>
+              <TabsTrigger value="logistics">{t("report.tabLogistics")}</TabsTrigger>
             </TabsList>
             <TabsContent value="overview">
               <OverviewTab />
@@ -139,11 +116,18 @@ function CompletedReport() {
           <Disclaimer />
         </div>
         <aside className="hidden lg:block">
-          <Card className="sticky top-4 max-h-[calc(100dvh-2rem)] overflow-y-auto">
-            <CardContent className="space-y-4">
+          <Card className="sticky top-6 max-h-[calc(100dvh-3rem)] gap-0 overflow-hidden py-0">
+            <div className="border-b px-5 py-4">
               <WhatIfHeading />
-              <WhatIfControls />
-            </CardContent>
+            </div>
+            <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+              <WhatIfControls actions={false} />
+            </div>
+            {!view.readOnly && (
+              <div className="bg-card border-t px-5 py-4">
+                <WhatIfActions />
+              </div>
+            )}
           </Card>
         </aside>
       </div>

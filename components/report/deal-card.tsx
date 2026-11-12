@@ -1,12 +1,12 @@
 "use client";
 
-import { InfoIcon } from "lucide-react";
+import { CheckIcon, SearchIcon, TriangleAlertIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Tooltip } from "@/components/ui/misc";
+import { Stat, Tooltip } from "@/components/ui/misc";
 import type { CalculationResult } from "@/lib/calc/types";
 import { useT } from "@/lib/i18n/client";
 import { trText } from "@/lib/i18n/generated";
@@ -37,6 +37,52 @@ export function ScoreMeter({ score }: { score: number }) {
           style={{ width: `${score}%` }}
         />
       </div>
+    </div>
+  );
+}
+
+const TONE_VAR = { go: "var(--go)", caution: "var(--caution)", stop: "var(--stop)" } as const;
+
+/** Deal score as a ring gauge (0–100). */
+export function ScoreRing({ score, size = 76 }: { score: number; size?: number }) {
+  const t = useT();
+  const tone = scoreTone(score);
+  const r = 30;
+  const c = 2 * Math.PI * r;
+  return (
+    <div
+      className="flex flex-col items-center gap-1"
+      role="meter"
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={score}
+      aria-label={t("report.dealScore")}
+    >
+      <svg viewBox="0 0 76 76" width={size} height={size} className="-rotate-90">
+        <circle cx="38" cy="38" r={r} fill="none" strokeWidth="7" className="stroke-muted" />
+        <circle
+          cx="38"
+          cy="38"
+          r={r}
+          fill="none"
+          strokeWidth="7"
+          strokeLinecap="round"
+          stroke={TONE_VAR[tone]}
+          strokeDasharray={`${(Math.max(0, Math.min(100, score)) / 100) * c} ${c}`}
+          className="transition-[stroke-dasharray] duration-500"
+        />
+        <text
+          x="38"
+          y="38"
+          transform="rotate(90 38 38)"
+          textAnchor="middle"
+          dominantBaseline="central"
+          className="fill-foreground num text-[19px] font-semibold"
+        >
+          {score}
+        </text>
+      </svg>
+      <span className="eyebrow">{t("report.dealScore")}</span>
     </div>
   );
 }
@@ -86,11 +132,11 @@ export function BidLadder({ calc, currentBid }: { calc: CalculationResult; curre
       <div className="relative pt-7">
         {currentBid !== null && (
           <div className="absolute top-0 -translate-x-1/2 text-center" style={{ left: pct(currentBid) }}>
-            <div className="text-[11px] font-medium whitespace-nowrap">{t("report.ladderCurrent", { amount: formatUsd(currentBid) })}</div>
+            <div className="text-xs font-medium whitespace-nowrap">{t("report.ladderCurrent", { amount: formatUsd(currentBid) })}</div>
             <div className="bg-foreground mx-auto h-3 w-0.5" />
           </div>
         )}
-        <div className="flex h-3 w-full gap-0.5 overflow-hidden rounded-full">
+        <div className="flex h-3.5 w-full gap-0.5 overflow-hidden rounded-full">
           {zones.map((z) => (
             <Tooltip key={z.label} content={`${z.label}: ${formatUsd(z.from)} – ${z.to >= top ? t("report.andUp") : formatUsd(z.to)}`}>
               <div className={cn("h-full", z.cls)} style={{ width: `${((z.to - z.from) / top) * 100}%` }} />
@@ -99,7 +145,7 @@ export function BidLadder({ calc, currentBid }: { calc: CalculationResult; curre
         </div>
         <div className={cn("relative mt-1", rows > 1 ? "h-[4.5rem]" : "h-9")}>
           {placed.map((m) => (
-            <div key={m.label} className={cn("absolute text-[11px] leading-tight whitespace-nowrap", m.align)} style={{ left: pct(m.v), top: m.row * 34 }}>
+            <div key={m.label} className={cn("absolute text-xs leading-tight whitespace-nowrap", m.align)} style={{ left: pct(m.v), top: m.row * 34 }}>
               <div className="text-muted-foreground">{m.label}</div>
               <div className="num font-semibold">{formatUsd(m.v)}</div>
             </div>
@@ -115,31 +161,39 @@ function MarketMissing() {
   const t = useT();
   const [value, setValue] = useState("");
   return (
-    <Card>
-      <CardContent className="space-y-3">
-        <div className="flex items-start gap-2">
-          <InfoIcon className="text-caution mt-0.5 size-5 shrink-0" />
-          <div>
-            <div className="font-semibold">{t("report.mvTitle")}</div>
-            <p className="text-muted-foreground text-sm">{t("report.mvBody")}</p>
+    <Card className="brand-glow overflow-hidden" data-testid="market-missing">
+      <CardContent className="space-y-5">
+        <div className="flex items-start gap-4">
+          <span className="bg-caution-soft text-caution grid size-11 shrink-0 place-items-center rounded-xl">
+            <SearchIcon className="size-5" />
+          </span>
+          <div className="space-y-1.5">
+            <h2 className="text-xl font-semibold tracking-tight">{t("report.mvTitle")}</h2>
+            <p className="text-muted-foreground max-w-2xl text-sm leading-relaxed">{t("report.mvBody")}</p>
           </div>
         </div>
         <form
-          className="flex gap-2"
+          className="flex max-w-lg gap-2 sm:pl-15"
           onSubmit={(e) => {
             e.preventDefault();
             const n = Number(value.replace(/[^\d]/g, ""));
             if (n > 0) setAssumption("mvCleanOverride", n);
           }}
         >
-          <Input
-            inputMode="numeric"
-            placeholder={t("report.mvPlaceholder")}
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            aria-label={t("report.mvLabel")}
-          />
-          <Button type="submit">{t("report.calculate")}</Button>
+          <div className="relative flex-1">
+            <span className="text-muted-foreground pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-base">$</span>
+            <Input
+              inputMode="numeric"
+              placeholder={t("report.mvPlaceholder")}
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              aria-label={t("report.mvLabel")}
+              className="num h-11 pl-7 text-base"
+            />
+          </div>
+          <Button type="submit" size="lg">
+            {t("report.calculate")}
+          </Button>
         </form>
       </CardContent>
     </Card>
@@ -154,34 +208,47 @@ export function DealCard() {
   return <DealSummary calc={calc} currentBid={currentBid} />;
 }
 
-/** Verdict, max bid, profit range, score and bid ladder for a calculation result. */
+const VERDICT_TONE = { GO: "go", BE_CAUTIOUS: "caution", WALK_AWAY: "stop" } as const;
+
+/** Verdict, max bid, key numbers, score and bid ladder for a calculation result. */
 export function DealSummary({ calc, currentBid }: { calc: CalculationResult; currentBid: number | null }) {
   const t = useT();
   const e = calc.scenarios.expected;
+  const tone = VERDICT_TONE[calc.verdict];
+  const worst = calc.scenarios.worst.profitAtMaxBid;
   return (
-    <Card className="overflow-hidden" data-testid="deal-card">
-      <CardContent className="space-y-5">
-        <div className="grid gap-5 md:grid-cols-[1.3fr_1fr_0.8fr] md:items-center">
-          <div className="space-y-3">
+    <Card
+      className="overflow-hidden"
+      data-testid="deal-card"
+      style={{ backgroundImage: `radial-gradient(110% 120% at 0% 0%, color-mix(in oklab, ${TONE_VAR[tone]} 13%, transparent), transparent 58%)` }}
+    >
+      <CardContent className="space-y-6">
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-4">
             <VerdictBadge verdict={calc.verdict} size="lg" />
             {calc.maxBid !== null ? (
               <div>
-                <div className="text-muted-foreground text-sm">{t("report.doNotBidAbove")}</div>
-                <div className="text-5xl font-semibold tracking-tight" data-testid="max-bid">
+                <div className="eyebrow">{t("report.doNotBidAbove")}</div>
+                <div className="num mt-1 text-5xl font-semibold tracking-tight sm:text-6xl" data-testid="max-bid">
                   {formatUsd(calc.maxBid)}
                 </div>
-                <div className="text-muted-foreground mt-1 text-sm">
+                <div className="text-muted-foreground mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
                   {currentBid !== null ? (
                     <>
-                      {t("report.currentBid")} <span className="num text-foreground">{formatUsd(currentBid)}</span>
+                      <span>
+                        {t("report.currentBid")} <span className="num text-foreground font-medium">{formatUsd(currentBid)}</span>
+                      </span>
                       {calc.headroomBps !== null && (
-                        <>
-                          {" · "}
-                          <span className={cn(calc.headroomBps < 1500 ? "text-caution" : "text-foreground")}>
-                            {t("report.headroom", { pct: formatBps(calc.headroomBps, 0) })}
-                          </span>
-                        </>
+                        <span
+                          className={cn(
+                            "num rounded-full px-2 py-0.5 text-xs font-medium",
+                            calc.headroomBps < 1500 ? "bg-caution-soft text-caution" : "bg-go-soft text-go",
+                          )}
+                        >
+                          {t("report.headroom", { pct: formatBps(calc.headroomBps, 0) })}
+                        </span>
                       )}
+                      {e.profitAtCurrentBid !== null && <span>{t("report.atCurrentBid", { amount: formatUsd(e.profitAtCurrentBid) })}</span>}
                     </>
                   ) : (
                     t("report.noCurrentBid")
@@ -189,54 +256,43 @@ export function DealSummary({ calc, currentBid }: { calc: CalculationResult; cur
                 </div>
               </div>
             ) : (
-              <div className="text-lg font-semibold">{t("report.noBidReaches")}</div>
+              <div className="max-w-md text-xl font-semibold tracking-tight">{t("report.noBidReaches")}</div>
             )}
           </div>
-          <div className="bg-muted/50 space-y-3 rounded-lg p-4">
-            <div>
-              <div className="text-muted-foreground text-xs">{t("report.expectedProfitAtMax")}</div>
-              <div className={cn("text-2xl font-semibold", (e.profitAtMaxBid ?? 0) < 0 && "text-stop")}>{formatUsd(e.profitAtMaxBid)}</div>
-              <div className="text-muted-foreground text-xs">
-                {t("report.roiTarget", { roi: formatBps(e.roiAtMaxBidBps), target: formatUsd(calc.targetProfit) })}
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div>
-                <div className="text-muted-foreground">{t("domain.scenario.worstCase")}</div>
-                <div className={cn("num font-medium", (calc.scenarios.worst.profitAtMaxBid ?? 0) < 0 && "text-stop")}>
-                  {formatUsd(calc.scenarios.worst.profitAtMaxBid)}
-                </div>
-              </div>
-              <div>
-                <div className="text-muted-foreground">{t("domain.scenario.bestCase")}</div>
-                <div className="num font-medium">{formatUsd(calc.scenarios.best.profitAtMaxBid)}</div>
-              </div>
-              {e.profitAtCurrentBid !== null && (
-                <div className="col-span-2">
-                  <div className="text-muted-foreground">{t("report.ifWinAtCurrent")}</div>
-                  <div className="num font-medium">{formatUsd(e.profitAtCurrentBid)}</div>
-                </div>
-              )}
-            </div>
-          </div>
-          <div className="space-y-4">
-            <ScoreMeter score={calc.dealScore} />
-            <ul className="space-y-1.5 text-sm">
-              {calc.verdictReasons.slice(0, 3).map((r) => (
-                <li key={r} className="flex gap-2">
-                  <span
-                    className={cn(
-                      "mt-1.5 size-1.5 shrink-0 rounded-full",
-                      calc.verdict === "GO" ? "bg-go" : calc.verdict === "BE_CAUTIOUS" ? "bg-caution" : "bg-stop",
-                    )}
-                  />
-                  <span>{trText(t, r)}</span>
+          <ScoreRing score={calc.dealScore} />
+        </div>
+
+        <div className="bg-background/60 dark:bg-background/40 grid grid-cols-2 gap-x-6 gap-y-5 rounded-xl border p-5 lg:grid-cols-4">
+          <Stat
+            label={t("report.expectedProfit")}
+            value={formatUsd(e.profitAtMaxBid)}
+            tone={(e.profitAtMaxBid ?? 0) < 0 ? "stop" : undefined}
+            sub={t("report.worstBest", { worst: formatUsd(worst), best: formatUsd(calc.scenarios.best.profitAtMaxBid) })}
+          />
+          <Stat label="ROI" value={formatBps(e.roiAtMaxBidBps)} sub={t("report.target", { amount: formatUsd(calc.targetProfit) })} />
+          <Stat label={t("report.comfortBid")} value={formatUsd(calc.comfortBid)} sub={t("report.comfortSub")} />
+          <Stat label={t("report.breakEven")} value={formatUsd(calc.breakEvenBid)} sub={t("report.breakEvenSub")} />
+        </div>
+
+        <BidLadder calc={calc} currentBid={currentBid} />
+
+        {calc.verdictReasons.length > 0 && (
+          <div className="border-t pt-5">
+            <div className="eyebrow mb-3">{t("report.whyVerdict")}</div>
+            <ul className="grid gap-2.5 text-sm sm:grid-cols-2">
+              {calc.verdictReasons.slice(0, 4).map((r) => (
+                <li key={r} className="flex gap-2.5">
+                  {tone === "go" ? (
+                    <CheckIcon className="text-go mt-0.5 size-4 shrink-0" aria-hidden="true" />
+                  ) : (
+                    <TriangleAlertIcon className={cn("mt-0.5 size-4 shrink-0", tone === "stop" ? "text-stop" : "text-caution")} aria-hidden="true" />
+                  )}
+                  <span className="leading-snug">{trText(t, r)}</span>
                 </li>
               ))}
             </ul>
           </div>
-        </div>
-        <BidLadder calc={calc} currentBid={currentBid} />
+        )}
       </CardContent>
     </Card>
   );

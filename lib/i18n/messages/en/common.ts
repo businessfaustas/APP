@@ -49,5 +49,9 @@ export const common = {
     billing: "Billing",
     admin: "Admin",
     main: "Main",
+    newAnalysis: "New analysis",
+    groupAnalyze: "Analyze",
+    groupTrack: "Track",
+    groupAccount: "Account",
   },
 };

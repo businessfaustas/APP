@@ -3,13 +3,20 @@
 import {
   BookPlusIcon,
   CalendarClockIcon,
+  CarFrontIcon,
   CheckIcon,
+  ChevronLeftIcon,
   CopyIcon,
+  EllipsisIcon,
   ExternalLinkIcon,
   EyeIcon,
   FileDownIcon,
+  FileTextIcon,
+  GaugeIcon,
+  KeyRoundIcon,
   Link2Icon,
   MapPinIcon,
+  PowerIcon,
   RefreshCwIcon,
 } from "lucide-react";
 import Link from "next/link";
@@ -20,6 +27,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { useT } from "@/lib/i18n/client";
 import { countdownLabel, damageLabel, keysLabel, runLabel, titleLabel } from "@/lib/i18n/labels";
@@ -79,77 +87,115 @@ export function ReportHeader() {
     router.push(`/app/analyses/${body.id}`);
   }
 
+  const odoBad = l.odometerBrand === "NOT_ACTUAL" || l.odometerBrand === "EXCEEDS_MECHANICAL_LIMITS";
+  const titleBad = l.titleCategory === "NON_REPAIRABLE" || l.titleCategory === "PARTS_ONLY";
+  const specs: { icon: typeof GaugeIcon; label: string; tone?: "stop" | "caution" | "go" }[] = [
+    ...(l.odometer !== null
+      ? [
+          {
+            icon: GaugeIcon,
+            label: `${formatNumber(l.odometer)} ${l.odometerUnit}${l.odometerBrand !== "ACTUAL" && l.odometerBrand !== "UNKNOWN" ? ` · ${t(`report.odoBrand.${l.odometerBrand}`)}` : ""}`,
+            tone: odoBad ? ("stop" as const) : undefined,
+          },
+        ]
+      : []),
+    { icon: FileTextIcon, label: titleLabel(t, l.titleCategory), tone: titleBad ? "stop" : l.titleCategory === "CLEAN" ? "go" : undefined },
+    ...(l.primaryDamage ? [{ icon: CarFrontIcon, label: damageLabel(t, l.primaryDamage) }] : []),
+    { icon: PowerIcon, label: runLabel(t, l.runCondition), tone: l.runCondition === "WONT_START" ? "caution" : undefined },
+    { icon: KeyRoundIcon, label: keysLabel(t, l.hasKeys), tone: l.hasKeys === false ? "caution" : undefined },
+  ];
+
   return (
-    <div className="space-y-3">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-        <div className="min-w-0 space-y-1.5">
-          <div className="text-muted-foreground flex flex-wrap items-center gap-2 text-xs">
-            <Badge variant="outline">{t(`domain.source.${l.source}`)}</Badge>
-            {l.lotNumber && <span>{t("report.lot", { lot: l.lotNumber })}</span>}
+    <div className="space-y-4">
+      <Link href="/app/history" className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm">
+        <ChevronLeftIcon className="size-4" /> {t("nav.history")}
+      </Link>
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="min-w-0 space-y-2">
+          <div className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm">
+            <Badge variant="secondary" className="font-semibold">
+              {t(`domain.source.${l.source}`)}
+            </Badge>
+            {l.lotNumber && <span className="num">{t("report.lot", { lot: l.lotNumber })}</span>}
             {l.sourceUrl && (
-              <a href={l.sourceUrl} target="_blank" rel="noopener noreferrer" className="hover:text-foreground inline-flex items-center gap-1">
-                {t("report.viewListing")} <ExternalLinkIcon className="size-3" />
+              <a
+                href={l.sourceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-foreground inline-flex items-center gap-1 underline-offset-4 hover:underline"
+              >
+                {t("report.viewListing")} <ExternalLinkIcon className="size-3.5" />
               </a>
             )}
             {view.isDemo && <Badge variant="info">{t("report.demoData")}</Badge>}
           </div>
-          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl" data-testid="report-title">
-            {title} <span className="text-muted-foreground font-normal">{l.trim}</span>
+          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl" data-testid="report-title">
+            {title} {l.trim && <span className="text-muted-foreground font-normal">{l.trim}</span>}
           </h1>
-          <div className="text-muted-foreground flex flex-wrap gap-x-4 gap-y-1 text-sm">
+          <div className="text-muted-foreground flex flex-wrap gap-x-5 gap-y-1.5 text-sm">
             {l.saleDate && (
-              <span className="inline-flex items-center gap-1">
-                <CalendarClockIcon className="size-3.5" /> {t("report.sale", { when: countdownLabel(t, l.saleDate) })}
+              <span className="inline-flex items-center gap-1.5">
+                <CalendarClockIcon className="size-4" /> {t("report.sale", { when: countdownLabel(t, l.saleDate) })}
               </span>
             )}
             {(l.location.city || l.location.state) && (
-              <span className="inline-flex items-center gap-1">
-                <MapPinIcon className="size-3.5" />
+              <span className="inline-flex items-center gap-1.5">
+                <MapPinIcon className="size-4" />
                 {[l.location.yardName ?? l.location.city, l.location.state].filter(Boolean).join(", ")}
               </span>
             )}
           </div>
-          <div className="flex flex-wrap gap-1.5 pt-1">
-            {l.odometer !== null && (
-              <Badge variant={l.odometerBrand === "NOT_ACTUAL" || l.odometerBrand === "EXCEEDS_MECHANICAL_LIMITS" ? "stop" : "secondary"}>
-                {formatNumber(l.odometer)} {l.odometerUnit}
-                {l.odometerBrand !== "ACTUAL" && l.odometerBrand !== "UNKNOWN" ? ` · ${t(`report.odoBrand.${l.odometerBrand}`)}` : ""}
-              </Badge>
-            )}
-            <Badge
-              variant={l.titleCategory === "NON_REPAIRABLE" || l.titleCategory === "PARTS_ONLY" ? "stop" : l.titleCategory === "CLEAN" ? "go" : "secondary"}
-            >
-              {titleLabel(t, l.titleCategory)}
-            </Badge>
-            {l.primaryDamage && <Badge variant="secondary">{damageLabel(t, l.primaryDamage).toLowerCase()}</Badge>}
-            <Badge variant={l.runCondition === "WONT_START" ? "caution" : "secondary"}>{runLabel(t, l.runCondition)}</Badge>
-            <Badge variant={l.hasKeys === false ? "caution" : "secondary"}>{keysLabel(t, l.hasKeys)}</Badge>
-          </div>
         </div>
         {!view.readOnly && (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             <Button size="sm" variant={watched ? "secondary" : "outline"} onClick={() => void toggleWatch()} disabled={busy} data-testid="watch-button">
               {watched ? <CheckIcon /> : <EyeIcon />} {watched ? t("report.watching") : t("report.watch")}
             </Button>
             <Button size="sm" variant="outline" onClick={() => void share()}>
               <Link2Icon /> {t("report.share")}
             </Button>
-            <Button size="sm" variant="outline" asChild>
-              <a href={`/api/analyses/${view.id}/pdf`}>
-                <FileDownIcon /> PDF
-              </a>
-            </Button>
-            <Button size="sm" variant="outline" asChild>
-              <Link href={`/app/journal?analysisId=${view.id}`}>
-                <BookPlusIcon /> {t("report.logOutcome")}
-              </Link>
-            </Button>
-            <Button size="sm" variant="ghost" onClick={() => void rerun()} disabled={busy}>
-              <RefreshCwIcon /> {t("report.rerun")}
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="icon" variant="outline" className="size-8" aria-label={t("report.moreActions")}>
+                  <EllipsisIcon />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem asChild>
+                  <a href={`/api/analyses/${view.id}/pdf`}>
+                    <FileDownIcon /> {t("report.downloadPdf")}
+                  </a>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href={`/app/journal?analysisId=${view.id}`}>
+                    <BookPlusIcon /> {t("report.logOutcome")}
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem disabled={busy} onSelect={() => void rerun()}>
+                  <RefreshCwIcon /> {t("report.rerun")}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         )}
       </div>
+      <ul className="flex flex-wrap gap-2" aria-label={t("report.listing")}>
+        {specs.map((sp) => (
+          <li
+            key={sp.label}
+            className={cn(
+              "bg-card inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm",
+              sp.tone === "stop" && "border-stop/40 bg-stop-soft text-stop",
+              sp.tone === "caution" && "border-caution/40 bg-caution-soft text-caution",
+              sp.tone === "go" && "border-go/30 bg-go-soft text-go",
+            )}
+          >
+            <sp.icon className={cn("size-4 shrink-0", !sp.tone && "text-muted-foreground")} aria-hidden="true" />
+            {sp.label}
+          </li>
+        ))}
+      </ul>
       <Dialog open={shareOpen} onOpenChange={setShareOpen}>
         <DialogContent>
           <DialogHeader>
