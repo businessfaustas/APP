@@ -92,7 +92,7 @@ function CompletedReport() {
               <TabsTrigger value="logistics">{t("report.tabLogistics")}</TabsTrigger>
             </TabsList>
             <TabsContent value="overview">
-              <OverviewTab />
+              <OverviewTab onOpenTab={setTab} />
             </TabsContent>
             <TabsContent value="damage">
               <DamageTab />

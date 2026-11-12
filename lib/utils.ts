@@ -29,6 +29,16 @@ export function formatUsd(amount: number | null | undefined): string {
 }
 
 /** Formats basis points as a percentage, e.g. 2551 → "25.5%". */
+/** Compact dollars for tight labels: $950, $4.9k, $12k, $1.2M. */
+export function shortUsd(amount: number): string {
+  const a = Math.abs(amount);
+  const sign = amount < 0 ? "-" : "";
+  if (a >= 1_000_000) return `${sign}$${(a / 1_000_000).toFixed(a >= 10_000_000 ? 0 : 1).replace(/\.0$/, "")}M`;
+  if (a >= 10_000) return `${sign}$${Math.round(a / 1000)}k`;
+  if (a >= 1000) return `${sign}$${(a / 1000).toFixed(1).replace(/\.0$/, "")}k`;
+  return `${sign}$${Math.round(a)}`;
+}
+
 export function formatBps(bps: number | null | undefined, digits = 1): string {
   if (bps === null || bps === undefined || Number.isNaN(bps)) return "—";
   return `${(bps / 100).toFixed(digits)}%`;

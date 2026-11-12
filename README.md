@@ -94,7 +94,9 @@ Copy `.env.example` to `.env`. Only `DATABASE_URL` is required. On Vercel, the n
 | `STRIPE_PRICE_PRO`, `STRIPE_PRICE_BUSINESS`, `STRIPE_PRICE_CREDITS_10` | Price IDs: $39/mo, $129/mo, a one-time $9 pack                                                                                                | Stripe → Products                           |
 | `RESEND_API_KEY`, `EMAIL_FROM`                                         | Watchlist reminder emails                                                                                                                     | resend.com (verify your domain)             |
 
-`/admin` and **Settings → Integrations** show which integrations are active. Secrets are never displayed.
+### Connect your APIs
+
+**Admin → Setup & API keys** (`/admin/setup`) is the checklist for going live: every integration grouped as required / recommended / optional, what it unlocks, what the app does without it, which of its variables are set (click a name to copy it), a link to where the key is created, and a **Test** button that makes one small read-only request with the saved key (database, Supabase Auth, Anthropic/OpenAI, ScrapingBee, Stripe, Resend). Add the variables in Vercel → Settings → Environment Variables and redeploy; no code changes are needed. Secrets are never displayed. **Settings → Integrations** shows the same status to every user.
 
 ---
 

@@ -10,6 +10,7 @@ import { VerdictBadge } from "@/components/report/verdict-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { CarVisual } from "@/components/vehicle/car-art";
 import type { CompareRow } from "@/lib/analysis/batch";
 import { useT } from "@/lib/i18n/client";
 import { countdownLabel, damageLabel } from "@/lib/i18n/labels";
@@ -87,12 +88,12 @@ export function CompareTable({ batchId, initial }: { batchId: string; initial: C
           <TableRow key={r.id}>
             <TableCell>
               <Link href={`/app/analyses/${r.id}`} className="flex items-center gap-3">
-                {r.photo ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={r.photo} alt="" className="h-10 w-16 shrink-0 rounded object-cover" />
-                ) : (
-                  <div className="bg-muted h-10 w-16 shrink-0 rounded" />
-                )}
+                <CarVisual
+                  {...r.visual}
+                  label={r.title}
+                  scanning={r.status === "RUNNING" || r.status === "QUEUED"}
+                  className="aspect-[16/10] w-20 shrink-0 rounded-lg border"
+                />
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5 font-medium">
                     {r.status === "COMPLETED" && i === 0 && sort === "dealScore" && desc && <Badge variant="go">{t("compare.best")}</Badge>}

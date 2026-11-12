@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -127,7 +128,12 @@ export default async function AdminOverview() {
       </div>
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Integrations</CardTitle>
+          <CardTitle className="flex items-center justify-between text-base">
+            Integrations
+            <Link href="/admin/setup" className="text-primary text-sm font-medium hover:underline">
+              Set up API keys →
+            </Link>
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <ul className="grid gap-1 text-sm sm:grid-cols-2">

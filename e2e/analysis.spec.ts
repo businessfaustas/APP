@@ -15,6 +15,36 @@ test("Audi A3 reference lot: GO with a $3,100 max bid", async ({ page }) => {
   await expect(page.getByTestId("disclaimer").first()).toBeVisible();
 });
 
+test("the Audi overview charts the reference numbers and links to the damage tab", async ({ page }) => {
+  await analyze(page, LOTS.audi);
+  const money = page.getByTestId("money-card");
+  await expect(money).toContainText("$12,390");
+  await expect(money).toContainText("$4,865");
+  await expect(money).toContainText("$2,518");
+  await expect(page.getByTestId("scenario-card")).toContainText("$4,379");
+  await page.getByTestId("damage-card").getByRole("button", { name: "Damage details" }).click();
+  await expect(page.getByRole("tab", { name: "Damage" })).toHaveAttribute("aria-selected", "true");
+});
+
+test("the dashboard shows the lot as a picture card", async ({ page }) => {
+  await analyze(page, LOTS.audi);
+  await open(page, "/app");
+  await expect(
+    page
+      .getByTestId("lot-card")
+      .filter({ hasText: /audi a3/i })
+      .first(),
+  ).toBeVisible();
+});
+
+test("admin setup lists every API and the database check passes", async ({ page }) => {
+  await open(page, "/admin/setup");
+  await expect(page.getByRole("heading", { name: "Connect your APIs" })).toBeVisible();
+  await expect(page.getByTestId("integration-ai")).toBeVisible();
+  await page.getByTestId("test-database").click();
+  await expect(page.getByTestId("integration-database").getByRole("status")).toHaveText("Connected.");
+});
+
 test("raising the labor rate to $100/h recalculates to BE CAUTIOUS at $2,375", async ({ page }) => {
   await analyze(page, LOTS.audi);
   const slider = page.getByTestId("labor-rate").getByRole("slider");

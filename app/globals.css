@@ -97,6 +97,7 @@
   --series-1: #2a78d6;
   --series-2: #eb6834;
   --series-3: #1baf7a;
+  --series-neutral: #b4b8c4;
   --status-good: #0ca30c;
   --status-critical: #d03b3b;
   --status-warning: #fab219;
@@ -144,6 +145,7 @@
   --series-1: #3987e5;
   --series-2: #d95926;
   --series-3: #199e70;
+  --series-neutral: #9096a6;
   --status-good: #0ca30c;
   --status-critical: #d03b3b;
   --status-warning: #fab219;
@@ -172,7 +174,87 @@
   }
 }
 
+/* ── Motion ───────────────────────────────────────────────────────────── */
+@keyframes ap-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+@keyframes ap-grow-x {
+  from {
+    transform: scaleX(0);
+  }
+}
+@keyframes ap-grow-y {
+  from {
+    transform: scaleY(0);
+  }
+}
+@keyframes ap-sweep {
+  from {
+    stroke-dasharray: 0 999;
+  }
+}
+@keyframes ap-glow {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.92);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.06);
+  }
+}
+@keyframes ap-scan {
+  0% {
+    transform: translateX(-30%);
+  }
+  100% {
+    transform: translateX(130%);
+  }
+}
+@keyframes ap-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
 @layer utilities {
+  /* Staggered entrance: set --i on each item (0, 1, 2…). */
+  .rise {
+    animation: ap-rise 520ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    animation-delay: calc(var(--i, 0) * 70ms);
+  }
+  .grow-x {
+    transform-origin: left center;
+    animation: ap-grow-x 800ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    animation-delay: calc(120ms + var(--i, 0) * 70ms);
+  }
+  .grow-y {
+    transform-origin: center bottom;
+    animation: ap-grow-y 700ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    animation-delay: calc(80ms + var(--i, 0) * 35ms);
+  }
+  .sweep {
+    animation: ap-sweep 1100ms cubic-bezier(0.2, 0.8, 0.2, 1) both 150ms;
+  }
+  .glow-pulse {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: ap-glow 2.4s ease-in-out infinite;
+  }
+  .scan {
+    animation: ap-scan 1.8s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  }
+  .float {
+    animation: ap-float 3.2s ease-in-out infinite;
+  }
   .pb-safe {
     padding-bottom: max(env(safe-area-inset-bottom), 0.5rem);
   }
@@ -187,5 +269,17 @@
   /* Soft brand glow used once per page, behind the main answer. */
   .brand-glow {
     background-image: radial-gradient(120% 140% at 0% 0%, color-mix(in oklab, var(--primary) 14%, transparent), transparent 60%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise,
+  .grow-x,
+  .grow-y,
+  .sweep,
+  .glow-pulse,
+  .scan,
+  .float {
+    animation: none !important;
   }
 }

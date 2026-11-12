@@ -7,9 +7,11 @@ import { VerdictBadge } from "@/components/report/verdict-badge";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { CarVisual } from "@/components/vehicle/car-art";
+import { lotVisual, photoUrl } from "@/lib/analysis/visual";
 import { requireUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/prisma";
-import type { NormalizedListing } from "@/lib/domain/schemas";
+import type { DamageAssessment, NormalizedListing, VehicleInfo } from "@/lib/domain/schemas";
 import { damageLabel } from "@/lib/i18n/labels";
 import { INTL_LOCALE } from "@/lib/i18n/locales";
 import { getT } from "@/lib/i18n/server";
@@ -45,8 +47,11 @@ export default async function HistoryPage({ searchParams }: { searchParams: Prom
         dealScore: true,
         createdAt: true,
         listingSnapshot: true,
+        vehicleInfo: true,
+        damage: true,
         inputValue: true,
         currentStep: true,
+        listing: { select: { photos: { orderBy: { position: "asc" }, take: 1, select: { id: true, originalUrl: true, storagePath: true } } } },
       },
     }),
     prisma.analysis.count({ where }),
@@ -93,10 +98,25 @@ export default async function HistoryPage({ searchParams }: { searchParams: Prom
                   return (
                     <TableRow key={a.id}>
                       <TableCell>
-                        <Link href={`/app/analyses/${a.id}`} className="font-medium hover:underline">
-                          {l ? [l.year, l.make, l.model].filter(Boolean).join(" ") || a.inputValue : a.inputValue}
-                        </Link>
-                        {l?.primaryDamage && <div className="text-muted-foreground text-xs">{damageLabel(t, l.primaryDamage).toLowerCase()}</div>}
+                        <div className="flex items-center gap-3">
+                          <CarVisual
+                            {...lotVisual({
+                              listing: l,
+                              vehicle: a.vehicleInfo as VehicleInfo | null,
+                              damage: a.damage as DamageAssessment | null,
+                              verdict: a.verdict,
+                              photo: photoUrl(a.listing?.photos[0]),
+                            })}
+                            label={l ? [l.year, l.make, l.model].filter(Boolean).join(" ") : a.inputValue}
+                            className="aspect-[16/10] w-20 shrink-0 rounded-lg border"
+                          />
+                          <div className="min-w-0">
+                            <Link href={`/app/analyses/${a.id}`} className="font-medium hover:underline">
+                              {l ? [l.year, l.make, l.model].filter(Boolean).join(" ") || a.inputValue : a.inputValue}
+                            </Link>
+                            {l?.primaryDamage && <div className="text-muted-foreground text-xs">{damageLabel(t, l.primaryDamage).toLowerCase()}</div>}
+                          </div>
+                        </div>
                       </TableCell>
                       <TableCell className="text-xs">{l ? `${t(`domain.source.${l.source}`)}${l.lotNumber ? ` · ${l.lotNumber}` : ""}` : "—"}</TableCell>
                       <TableCell>

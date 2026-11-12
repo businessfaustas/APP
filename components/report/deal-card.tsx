@@ -1,12 +1,13 @@
 "use client";
 
-import { CheckIcon, SearchIcon, TriangleAlertIcon } from "lucide-react";
+import { CheckIcon, PercentIcon, ScaleIcon, SearchIcon, ShieldCheckIcon, TrendingUpIcon, TriangleAlertIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Stat, Tooltip } from "@/components/ui/misc";
+import { CountTo } from "@/components/motion/count-to";
+import { Tooltip } from "@/components/ui/misc";
 import type { CalculationResult } from "@/lib/calc/types";
 import { useT } from "@/lib/i18n/client";
 import { trText } from "@/lib/i18n/generated";
@@ -44,7 +45,7 @@ export function ScoreMeter({ score }: { score: number }) {
 const TONE_VAR = { go: "var(--go)", caution: "var(--caution)", stop: "var(--stop)" } as const;
 
 /** Deal score as a ring gauge (0–100). */
-export function ScoreRing({ score, size = 76 }: { score: number; size?: number }) {
+export function ScoreRing({ score, size = 76, label, caption }: { score: number; size?: number; label?: string; caption?: string }) {
   const t = useT();
   const tone = scoreTone(score);
   const r = 30;
@@ -56,7 +57,7 @@ export function ScoreRing({ score, size = 76 }: { score: number; size?: number }
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={score}
-      aria-label={t("report.dealScore")}
+      aria-label={caption ?? t("report.dealScore")}
     >
       <svg viewBox="0 0 76 76" width={size} height={size} className="-rotate-90">
         <circle cx="38" cy="38" r={r} fill="none" strokeWidth="7" className="stroke-muted" />
@@ -79,10 +80,10 @@ export function ScoreRing({ score, size = 76 }: { score: number; size?: number }
           dominantBaseline="central"
           className="fill-foreground num text-[19px] font-semibold"
         >
-          {score}
+          {label ?? score}
         </text>
       </svg>
-      <span className="eyebrow">{t("report.dealScore")}</span>
+      <span className="eyebrow">{caption ?? t("report.dealScore")}</span>
     </div>
   );
 }
@@ -210,90 +211,157 @@ export function DealCard() {
 
 const VERDICT_TONE = { GO: "go", BE_CAUTIOUS: "caution", WALK_AWAY: "stop" } as const;
 
-/** Verdict, max bid, key numbers, score and bid ladder for a calculation result. */
+/** A key number in its own card: icon, label, value (glides when it changes) and a short line. */
+export function KpiCard({
+  icon: Icon,
+  label,
+  value,
+  format,
+  sub,
+  tone,
+  index = 0,
+}: {
+  icon: typeof TrendingUpIcon;
+  label: string;
+  value: number | null;
+  format: (n: number) => string;
+  sub?: string;
+  tone?: "go" | "stop" | "caution" | "brand";
+  index?: number;
+}) {
+  return (
+    <Card className="rise gap-0 py-5" style={{ ["--i" as string]: index }}>
+      <CardContent className="space-y-3 px-5">
+        <div className="flex items-center justify-between gap-2">
+          <span className="eyebrow">{label}</span>
+          <span
+            className={cn(
+              "grid size-8 shrink-0 place-items-center rounded-lg",
+              tone === "go" && "bg-go-soft text-go",
+              tone === "stop" && "bg-stop-soft text-stop",
+              tone === "caution" && "bg-caution-soft text-caution",
+              (!tone || tone === "brand") && "bg-primary/12 text-primary",
+            )}
+          >
+            <Icon className="size-4" aria-hidden="true" />
+          </span>
+        </div>
+        <div className={cn("text-2xl font-semibold tracking-tight", tone === "stop" && "text-stop")}>
+          {value === null ? "—" : <CountTo value={value} format={format} />}
+        </div>
+        {sub && <div className="text-muted-foreground text-xs leading-snug">{sub}</div>}
+      </CardContent>
+    </Card>
+  );
+}
+
+/** Verdict, max bid, score and bid ladder, then the four key numbers as cards. */
 export function DealSummary({ calc, currentBid }: { calc: CalculationResult; currentBid: number | null }) {
   const t = useT();
   const e = calc.scenarios.expected;
   const tone = VERDICT_TONE[calc.verdict];
   const worst = calc.scenarios.worst.profitAtMaxBid;
   return (
-    <Card
-      className="overflow-hidden"
-      data-testid="deal-card"
-      style={{ backgroundImage: `radial-gradient(110% 120% at 0% 0%, color-mix(in oklab, ${TONE_VAR[tone]} 13%, transparent), transparent 58%)` }}
-    >
-      <CardContent className="space-y-6">
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-          <div className="space-y-4">
-            <VerdictBadge verdict={calc.verdict} size="lg" />
-            {calc.maxBid !== null ? (
-              <div>
-                <div className="eyebrow">{t("report.doNotBidAbove")}</div>
-                <div className="num mt-1 text-5xl font-semibold tracking-tight sm:text-6xl" data-testid="max-bid">
-                  {formatUsd(calc.maxBid)}
-                </div>
-                <div className="text-muted-foreground mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-                  {currentBid !== null ? (
-                    <>
-                      <span>
-                        {t("report.currentBid")} <span className="num text-foreground font-medium">{formatUsd(currentBid)}</span>
-                      </span>
-                      {calc.headroomBps !== null && (
-                        <span
-                          className={cn(
-                            "num rounded-full px-2 py-0.5 text-xs font-medium",
-                            calc.headroomBps < 1500 ? "bg-caution-soft text-caution" : "bg-go-soft text-go",
-                          )}
-                        >
-                          {t("report.headroom", { pct: formatBps(calc.headroomBps, 0) })}
+    <div className="space-y-4">
+      <Card
+        className="rise overflow-hidden"
+        data-testid="deal-card"
+        style={{ backgroundImage: `radial-gradient(110% 120% at 0% 0%, color-mix(in oklab, ${TONE_VAR[tone]} 14%, transparent), transparent 60%)` }}
+      >
+        <CardContent className="space-y-6">
+          <div className="flex items-start justify-between gap-5">
+            <div className="space-y-4">
+              <VerdictBadge verdict={calc.verdict} size="lg" />
+              {calc.maxBid !== null ? (
+                <div>
+                  <div className="eyebrow">{t("report.doNotBidAbove")}</div>
+                  <div className="mt-1 text-5xl font-semibold tracking-tight sm:text-6xl" data-testid="max-bid">
+                    <CountTo value={calc.maxBid} format={formatUsd} />
+                  </div>
+                  <div className="text-muted-foreground mt-2.5 flex flex-wrap items-center gap-2 text-sm">
+                    {currentBid !== null ? (
+                      <>
+                        <span>
+                          {t("report.currentBid")} <span className="text-foreground font-medium">{formatUsd(currentBid)}</span>
                         </span>
-                      )}
-                      {e.profitAtCurrentBid !== null && <span>{t("report.atCurrentBid", { amount: formatUsd(e.profitAtCurrentBid) })}</span>}
-                    </>
-                  ) : (
-                    t("report.noCurrentBid")
-                  )}
+                        {calc.headroomBps !== null && (
+                          <span
+                            className={cn(
+                              "rounded-full px-2 py-0.5 text-xs font-medium",
+                              calc.headroomBps < 1500 ? "bg-caution-soft text-caution" : "bg-go-soft text-go",
+                            )}
+                          >
+                            {t("report.headroom", { pct: formatBps(calc.headroomBps, 0) })}
+                          </span>
+                        )}
+                      </>
+                    ) : (
+                      t("report.noCurrentBid")
+                    )}
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div className="max-w-md text-xl font-semibold tracking-tight">{t("report.noBidReaches")}</div>
-            )}
+              ) : (
+                <div className="max-w-md text-xl font-semibold tracking-tight">{t("report.noBidReaches")}</div>
+              )}
+            </div>
+            <ScoreRing score={calc.dealScore} size={92} />
           </div>
-          <ScoreRing score={calc.dealScore} />
-        </div>
-
-        <div className="bg-background/60 dark:bg-background/40 grid grid-cols-2 gap-x-6 gap-y-5 rounded-xl border p-5 lg:grid-cols-4">
-          <Stat
-            label={t("report.expectedProfit")}
-            value={formatUsd(e.profitAtMaxBid)}
-            tone={(e.profitAtMaxBid ?? 0) < 0 ? "stop" : undefined}
-            sub={t("report.worstBest", { worst: formatUsd(worst), best: formatUsd(calc.scenarios.best.profitAtMaxBid) })}
-          />
-          <Stat label="ROI" value={formatBps(e.roiAtMaxBidBps)} sub={t("report.target", { amount: formatUsd(calc.targetProfit) })} />
-          <Stat label={t("report.comfortBid")} value={formatUsd(calc.comfortBid)} sub={t("report.comfortSub")} />
-          <Stat label={t("report.breakEven")} value={formatUsd(calc.breakEvenBid)} sub={t("report.breakEvenSub")} />
-        </div>
-
-        <BidLadder calc={calc} currentBid={currentBid} />
-
-        {calc.verdictReasons.length > 0 && (
-          <div className="border-t pt-5">
-            <div className="eyebrow mb-3">{t("report.whyVerdict")}</div>
-            <ul className="grid gap-2.5 text-sm sm:grid-cols-2">
-              {calc.verdictReasons.slice(0, 4).map((r) => (
-                <li key={r} className="flex gap-2.5">
+          <BidLadder calc={calc} currentBid={currentBid} />
+          {calc.verdictReasons.length > 0 && (
+            <ul className="flex flex-wrap gap-2 border-t pt-5" aria-label={t("report.whyVerdict")}>
+              {calc.verdictReasons.slice(0, 3).map((r) => (
+                <li key={r} className="bg-background/60 dark:bg-background/40 inline-flex items-start gap-2 rounded-lg border px-3 py-1.5 text-xs leading-snug">
                   {tone === "go" ? (
-                    <CheckIcon className="text-go mt-0.5 size-4 shrink-0" aria-hidden="true" />
+                    <CheckIcon className="text-go mt-px size-3.5 shrink-0" aria-hidden="true" />
                   ) : (
-                    <TriangleAlertIcon className={cn("mt-0.5 size-4 shrink-0", tone === "stop" ? "text-stop" : "text-caution")} aria-hidden="true" />
+                    <TriangleAlertIcon className={cn("mt-px size-3.5 shrink-0", tone === "stop" ? "text-stop" : "text-caution")} aria-hidden="true" />
                   )}
-                  <span className="leading-snug">{trText(t, r)}</span>
+                  <span>{trText(t, r)}</span>
                 </li>
               ))}
             </ul>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+          )}
+        </CardContent>
+      </Card>
+
+      <div className="grid grid-cols-2 gap-4 2xl:grid-cols-4">
+        <KpiCard
+          index={1}
+          icon={TrendingUpIcon}
+          label={t("report.expectedProfit")}
+          value={e.profitAtMaxBid}
+          format={formatUsd}
+          tone={(e.profitAtMaxBid ?? 0) < 0 ? "stop" : "go"}
+          sub={t("report.worstBest", { worst: formatUsd(worst), best: formatUsd(calc.scenarios.best.profitAtMaxBid) })}
+        />
+        <KpiCard
+          index={2}
+          icon={PercentIcon}
+          label="ROI"
+          value={e.roiAtMaxBidBps}
+          format={(n) => formatBps(n)}
+          tone="brand"
+          sub={t("report.target", { amount: formatUsd(calc.targetProfit) })}
+        />
+        <KpiCard
+          index={3}
+          icon={ShieldCheckIcon}
+          label={t("report.comfortBid")}
+          value={calc.comfortBid}
+          format={formatUsd}
+          tone="brand"
+          sub={t("report.comfortSub")}
+        />
+        <KpiCard
+          index={4}
+          icon={ScaleIcon}
+          label={t("report.breakEven")}
+          value={calc.breakEvenBid}
+          format={formatUsd}
+          tone="caution"
+          sub={t("report.breakEvenSub")}
+        />
+      </div>
+    </div>
   );
 }

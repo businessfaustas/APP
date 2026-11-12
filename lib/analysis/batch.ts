@@ -1,8 +1,9 @@
 import "server-only";
 
+import { lotVisual, photoUrl, type LotVisual } from "@/lib/analysis/visual";
 import type { CalculationResult } from "@/lib/calc/types";
 import { prisma } from "@/lib/db/prisma";
-import type { DamageAssessment, NormalizedListing } from "@/lib/domain/schemas";
+import type { DamageAssessment, NormalizedListing, VehicleInfo } from "@/lib/domain/schemas";
 
 export interface CompareRow {
   id: string;
@@ -11,7 +12,7 @@ export interface CompareRow {
   progress: number;
   inputValue: string;
   title: string;
-  photo: string | null;
+  visual: LotVisual;
   damage: string | null;
   title_: string | null;
   saleDate: string | null;
@@ -41,7 +42,6 @@ export async function getBatchRows(batchId: string, userId: string): Promise<{ n
     const calc = a.calc as CalculationResult | null;
     const d = a.damage as DamageAssessment | null;
     const p = a.listing?.photos[0];
-    const photo = p ? (p.originalUrl?.startsWith("/demo-photos/") ? p.originalUrl : p.storagePath ? `/api/photos/${p.id}` : null) : null;
     return {
       id: a.id,
       status: a.status,
@@ -49,7 +49,7 @@ export async function getBatchRows(batchId: string, userId: string): Promise<{ n
       progress: a.progress,
       inputValue: a.inputValue,
       title: l ? [l.year, l.make, l.model].filter(Boolean).join(" ") || a.inputValue : a.inputValue,
-      photo,
+      visual: lotVisual({ listing: l, vehicle: a.vehicleInfo as VehicleInfo | null, damage: d, verdict: a.verdict, photo: photoUrl(p) }),
       damage: l?.primaryDamage ?? null,
       title_: l?.titleCategory ?? null,
       saleDate: l?.saleDate ?? null,

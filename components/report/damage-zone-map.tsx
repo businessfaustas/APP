@@ -41,16 +41,19 @@ export function DamageZoneMap({
   severities,
   selected,
   onSelect,
+  compact = false,
 }: {
   severities: Partial<Record<DamageZone, number>>;
   selected: DamageZone | null;
   onSelect: (z: DamageZone | null) => void;
+  /** Just the car: no undercarriage chip or legend (for small summary cards). */
+  compact?: boolean;
 }) {
   const t = useT();
   const under = severities.undercarriage;
   return (
     <div className="flex flex-col items-center gap-3">
-      <svg viewBox="0 0 200 360" className="h-auto w-full max-w-[220px]" role="group" aria-label={t("report.damageMapAria")}>
+      <svg viewBox="0 0 200 360" className={cn("h-auto w-full", compact ? "max-w-full" : "max-w-[220px]")} role="group" aria-label={t("report.damageMapAria")}>
         <path d="M44 14 Q100 -4 156 14 L184 120 V250 L176 318 Q100 368 24 318 L16 250 V120 Z" className="stroke-border fill-none" strokeWidth={2} />
         {SHAPES.map((s) => {
           const sev = severities[s.zone];
@@ -94,32 +97,36 @@ export function DamageZoneMap({
           );
         })}
       </svg>
-      <button
-        type="button"
-        onClick={() => onSelect(selected === "undercarriage" ? null : "undercarriage")}
-        className={cn(
-          "rounded-full border px-3 py-1 text-xs",
-          under ? (under > 6 ? "border-stop/50 bg-stop-soft" : "border-caution/50 bg-caution-soft") : "text-muted-foreground",
-          selected === "undercarriage" && "ring-foreground ring-2",
-        )}
-      >
-        {t("report.zone.undercarriage")}
-        {under ? ` · ${under}/10` : ""}
-      </button>
-      <div className="text-muted-foreground flex flex-wrap justify-center gap-3 text-[11px]">
-        <span className="flex items-center gap-1">
-          <span className="bg-muted size-2.5 rounded-sm" /> {t("report.sevNone")}
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="bg-caution/35 size-2.5 rounded-sm" /> {t("report.sevMinor")}
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="bg-caution/80 size-2.5 rounded-sm" /> {t("report.sevModerate")}
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="bg-stop/80 size-2.5 rounded-sm" /> {t("report.sevSevere")}
-        </span>
-      </div>
+      {!compact && (
+        <>
+          <button
+            type="button"
+            onClick={() => onSelect(selected === "undercarriage" ? null : "undercarriage")}
+            className={cn(
+              "rounded-full border px-3 py-1 text-xs",
+              under ? (under > 6 ? "border-stop/50 bg-stop-soft" : "border-caution/50 bg-caution-soft") : "text-muted-foreground",
+              selected === "undercarriage" && "ring-foreground ring-2",
+            )}
+          >
+            {t("report.zone.undercarriage")}
+            {under ? ` · ${under}/10` : ""}
+          </button>
+          <div className="text-muted-foreground flex flex-wrap justify-center gap-3 text-[11px]">
+            <span className="flex items-center gap-1">
+              <span className="bg-muted size-2.5 rounded-sm" /> {t("report.sevNone")}
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="bg-caution/35 size-2.5 rounded-sm" /> {t("report.sevMinor")}
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="bg-caution/80 size-2.5 rounded-sm" /> {t("report.sevModerate")}
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="bg-stop/80 size-2.5 rounded-sm" /> {t("report.sevSevere")}
+            </span>
+          </div>
+        </>
+      )}
     </div>
   );
 }

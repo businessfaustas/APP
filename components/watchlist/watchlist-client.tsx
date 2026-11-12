@@ -10,6 +10,8 @@ import { VerdictBadge } from "@/components/report/verdict-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { CarVisual } from "@/components/vehicle/car-art";
+import type { LotVisual } from "@/lib/analysis/visual";
 import type { VerdictValue } from "@/lib/calc/types";
 import { useLocale, useT } from "@/lib/i18n/client";
 import { countdownLabel } from "@/lib/i18n/labels";
@@ -31,7 +33,7 @@ export interface WatchItemView {
   notes: string | null;
   remindAt: string | null;
   remindedAt: string | null;
-  photo: string | null;
+  visual: LotVisual;
 }
 
 function Item({ item }: { item: WatchItemView }) {
@@ -60,12 +62,7 @@ function Item({ item }: { item: WatchItemView }) {
   return (
     <Card className={cn(ended && "opacity-70")}>
       <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-center">
-        {item.photo ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={item.photo} alt="" className="h-20 w-full shrink-0 rounded-md object-cover sm:w-32" />
-        ) : (
-          <div className="bg-muted hidden h-20 w-32 shrink-0 rounded-md sm:block" />
-        )}
+        <CarVisual {...item.visual} label={item.title} className="aspect-[16/9] w-full shrink-0 rounded-xl border sm:w-36" />
         <div className="min-w-0 flex-1 space-y-1">
           <div className="flex flex-wrap items-center gap-2">
             {item.analysisId ? (

@@ -28,6 +28,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { CarVisual } from "@/components/vehicle/car-art";
+import { lotVisual } from "@/lib/analysis/visual";
 import { Input } from "@/components/ui/input";
 import { useT } from "@/lib/i18n/client";
 import { countdownLabel, damageLabel, keysLabel, runLabel, titleLabel } from "@/lib/i18n/labels";
@@ -36,7 +38,7 @@ import { cn, formatNumber } from "@/lib/utils";
 import { useReport } from "./report-context";
 
 export function ReportHeader() {
-  const { view } = useReport();
+  const { view, calc } = useReport();
   const router = useRouter();
   const t = useT();
   const l = view.listing;
@@ -105,13 +107,22 @@ export function ReportHeader() {
     { icon: KeyRoundIcon, label: keysLabel(t, l.hasKeys), tone: l.hasKeys === false ? "caution" : undefined },
   ];
 
+  const visual = lotVisual({
+    listing: l,
+    vehicle: view.vehicle,
+    damage: view.damage,
+    verdict: calc?.verdict ?? view.calc?.verdict,
+    photo: view.photos.find((p) => !p.url.startsWith("/demo-photos/"))?.url,
+  });
+
   return (
     <div className="space-y-4">
       <Link href="/app/history" className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm">
         <ChevronLeftIcon className="size-4" /> {t("nav.history")}
       </Link>
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div className="min-w-0 space-y-2">
+      <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
+        <CarVisual {...visual} label={title} className="rise aspect-[16/9] w-full shrink-0 rounded-2xl border sm:w-[22rem]" />
+        <div className="min-w-0 flex-1 space-y-2.5">
           <div className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm">
             <Badge variant="secondary" className="font-semibold">
               {t(`domain.source.${l.source}`)}
@@ -145,6 +156,22 @@ export function ReportHeader() {
               </span>
             )}
           </div>
+          <ul className="flex flex-wrap gap-2 pt-1.5" aria-label={t("report.listing")}>
+            {specs.map((sp) => (
+              <li
+                key={sp.label}
+                className={cn(
+                  "bg-card inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm",
+                  sp.tone === "stop" && "border-stop/40 bg-stop-soft text-stop",
+                  sp.tone === "caution" && "border-caution/40 bg-caution-soft text-caution",
+                  sp.tone === "go" && "border-go/30 bg-go-soft text-go",
+                )}
+              >
+                <sp.icon className={cn("size-4 shrink-0", !sp.tone && "text-muted-foreground")} aria-hidden="true" />
+                {sp.label}
+              </li>
+            ))}
+          </ul>
         </div>
         {!view.readOnly && (
           <div className="flex shrink-0 items-center gap-2">
@@ -180,22 +207,6 @@ export function ReportHeader() {
           </div>
         )}
       </div>
-      <ul className="flex flex-wrap gap-2" aria-label={t("report.listing")}>
-        {specs.map((sp) => (
-          <li
-            key={sp.label}
-            className={cn(
-              "bg-card inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm",
-              sp.tone === "stop" && "border-stop/40 bg-stop-soft text-stop",
-              sp.tone === "caution" && "border-caution/40 bg-caution-soft text-caution",
-              sp.tone === "go" && "border-go/30 bg-go-soft text-go",
-            )}
-          >
-            <sp.icon className={cn("size-4 shrink-0", !sp.tone && "text-muted-foreground")} aria-hidden="true" />
-            {sp.label}
-          </li>
-        ))}
-      </ul>
       <Dialog open={shareOpen} onOpenChange={setShareOpen}>
         <DialogContent>
           <DialogHeader>

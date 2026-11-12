@@ -36,8 +36,10 @@ test("a demo report reads in Lithuanian with the same numbers", async ({ page })
   await expect(dealVerdict(page)).toHaveText(lt.domain.verdict.GO);
   await expect(page.getByTestId("max-bid")).toHaveText("$3,100");
   await expect(page.getByTestId("deal-card")).toContainText(lt.report.doNotBidAbove);
-  await expect(page.getByTestId("deal-card")).toContainText(lt.report.whyVerdict);
-  await expect(page.getByText(/Didžiausios išlaidos: remontas \$4,865/)).toBeVisible();
+  await expect(page.getByTestId("deal-card").getByRole("list", { name: lt.report.whyVerdict })).toBeVisible();
+  await expect(page.getByTestId("money-card")).toContainText(lt.report.purchase);
+  await expect(page.getByTestId("money-card")).toContainText("$4,865");
+  await expect(page.getByTestId("scenario-card")).toContainText(lt.domain.scenario.expected);
   await expect(page.getByTestId("risk-flags")).toContainText(lt.gen.flags.FEE_TABLE_PLACEHOLDER.title);
   await expect(page.getByTestId("checklist")).toContainText(lt.gen.checklist.nicb);
 

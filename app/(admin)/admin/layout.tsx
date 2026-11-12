@@ -7,6 +7,7 @@ export const dynamic = "force-dynamic";
 
 const TABS = [
   { href: "/admin", label: "Overview" },
+  { href: "/admin/setup", label: "Setup & API keys" },
   { href: "/admin/fees", label: "Fee tables" },
   { href: "/admin/references", label: "Parts & labor" },
   { href: "/admin/export-profiles", label: "Export profiles" },

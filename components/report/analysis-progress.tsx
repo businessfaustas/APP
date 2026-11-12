@@ -6,10 +6,13 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { ManualFields, QuickFields } from "@/components/input/manual-fields";
+import { CountTo } from "@/components/motion/count-to";
 import { PhotoUpload } from "@/components/input/photo-upload";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/input";
+import { CarVisual } from "@/components/vehicle/car-art";
+import { lotVisual } from "@/lib/analysis/visual";
 import { Progress, SegmentedControl } from "@/components/ui/misc";
 import type { AnalysisView } from "@/lib/analysis/view";
 import { useT } from "@/lib/i18n/client";
@@ -22,38 +25,68 @@ export function AnalysisProgress({ view }: { view: AnalysisView }) {
   const t = useT();
   const photoCount = view.listing?.photoUrls.length ?? 0;
   const step = view.currentStep ?? view.status;
-  const car = view.listing ? ` ${[view.listing.year, view.listing.make, view.listing.model].filter(Boolean).join(" ")}` : "";
+  const name = view.listing ? [view.listing.year, view.listing.make, view.listing.model].filter(Boolean).join(" ") : "";
+  const visual = lotVisual({
+    listing: view.listing,
+    vehicle: view.vehicle,
+    damage: view.damage,
+    verdict: null,
+    photo: view.photos.find((p) => !p.url.startsWith("/demo-photos/"))?.url,
+  });
   return (
-    <Card className="mx-auto max-w-xl" data-testid="analysis-progress">
-      <CardHeader>
-        <CardTitle className="text-lg">{t("report.analyzing", { car })}</CardTitle>
-        <p className="text-muted-foreground text-sm">{t.dyn(`gen.steps.${step}`, undefined, view.stepLabel)}</p>
-      </CardHeader>
-      <CardContent className="space-y-5">
-        <Progress value={view.progress} aria-label={t("report.progressAria")} />
-        <ol className="space-y-2.5">
-          {PROGRESS_STEPS.map((s) => {
-            const done = view.progress >= s.at && view.currentStep !== s.key;
-            const active = view.currentStep === s.key || (!done && view.progress >= s.at - 15 && view.progress < s.at);
-            const label = s.key === "vision-audit" && photoCount ? t("report.analyzingPhotos", { n: photoCount }) : t(`report.progressStep.${s.key}`);
-            return (
-              <li key={s.key} className="flex items-center gap-2.5 text-sm">
-                <span
-                  className={cn(
-                    "flex size-5 items-center justify-center rounded-full border",
-                    done && "border-go bg-go text-background",
-                    active && "border-primary",
-                  )}
+    <Card className="rise mx-auto max-w-4xl gap-0 overflow-hidden py-0" data-testid="analysis-progress">
+      <div className="grid md:grid-cols-[1.15fr_1fr]">
+        <div className="relative min-h-56">
+          <CarVisual {...visual} scanning label={name || undefined} className="absolute inset-0" />
+          <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-5">
+            <div className="bg-background/80 rounded-xl border px-3 py-2 backdrop-blur">
+              <div className="eyebrow">{t("report.progressAria")}</div>
+              <div className="num text-2xl font-semibold tracking-tight">
+                <CountTo value={view.progress} format={(n) => `${n}%`} />
+              </div>
+            </div>
+            {visual.zones.length > 0 && (
+              <div className="bg-background/80 rise flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium backdrop-blur">
+                <span className="bg-stop glow-pulse size-2 rounded-full" aria-hidden="true" />
+                {t("report.zonesFound", { n: visual.zones.length })}
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="space-y-5 p-6">
+          <div>
+            <h1 className="text-lg font-semibold tracking-tight">{t("report.analyzing", { car: name ? ` ${name}` : "" })}</h1>
+            <p className="text-muted-foreground mt-1 text-sm">{t.dyn(`gen.steps.${step}`, undefined, view.stepLabel)}</p>
+          </div>
+          <Progress value={view.progress} aria-label={t("report.progressAria")} />
+          <ol className="space-y-1">
+            {PROGRESS_STEPS.map((s, i) => {
+              const done = view.progress >= s.at && view.currentStep !== s.key;
+              const active = view.currentStep === s.key || (!done && view.progress >= s.at - 15 && view.progress < s.at);
+              const label = s.key === "vision-audit" && photoCount ? t("report.analyzingPhotos", { n: photoCount }) : t(`report.progressStep.${s.key}`);
+              return (
+                <li
+                  key={s.key}
+                  className={cn("rise flex items-center gap-3 rounded-lg px-2.5 py-1.5 text-sm transition-colors", active && "bg-primary/8")}
+                  style={{ ["--i" as string]: i }}
                 >
-                  {done ? <CheckIcon className="size-3" /> : active ? <Loader2Icon className="text-primary size-3 animate-spin" /> : null}
-                </span>
-                <span className={cn(!done && !active && "text-muted-foreground")}>{label}</span>
-              </li>
-            );
-          })}
-        </ol>
-        <p className="text-muted-foreground text-xs">{t("report.progressNote")}</p>
-      </CardContent>
+                  <span
+                    className={cn(
+                      "flex size-5 shrink-0 items-center justify-center rounded-full border transition-colors duration-300",
+                      done && "border-go bg-go text-background",
+                      active && "border-primary",
+                    )}
+                  >
+                    {done ? <CheckIcon className="size-3" /> : active ? <Loader2Icon className="text-primary size-3 animate-spin" /> : null}
+                  </span>
+                  <span className={cn(active ? "font-medium" : !done && "text-muted-foreground")}>{label}</span>
+                </li>
+              );
+            })}
+          </ol>
+          <p className="text-muted-foreground text-xs">{t("report.progressNote")}</p>
+        </div>
+      </div>
     </Card>
   );
 }
