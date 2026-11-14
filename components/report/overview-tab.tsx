@@ -122,7 +122,7 @@ function Checklist({ items }: { items: string[] }) {
   const pct = items.length ? Math.round((checked.size / items.length) * 100) : 0;
   if (items.length === 0) return null;
   return (
-    <div className="bg-card rounded-2xl border px-6 py-2">
+    <div className="surface bg-card rounded-2xl border px-6 py-2">
       <Disclosure
         title={
           <span className="flex items-center gap-3">
@@ -171,7 +171,7 @@ function DataSources() {
   const fallbacks = entries.filter(([, v]) => !v.ok).length;
   if (entries.length === 0) return null;
   return (
-    <div className="bg-card rounded-2xl border px-6 py-2">
+    <div className="surface bg-card rounded-2xl border px-6 py-2">
       <Disclosure
         title={t("report.dataSources")}
         meta={fallbacks ? t("report.sourcesMeta", { n: entries.length, fallbacks }) : String(entries.length)}
@@ -366,7 +366,7 @@ export function OverviewTab({ onOpenTab }: { onOpenTab?: (tab: string) => void }
       </div>
       <Checklist items={view.checklist} />
       {bullets.length > 0 && (
-        <div className="bg-card rounded-2xl border px-6 py-2">
+        <div className="surface bg-card rounded-2xl border px-6 py-2">
           <Disclosure title={t("report.aiSummary")}>
             <ul className="space-y-2 pb-3 text-sm leading-relaxed">
               {bullets.map((b) => (

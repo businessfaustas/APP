@@ -1,11 +1,14 @@
 /** What the car picture needs for a lot: a real photo if any, its silhouette, damaged areas and verdict tone. */
 import type { DamageAssessment, DamageZone, NormalizedListing, VehicleInfo } from "@/lib/domain/schemas";
+import { paintOf } from "@/lib/vehicle/art";
 
 export interface LotVisual {
   photo: string | null;
   body: "sedan" | "suv" | "pickup";
   zones: { zone: DamageZone; severity: number }[];
   tone: "go" | "caution" | "stop" | "neutral";
+  /** Paint colour (#rrggbb) from the listing's colour. */
+  paint: string;
 }
 
 const PICKUP = /pickup|truck|f-?150|f-?250|silverado|sierra|\bram\b|tacoma|tundra|ranger|frontier|colorado|titan|gladiator|cybertruck/;
@@ -27,7 +30,7 @@ export function toneOf(verdict: string | null | undefined): LotVisual["tone"] {
 }
 
 export function lotVisual(args: {
-  listing: Pick<NormalizedListing, "make" | "model"> | null;
+  listing: (Pick<NormalizedListing, "make" | "model"> & { color?: string | null }) | null;
   vehicle: Pick<VehicleInfo, "bodyClass" | "vehicleClass"> | null;
   damage: DamageAssessment | null;
   verdict: string | null | undefined;
@@ -40,6 +43,7 @@ export function lotVisual(args: {
     body: bodyOf(args.listing, args.vehicle),
     zones: [...zones].map(([zone, severity]) => ({ zone, severity })),
     tone: toneOf(args.verdict),
+    paint: paintOf(args.listing?.color),
   };
 }
 

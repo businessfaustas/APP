@@ -7,7 +7,7 @@ import { lotVisual, photoUrl } from "@/lib/analysis/visual";
 import { requireUser } from "@/lib/auth/session";
 import { features } from "@/lib/config/env";
 import { prisma } from "@/lib/db/prisma";
-import type { DamageAssessment, VehicleInfo } from "@/lib/domain/schemas";
+import type { DamageAssessment, NormalizedListing, VehicleInfo } from "@/lib/domain/schemas";
 import { rich } from "@/lib/i18n/rich";
 import { getT } from "@/lib/i18n/server";
 
@@ -24,7 +24,7 @@ export default async function WatchlistPage() {
   });
   const analyses = await prisma.analysis.findMany({
     where: { id: { in: rows.map((r) => r.analysisId).filter((x): x is string => Boolean(x)) } },
-    select: { id: true, verdict: true, maxBid: true, damage: true, vehicleInfo: true },
+    select: { id: true, verdict: true, maxBid: true, damage: true, vehicleInfo: true, listingSnapshot: true },
   });
   const byId = new Map(analyses.map((a) => [a.id, a]));
   const items: WatchItemView[] = rows
@@ -48,7 +48,7 @@ export default async function WatchlistPage() {
         remindAt: r.remindAt?.toISOString() ?? null,
         remindedAt: r.remindedAt?.toISOString() ?? null,
         visual: lotVisual({
-          listing: l,
+          listing: { make: l.make, model: l.model, color: (a?.listingSnapshot as NormalizedListing | null)?.color },
           vehicle: (a?.vehicleInfo as VehicleInfo | null) ?? null,
           damage: (a?.damage as DamageAssessment | null) ?? null,
           verdict: a?.verdict,

@@ -74,7 +74,8 @@ function NavLink({ item, active, label }: { item: NavItem; active: boolean; labe
       aria-current={active ? "page" : undefined}
       className={cn(
         "group text-muted-foreground hover:bg-accent/60 hover:text-foreground relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-        active && "bg-accent text-accent-foreground hover:bg-accent hover:text-accent-foreground",
+        active &&
+          "text-foreground hover:text-foreground bg-[linear-gradient(90deg,color-mix(in_oklab,var(--color-primary)_22%,transparent),color-mix(in_oklab,var(--color-primary)_6%,transparent))] shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--color-primary)_22%,transparent)] hover:bg-transparent",
       )}
     >
       <span
@@ -93,7 +94,11 @@ export function AppShell({ user, children }: { user: ShellUser; children: React.
   return (
     <div className="min-h-dvh md:grid md:grid-cols-[248px_1fr]">
       {/* Desktop sidebar */}
-      <aside className="bg-sidebar sticky top-0 hidden h-dvh flex-col border-r md:flex">
+      <aside className="bg-sidebar sticky top-0 isolate hidden h-dvh flex-col overflow-hidden border-r md:flex">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-56 bg-[radial-gradient(120%_100%_at_0%_0%,color-mix(in_oklab,var(--color-primary)_16%,transparent),transparent_70%)]"
+        />
         <div className="px-5 pt-5 pb-4">
           <Logo href="/app" />
         </div>
@@ -129,7 +134,7 @@ export function AppShell({ user, children }: { user: ShellUser; children: React.
           )}
         </nav>
         <div className="space-y-3 border-t p-4">
-          <Link href="/app/billing" className="bg-card hover:border-primary/40 flex items-center gap-3 rounded-xl border px-3 py-2.5 transition-colors">
+          <Link href="/app/billing" className="surface bg-card hover:border-primary/40 flex items-center gap-3 rounded-xl border px-3 py-2.5 transition-colors">
             <span className="bg-primary/12 text-primary grid size-8 place-items-center rounded-lg">
               <CoinsIcon className="size-4" />
             </span>

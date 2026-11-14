@@ -108,7 +108,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
   return (
     <PageContainer>
-      <section className="brand-glow bg-card relative overflow-hidden rounded-3xl border p-5 sm:p-8">
+      <section className="brand-glow top-line bg-card relative isolate overflow-hidden rounded-3xl border p-5 shadow-[var(--surface-highlight),var(--surface-shadow)] sm:p-8">
+        <div aria-hidden="true" className="grid-lines absolute inset-0 -z-10 [mask-image:radial-gradient(60%_90%_at_85%_50%,black,transparent)]" />
         <div className="grid items-center gap-6 lg:grid-cols-[1.25fr_1fr]">
           <div className="space-y-5">
             <div className="rise">

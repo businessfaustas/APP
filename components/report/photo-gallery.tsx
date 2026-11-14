@@ -1,12 +1,13 @@
 "use client";
 
-import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
+import { ChevronLeftIcon, ChevronRightIcon, Maximize2Icon } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import type { PhotoView } from "@/lib/analysis/view";
 import { useT } from "@/lib/i18n/client";
+import { trText } from "@/lib/i18n/generated";
 import { cn } from "@/lib/utils";
 
 export function PhotoGallery({ photos, findings, highlight }: { photos: PhotoView[]; findings: Map<number, string>; highlight: Set<number> | null }) {
@@ -16,25 +17,39 @@ export function PhotoGallery({ photos, findings, highlight }: { photos: PhotoVie
   const current = open !== null ? photos[open] : undefined;
   return (
     <>
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 2xl:grid-cols-4">
         {photos.map((p, i) => {
           const dim = highlight !== null && !highlight.has(p.position);
+          const finding = findings.get(p.position);
           return (
             <button
               key={p.id}
               type="button"
               onClick={() => setOpen(i)}
-              className={cn("group bg-muted relative overflow-hidden rounded-lg border text-left transition-opacity", dim && "opacity-35")}
+              className={cn(
+                "group bg-surface-2 hover:border-primary/50 focus-visible:ring-ring/50 overflow-hidden rounded-xl border text-left transition-[opacity,border-color] outline-none focus-visible:ring-[3px]",
+                dim && "opacity-35",
+              )}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={p.url}
-                alt={findings.get(p.position) ?? t("report.photoN", { n: p.position })}
-                loading="lazy"
-                className="aspect-[16/9] w-full object-cover transition-transform group-hover:scale-[1.02]"
-              />
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent px-2 pt-6 pb-1.5 text-[11px] text-white">
-                <span className="font-semibold">{p.position}</span> {findings.get(p.position) ?? ""}
+              <div className="relative overflow-hidden">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={p.url}
+                  alt={finding ? trText(t, finding) : t("report.photoN", { n: p.position })}
+                  loading="lazy"
+                  className="aspect-[16/9] w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                />
+                <span className="num absolute top-2 left-2 grid size-6 place-items-center rounded-md bg-black/60 text-[11px] font-semibold text-white backdrop-blur">
+                  {p.position}
+                </span>
+                <span className="absolute right-2 bottom-2 grid size-7 place-items-center rounded-md bg-black/60 text-white opacity-0 backdrop-blur transition-opacity group-hover:opacity-100">
+                  <Maximize2Icon className="size-3.5" aria-hidden="true" />
+                </span>
+              </div>
+              <div className="px-3 py-2.5">
+                <p className="text-muted-foreground line-clamp-2 min-h-[2.1rem] text-xs leading-[1.05rem]">
+                  {finding ? trText(t, finding) : t("report.noFindings")}
+                </p>
               </div>
             </button>
           );
@@ -45,11 +60,11 @@ export function PhotoGallery({ photos, findings, highlight }: { photos: PhotoVie
           {current && (
             <div className="space-y-3">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={current.url} alt={findings.get(current.position) ?? ""} className="max-h-[70dvh] w-full rounded-md object-contain" />
+              <img src={current.url} alt={findings.get(current.position) ?? ""} className="max-h-[70dvh] w-full rounded-xl object-contain" />
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <DialogTitle className="text-base">{t("report.photoN", { n: current.position })}</DialogTitle>
-                  <DialogDescription>{findings.get(current.position) ?? t("report.noFindings")}</DialogDescription>
+                  <DialogDescription>{findings.get(current.position) ? trText(t, findings.get(current.position)!) : t("report.noFindings")}</DialogDescription>
                 </div>
                 <div className="flex shrink-0 gap-1">
                   <Button

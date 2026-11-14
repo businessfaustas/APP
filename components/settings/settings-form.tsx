@@ -318,10 +318,13 @@ export function SettingsForm({
         </CardContent>
       </Card>
 
-      <div className="sticky bottom-20 z-10 flex justify-end md:bottom-4">
-        <Button size="lg" onClick={() => void save()} disabled={busy} className="shadow-lg">
-          {busy && <Loader2Icon className="animate-spin" />} {t("settings.save")}
-        </Button>
+      <div className="sticky bottom-20 z-10 md:bottom-4">
+        <div className="bg-card/85 flex items-center justify-between gap-4 rounded-2xl border px-4 py-3 shadow-xl backdrop-blur-xl sm:px-5">
+          <p className="text-muted-foreground text-sm">{t("settings.saveHint")}</p>
+          <Button onClick={() => void save()} disabled={busy} className="shrink-0">
+            {busy && <Loader2Icon className="animate-spin" />} {t("settings.save")}
+          </Button>
+        </div>
       </div>
 
       <Card id="extension">

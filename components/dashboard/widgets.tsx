@@ -52,14 +52,14 @@ export function KpiTile({
           {icon}
         </span>
       </div>
-      <div className="mt-3 text-3xl font-semibold tracking-tight">{value === null ? "—" : <CountTo value={value} from={0} format={FORMAT[format]} />}</div>
+      <div className="display mt-3 text-3xl">{value === null ? "—" : <CountTo value={value} from={0} format={FORMAT[format]} />}</div>
       {sub && <div className="text-muted-foreground mt-1 text-xs">{sub}</div>}
     </>
   );
-  const cls = "rise bg-card block rounded-2xl border p-5";
+  const cls = "rise surface bg-card block rounded-2xl border p-5";
   const style = { ["--i" as string]: index } as React.CSSProperties;
   return href ? (
-    <Link href={href} className={cn(cls, "hover:border-primary/40 transition-colors")} style={style}>
+    <Link href={href} className={cn(cls, "surface-link")} style={style}>
       {body}
     </Link>
   ) : (
@@ -125,7 +125,7 @@ export function LotCard({ lot, index = 0 }: { lot: LotCardData; index?: number }
   return (
     <Link
       href={`/app/analyses/${lot.id}`}
-      className="rise group bg-card hover:border-primary/40 block overflow-hidden rounded-2xl border transition-[border-color,box-shadow] hover:shadow-lg"
+      className="rise group surface surface-link bg-card block overflow-hidden rounded-2xl border"
       style={{ ["--i" as string]: index }}
       data-testid="lot-card"
     >

@@ -213,6 +213,7 @@ export const app: Pick<
     title: "Nustatymai",
     body: "Numatytosios reikšmės kiekvienai naujai ataskaitai. Bet kurią jų vis tiek galite pakeisti konkrečioje ataskaitoje „O jeigu?“ skydelyje.",
     saved: "Nustatymai išsaugoti — naujos ataskaitos juos naudos",
+    saveHint: "Numatytieji nustatymai taikomi kiekvienai naujai ataskaitai.",
     couldNotSave: "Išsaugoti nepavyko",
     tokenRevoked: "Raktas atšauktas",
     confirmDelete: "Visam laikui ištrinti paskyrą ir visas ataskaitas? Šio veiksmo atšaukti negalima.",

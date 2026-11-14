@@ -246,9 +246,7 @@ export function KpiCard({
             <Icon className="size-4" aria-hidden="true" />
           </span>
         </div>
-        <div className={cn("text-2xl font-semibold tracking-tight", tone === "stop" && "text-stop")}>
-          {value === null ? "—" : <CountTo value={value} format={format} />}
-        </div>
+        <div className={cn("display text-2xl", tone === "stop" && "text-stop")}>{value === null ? "—" : <CountTo value={value} format={format} />}</div>
         {sub && <div className="text-muted-foreground text-xs leading-snug">{sub}</div>}
       </CardContent>
     </Card>
@@ -264,9 +262,12 @@ export function DealSummary({ calc, currentBid }: { calc: CalculationResult; cur
   return (
     <div className="space-y-4">
       <Card
-        className="rise overflow-hidden"
+        className="rise top-line overflow-hidden"
         data-testid="deal-card"
-        style={{ backgroundImage: `radial-gradient(110% 120% at 0% 0%, color-mix(in oklab, ${TONE_VAR[tone]} 14%, transparent), transparent 60%)` }}
+        style={{
+          ["--line" as string]: TONE_VAR[tone],
+          backgroundImage: `radial-gradient(110% 120% at 0% 0%, color-mix(in oklab, ${TONE_VAR[tone]} 16%, transparent), transparent 60%)`,
+        }}
       >
         <CardContent className="space-y-6">
           <div className="flex items-start justify-between gap-5">
@@ -275,7 +276,7 @@ export function DealSummary({ calc, currentBid }: { calc: CalculationResult; cur
               {calc.maxBid !== null ? (
                 <div>
                   <div className="eyebrow">{t("report.doNotBidAbove")}</div>
-                  <div className="mt-1 text-5xl font-semibold tracking-tight sm:text-6xl" data-testid="max-bid">
+                  <div className="display mt-1 text-5xl sm:text-6xl" data-testid="max-bid">
                     <CountTo value={calc.maxBid} format={formatUsd} />
                   </div>
                   <div className="text-muted-foreground mt-2.5 flex flex-wrap items-center gap-2 text-sm">

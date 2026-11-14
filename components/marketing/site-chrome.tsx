@@ -15,8 +15,8 @@ export async function SiteHeader() {
     { href: "/#faq", label: t("site.faq") },
   ];
   return (
-    <header className="bg-background/85 supports-[backdrop-filter]:bg-background/70 sticky top-0 z-40 border-b backdrop-blur">
-      <div className="mx-auto flex h-14 max-w-6xl items-center gap-4 px-4">
+    <header className="bg-background/80 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40 border-b backdrop-blur-xl">
+      <div className="mx-auto flex h-16 max-w-6xl items-center gap-2 px-4 sm:gap-4">
         <Logo />
         <nav aria-label={t("nav.main")} className="ml-4 hidden items-center gap-1 md:flex">
           {nav.map((n) => (
@@ -31,7 +31,9 @@ export async function SiteHeader() {
         </nav>
         <div className="ml-auto flex items-center gap-1.5">
           <LanguageSwitcher />
-          <ThemeToggle />
+          <span className="hidden sm:inline-flex">
+            <ThemeToggle />
+          </span>
           <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
             <Link href="/login">{t("common.signIn")}</Link>
           </Button>

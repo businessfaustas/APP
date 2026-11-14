@@ -207,6 +207,7 @@ export const app = {
     title: "Settings",
     body: "Your defaults for every new report. You can still change any of them per report with the What-if panel.",
     saved: "Settings saved — new reports will use them",
+    saveHint: "Your defaults apply to every new report.",
     couldNotSave: "Couldn't save",
     tokenRevoked: "Token revoked",
     confirmDelete: "Delete your account and all reports permanently? This can't be undone.",
