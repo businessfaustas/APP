@@ -11,6 +11,7 @@ import { trPart, trText } from "@/lib/i18n/generated";
 import { cn } from "@/lib/utils";
 
 import { DamageZoneMap, zoneSeverities } from "./damage-zone-map";
+import { LineCost } from "./line-cost";
 import { PhotoGallery } from "./photo-gallery";
 import { useReport } from "./report-context";
 
@@ -46,15 +47,21 @@ export function DamageTab() {
             <CardTitle className="text-base">{t("report.photoCoverage")}</CardTitle>
           </CardHeader>
           <CardContent>
-            <ul className="grid grid-cols-2 gap-1.5 text-sm">
-              {ANGLES.map((a) => (
-                <li key={a} className="flex items-center gap-1.5">
-                  {present.has(a) ? <CheckIcon className="text-go size-3.5" /> : <XIcon className="text-stop size-3.5" />}
-                  <span className={cn(!present.has(a) && "text-muted-foreground")}>{t(`report.angle.${a}`)}</span>
-                </li>
-              ))}
-            </ul>
-            <p className="text-muted-foreground mt-2 text-xs">{t("report.imageQuality", { q: t(`report.quality.${d.photo_coverage.image_quality}`) })}</p>
+            {view.damageFromPhotos ? (
+              <ul className="grid grid-cols-2 gap-1.5 text-sm">
+                {ANGLES.map((a) => (
+                  <li key={a} className="flex items-center gap-1.5">
+                    {present.has(a) ? <CheckIcon className="text-go size-3.5" /> : <XIcon className="text-stop size-3.5" />}
+                    <span className={cn(!present.has(a) && "text-muted-foreground")}>{t(`report.angle.${a}`)}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-muted-foreground text-sm">{t("report.coverageUnavailable")}</p>
+            )}
+            {view.damageFromPhotos && (
+              <p className="text-muted-foreground mt-2 text-xs">{t("report.imageQuality", { q: t(`report.quality.${d.photo_coverage.image_quality}`) })}</p>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -94,7 +101,7 @@ export function DamageTab() {
             )}
           </CardHeader>
           <CardContent>
-            <PhotoGallery photos={view.photos} findings={findings} highlight={highlight} />
+            <PhotoGallery photos={view.photos} findings={findings} highlight={highlight} analyzed={view.damageFromPhotos} />
             {view.photos.some((p) => p.url.startsWith("/demo-photos/")) && <p className="text-muted-foreground mt-2 text-xs">{t("report.demoPhotos")}</p>}
           </CardContent>
         </Card>
@@ -113,7 +120,8 @@ export function DamageTab() {
                       {l.reason ? ` · ${trText(t, l.reason)}` : ""}
                     </div>
                   </div>
-                  <div className="shrink-0 text-right">
+                  <div className="flex shrink-0 flex-col items-end gap-1.5 text-right">
+                    <LineCost line={l} className="text-sm" />
                     {l.origin === "VISIBLE" ? (
                       <Badge variant="outline">
                         {t("report.visible")}

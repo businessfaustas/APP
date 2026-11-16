@@ -201,6 +201,15 @@ model Listing {
   @@index([vin])
 }
 
+/// Private file storage inside Postgres, used for photos when Supabase Storage isn't connected.
+/// (On serverless hosts there is no shared disk, so files can't live on the server.)
+model StoredObject {
+  path        String   @id
+  bytes       Bytes
+  contentType String   @default("image/jpeg")
+  createdAt   DateTime @default(now())
+}
+
 model ListingPhoto {
   id          String  @id @default(cuid())
   listingId   String

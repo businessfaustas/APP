@@ -26,6 +26,18 @@ test("the Audi overview charts the reference numbers and links to the damage tab
   await expect(page.getByRole("tab", { name: "Damage" })).toHaveAttribute("aria-selected", "true");
 });
 
+test("every repair line shows what it costs, and the Damage tab lists the same part costs", async ({ page }) => {
+  await analyze(page, LOTS.audi);
+  await page.getByRole("tab", { name: "Repair" }).click();
+  const table = page.getByTestId("repair-table");
+  await expect(table.getByRole("columnheader", { name: "Line cost" })).toBeVisible();
+  const first = table.getByRole("row").nth(1);
+  await expect(first).toContainText("Front bumper cover");
+  await expect(first).toContainText(/\$[\d,]+/);
+  await page.getByRole("tab", { name: "Damage" }).click();
+  await expect(page.getByRole("listitem").filter({ hasText: "Front bumper cover" }).first()).toContainText(/\$[\d,]+/);
+});
+
 test("the dashboard shows the lot as a picture card", async ({ page }) => {
   await analyze(page, LOTS.audi);
   await open(page, "/app");

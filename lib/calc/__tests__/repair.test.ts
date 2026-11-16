@@ -173,3 +173,43 @@ describe("line rules", () => {
     expect(aggregateRepair(audi.repair.lineItems, "expected", { ...prefs, contingencyOverrideBps: 2000 }, 1500).contingencyBps).toBe(2000);
   });
 });
+
+describe("lineCost", () => {
+  it("adds up to the engine's repair subtotal, for every demo lot", async () => {
+    const { DEMO_FIXTURES } = await import("@/lib/demo/fixtures");
+    const { DEFAULT_SETTINGS } = await import("../build");
+    const { computeRepair } = await import("../calculator");
+    const { aggregateRepair, lineCost } = await import("../repair");
+    const rates = {
+      partsSourcePreference: DEFAULT_SETTINGS.partsSourcePreference,
+      partsDiscountBps: DEFAULT_SETTINGS.partsDiscountBps,
+      laborRate: DEFAULT_SETTINGS.laborRate,
+      paintMaterialsPerHour: DEFAULT_SETTINGS.paintMaterialsPerHour,
+    };
+    for (const fx of DEMO_FIXTURES) {
+      for (const scenario of ["best", "expected", "worst"] as const) {
+        const items = fx.repair.lineItems;
+        const total = computeRepair(
+          aggregateRepair(items, scenario, { partsSourcePreference: rates.partsSourcePreference, contingencyOverrideBps: null }, fx.repair.baseContingencyBps),
+          rates,
+        );
+        const engine = total.breakdown.parts + total.breakdown.labor + total.breakdown.paintMaterials + total.breakdown.sublets;
+        const perLine = items.reduce((a, l) => a + lineCost(l, scenario, rates), 0);
+        // Each line rounds its own dollars, so the sum can differ from the engine's by a dollar or so per line.
+        expect(Math.abs(perLine - engine)).toBeLessThanOrEqual(items.length);
+      }
+    }
+  });
+
+  it("is zero for a hidden-damage line that doesn't count in that scenario, and ignores unchecked lines", async () => {
+    const { DEMO_FIXTURES } = await import("@/lib/demo/fixtures");
+    const { lineCost } = await import("../repair");
+    const rates = { partsSourcePreference: "AFTERMARKET" as const, partsDiscountBps: 0, laborRate: 70, paintMaterialsPerHour: 40 };
+    const items = DEMO_FIXTURES[0]!.repair.lineItems;
+    const hidden = items.find((l) => l.origin === "HIDDEN_LIKELY" && l.probability < 0.5 && l.probability >= 0.2)!;
+    expect(lineCost(hidden, "best", rates)).toBe(0);
+    expect(lineCost(hidden, "expected", rates)).toBe(0);
+    expect(lineCost(hidden, "worst", rates)).toBeGreaterThan(0);
+    expect(lineCost({ ...items[0]!, included: false }, "expected", rates)).toBe(0);
+  });
+});

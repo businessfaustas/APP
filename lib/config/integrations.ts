@@ -70,7 +70,8 @@ export function integrations(): Integration[] {
       priority: "recommended",
       enabled: features.supabaseStorage(),
       unlocks: "Keeps auction and uploaded photos permanently.",
-      without: "Photos are saved to the server's disk, which is wiped on every Vercel deploy.",
+      without:
+        "Photos are kept in your Postgres database instead. That works everywhere but uses database space, so move them to Supabase Storage once you have regular users.",
       vars: [
         { name: "SUPABASE_SERVICE_ROLE_KEY", set: isSet(e.SUPABASE_SERVICE_ROLE_KEY) },
         { name: "SUPABASE_PHOTOS_BUCKET", set: isSet(process.env.SUPABASE_PHOTOS_BUCKET), optional: true },

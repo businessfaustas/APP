@@ -17,6 +17,7 @@ import { trPart, trText } from "@/lib/i18n/generated";
 import type { Translator } from "@/lib/i18n/translate";
 import { cn, formatBps, formatUsd } from "@/lib/utils";
 
+import { LineCost } from "./line-cost";
 import { useReport } from "./report-context";
 
 function CellNumber({
@@ -165,7 +166,7 @@ export function RepairTab() {
                 <TableHead className="text-right">{t("report.bodyH")}</TableHead>
                 <TableHead className="text-right">{t("report.paintH")}</TableHead>
                 <TableHead className="text-right">{t("report.mechH")}</TableHead>
-                <TableHead className="text-right">{t("report.conf")}</TableHead>
+                <TableHead className="text-right">{t("report.lineCost")}</TableHead>
                 <TableHead className="w-8" />
               </TableRow>
             </TableHeader>
@@ -189,7 +190,8 @@ export function RepairTab() {
                       <div className="text-sm font-medium">{name}</div>
                       <div className="text-muted-foreground mt-0.5 flex flex-wrap items-center gap-1 text-[11px]">
                         <span>
-                          {t(`report.zone.${l.zone}`)} · {l.kind === "SUBLET" ? t("report.sublet") : t(`report.action.${l.action}`)}
+                          {t(`report.zone.${l.zone}`)} · {l.kind === "SUBLET" ? t("report.sublet") : t(`report.action.${l.action}`)} ·{" "}
+                          {t("report.confidence", { pct: Math.round(l.confidence * 100) })}
                         </span>
                         {l.origin === "HIDDEN_LIKELY" && <Badge variant="caution">{t("report.likely", { pct: Math.round(l.probability * 100), note })}</Badge>}
                         {l.origin === "RULE" && (
@@ -255,7 +257,9 @@ export function RepairTab() {
                         onCommit={(v) => updateLine(l.id, { mechHours: { low: v, mid: v, high: v } })}
                       />
                     </TableCell>
-                    <TableCell className="num text-muted-foreground text-right text-xs">{Math.round(l.confidence * 100)}%</TableCell>
+                    <TableCell className="text-right text-sm whitespace-nowrap">
+                      <LineCost line={l} />
+                    </TableCell>
                     <TableCell>
                       {l.priceOrigin === "USER" && !ro && (
                         <Button size="icon" variant="ghost" className="size-7" aria-label={t("report.remove", { name })} onClick={() => removeLine(l.id)}>
@@ -268,6 +272,9 @@ export function RepairTab() {
               })}
             </TableBody>
           </Table>
+          <p className="text-muted-foreground text-xs">
+            {t("report.lineCostNote", { cont: formatBps(assumptions.contingencyOverrideBps ?? view.repair?.baseContingencyBps ?? 0, 0) })}
+          </p>
           <AddLine />
         </CardContent>
       </Card>

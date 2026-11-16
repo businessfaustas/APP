@@ -95,7 +95,12 @@ export function integrationStatus(): { key: string; label: string; enabled: bool
   return [
     { key: "demo", label: "Demo mode", enabled: features.demoMode(), note: "Sample lots and fixture data" },
     { key: "auth", label: "Supabase Auth", enabled: features.supabaseAuth(), note: "Email magic link + Google sign-in" },
-    { key: "storage", label: "Supabase Storage", enabled: features.supabaseStorage(), note: "Otherwise photos are stored on local disk" },
+    {
+      key: "storage",
+      label: "Supabase Storage",
+      enabled: features.supabaseStorage(),
+      note: "Otherwise photos are stored in the database (or on local disk when self-hosting)",
+    },
     { key: "ai", label: `AI (${env().AI_PROVIDER})`, enabled: features.ai(), note: "Vision damage audit, text extraction, narrative" },
     { key: "scraping", label: "Listing fetcher", enabled: features.scraping(), note: "ScrapingBee or Apify — paste-text works without it" },
     { key: "history", label: "VinAudit history", enabled: features.history(), note: "NMVTIS title & odometer history" },

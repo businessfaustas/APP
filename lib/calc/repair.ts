@@ -1,5 +1,6 @@
 import type { PartSource, PriceRange, RepairLineItem } from "@/lib/domain/schemas";
 
+import { applyBps, hoursCost } from "./money";
 import type { RepairAggregationSettings, RepairInputs, ScenarioKey } from "./types";
 
 /** Hidden-damage probability needed for a line to count in each scenario. */
@@ -108,4 +109,27 @@ export function aggregateRepair(
     subletCost,
     contingencyBps: scenarioContingencyBps(base, scenario),
   };
+}
+
+/** The rates a single line is costed with (the same ones computeRepair uses for the total). */
+export interface LineCostSettings {
+  partsSourcePreference: PartSource;
+  partsDiscountBps: number;
+  laborRate: number;
+  paintMaterialsPerHour: number;
+}
+
+/**
+ * What one line costs in one scenario, in whole dollars, before contingency: the part (after the
+ * parts discount; sublets are not discounted), all labor hours at the labor rate, and paint
+ * materials per paint hour. Zero when the line doesn't count in that scenario.
+ */
+export function lineCost(item: RepairLineItem, scenario: ScenarioKey, s: LineCostSettings): number {
+  if (!lineIncludedInScenario(item, scenario)) return 0;
+  const price = linePrice(item, scenario, s.partsSourcePreference);
+  const part = item.kind === "SUBLET" ? price : price - applyBps(price, s.partsDiscountBps);
+  const body = pickHours(item.bodyHours, scenario);
+  const paint = pickHours(item.paintHours, scenario);
+  const mech = pickHours(item.mechHours, scenario);
+  return part + hoursCost(body + paint + mech, s.laborRate) + hoursCost(paint, s.paintMaterialsPerHour);
 }

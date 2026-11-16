@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createHash, randomUUID } from "node:crypto";
-import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
@@ -14,12 +14,24 @@ import { assertPublicUrl, fetchWithTimeout } from "@/lib/providers/http";
 
 const MAX_BYTES = 15 * 1024 * 1024;
 const MAX_EDGE = 1568;
-// Without Supabase Storage photos go to local disk; on Vercel only the temp directory is writable.
+// Local disk is only used when running on a single machine (dev, self-hosting).
 const LOCAL_ROOT = process.env.VERCEL ? path.join(os.tmpdir(), "auctionpulse-photos") : path.join(process.cwd(), ".data", "photos");
+
+/**
+ * Where files live. Supabase Storage when connected (durable, scales). Otherwise Postgres on
+ * serverless hosts, where every request can land on a different machine with its own empty
+ * disk, or local disk on a single machine. PHOTO_STORAGE=db|disk overrides the choice.
+ */
+export function storageBackend(): "supabase" | "db" | "disk" {
+  if (features.supabaseStorage()) return "supabase";
+  const forced = process.env.PHOTO_STORAGE;
+  if (forced === "db" || forced === "disk") return forced;
+  return process.env.VERCEL ? "db" : "disk";
+}
 
 let supabase: SupabaseClient | null = null;
 function storageClient(): SupabaseClient | null {
-  if (!features.supabaseStorage()) return null;
+  if (storageBackend() !== "supabase") return null;
   if (!supabase) supabase = createClient(env().NEXT_PUBLIC_SUPABASE_URL!, env().SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
   return supabase;
 }
@@ -37,6 +49,15 @@ export async function putObject(storagePath: string, bytes: Uint8Array, contentT
     if (error) throw new Error(`Storage upload failed: ${error.message}`);
     return;
   }
+  if (storageBackend() === "db") {
+    const data = new Uint8Array(bytes);
+    await prisma.storedObject.upsert({
+      where: { path: storagePath },
+      create: { path: storagePath, bytes: data, contentType },
+      update: { bytes: data, contentType },
+    });
+    return;
+  }
   const full = safeLocalPath(storagePath);
   await mkdir(path.dirname(full), { recursive: true });
   await writeFile(full, bytes);
@@ -49,10 +70,27 @@ export async function getObject(storagePath: string): Promise<Uint8Array | null>
     if (error || !data) return null;
     return new Uint8Array(await data.arrayBuffer());
   }
+  if (storageBackend() === "db") {
+    const row = await prisma.storedObject.findUnique({ where: { path: storagePath }, select: { bytes: true } });
+    return row ? new Uint8Array(row.bytes) : null;
+  }
   try {
     return new Uint8Array(await readFile(safeLocalPath(storagePath)));
   } catch {
     return null;
+  }
+}
+
+/** Whether the file is still there. Always true for Supabase (durable); checked for db and disk. */
+export async function hasObject(storagePath: string): Promise<boolean> {
+  const backend = storageBackend();
+  if (backend === "supabase") return true;
+  if (backend === "db") return (await prisma.storedObject.count({ where: { path: storagePath } })) > 0;
+  try {
+    await stat(safeLocalPath(storagePath));
+    return true;
+  } catch {
+    return false;
   }
 }
 
@@ -62,6 +100,10 @@ export async function removePrefix(prefix: string): Promise<void> {
     const bucket = sb.storage.from(env().SUPABASE_PHOTOS_BUCKET);
     const { data } = await bucket.list(prefix, { limit: 1000 });
     if (data?.length) await bucket.remove(data.map((f) => `${prefix}/${f.name}`));
+    return;
+  }
+  if (storageBackend() === "db") {
+    await prisma.storedObject.deleteMany({ where: { path: { startsWith: `${prefix}/` } } });
     return;
   }
   await rm(safeLocalPath(prefix), { recursive: true, force: true });
@@ -107,12 +149,41 @@ export async function storeUpload(userId: string, bytes: Uint8Array): Promise<st
 }
 
 /**
+ * A listing's photo rows can outlive their files (stored on a disk that was wiped, or by an
+ * earlier version). Re-downloads whichever files are missing so the report shows every photo.
+ */
+async function healPhotos(rows: { id: string; originalUrl: string | null; storagePath: string | null }[]): Promise<{ stored: number; failed: number }> {
+  let stored = 0;
+  let failed = 0;
+  for (const row of rows) {
+    if (!row.storagePath || (await hasObject(row.storagePath))) {
+      stored++;
+      continue;
+    }
+    if (!row.originalUrl || row.originalUrl.startsWith("/demo-photos/")) {
+      failed++;
+      continue;
+    }
+    try {
+      const norm = await normalizeImage(await downloadImage(row.originalUrl));
+      await putObject(row.storagePath, norm.bytes, "image/jpeg");
+      await prisma.listingPhoto.update({ where: { id: row.id }, data: { width: norm.width, height: norm.height, sha256: norm.sha256 } });
+      stored++;
+    } catch (err) {
+      failed++;
+      console.error("Photo re-download failed", err);
+    }
+  }
+  return { stored, failed };
+}
+
+/**
  * Downloads (or links) a listing's photos into ListingPhoto rows. Demo photos and uploads
  * are referenced in place; remote photos are resized and stored privately.
  */
 export async function storeListingPhotos(listingId: string, urls: string[], max: number): Promise<{ stored: number; failed: number }> {
-  const existing = await prisma.listingPhoto.count({ where: { listingId } });
-  if (existing > 0) return { stored: existing, failed: 0 };
+  const existing = await prisma.listingPhoto.findMany({ where: { listingId }, orderBy: { position: "asc" } });
+  if (existing.length > 0) return healPhotos(existing);
   let stored = 0;
   let failed = 0;
   const selected = urls.slice(0, max);

@@ -10,7 +10,18 @@ import { useT } from "@/lib/i18n/client";
 import { trText } from "@/lib/i18n/generated";
 import { cn } from "@/lib/utils";
 
-export function PhotoGallery({ photos, findings, highlight }: { photos: PhotoView[]; findings: Map<number, string>; highlight: Set<number> | null }) {
+export function PhotoGallery({
+  photos,
+  findings,
+  highlight,
+  analyzed = true,
+}: {
+  photos: PhotoView[];
+  findings: Map<number, string>;
+  highlight: Set<number> | null;
+  /** False when AI never looked at the photos (no key, or the photo analysis failed). */
+  analyzed?: boolean;
+}) {
   const [open, setOpen] = useState<number | null>(null);
   const t = useT();
   if (photos.length === 0) return <p className="text-muted-foreground text-sm">{t("report.noPhotos")}</p>;
@@ -48,7 +59,7 @@ export function PhotoGallery({ photos, findings, highlight }: { photos: PhotoVie
               </div>
               <div className="px-3 py-2.5">
                 <p className="text-muted-foreground line-clamp-2 min-h-[2.1rem] text-xs leading-[1.05rem]">
-                  {finding ? trText(t, finding) : t("report.noFindings")}
+                  {finding ? trText(t, finding) : analyzed ? t("report.noFindings") : t("report.photoNotAnalyzed")}
                 </p>
               </div>
             </button>
@@ -64,7 +75,13 @@ export function PhotoGallery({ photos, findings, highlight }: { photos: PhotoVie
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <DialogTitle className="text-base">{t("report.photoN", { n: current.position })}</DialogTitle>
-                  <DialogDescription>{findings.get(current.position) ? trText(t, findings.get(current.position)!) : t("report.noFindings")}</DialogDescription>
+                  <DialogDescription>
+                    {findings.get(current.position)
+                      ? trText(t, findings.get(current.position)!)
+                      : analyzed
+                        ? t("report.noFindings")
+                        : t("report.photoNotAnalyzed")}
+                  </DialogDescription>
                 </div>
                 <div className="flex shrink-0 gap-1">
                   <Button
