@@ -39,9 +39,24 @@ vi.mock("@/lib/db/prisma", () => ({
   },
 }));
 
+const config = { SCRAPINGBEE_API_KEY: undefined as string | undefined, SCRAPER_MAX_PAID_PHOTOS: 10 };
+vi.mock("@/lib/config/env", () => ({
+  env: () => ({ ...config, SUPABASE_PHOTOS_BUCKET: "listing-photos" }),
+  features: { supabaseStorage: () => false },
+}));
+
+const requested: string[] = [];
+let directStatus = 200;
+
 vi.mock("@/lib/providers/http", () => ({
   assertPublicUrl: async (u: string) => new URL(u),
-  fetchWithTimeout: async () => new Response(new Uint8Array(await jpeg()), { headers: { "content-type": "image/jpeg" } }),
+  fetchWithTimeout: async (url: string) => {
+    requested.push(url);
+    const viaScraper = url.startsWith("https://app.scrapingbee.com/");
+    return viaScraper || directStatus === 200
+      ? new Response(new Uint8Array(await jpeg()), { headers: { "content-type": "image/jpeg" } })
+      : new Response("blocked", { status: directStatus });
+  },
 }));
 
 async function jpeg(): Promise<Buffer> {
@@ -56,6 +71,10 @@ describe("photo storage without Supabase", () => {
   beforeEach(() => {
     objects.clear();
     photos.length = 0;
+    requested.length = 0;
+    directStatus = 200;
+    config.SCRAPINGBEE_API_KEY = undefined;
+    config.SCRAPER_MAX_PAID_PHOTOS = 10;
     vi.stubEnv("PHOTO_STORAGE", "db");
   });
   afterEach(() => vi.unstubAllEnvs());
@@ -95,5 +114,32 @@ describe("photo storage without Supabase", () => {
     photos.push({ id: "d1", listingId: "L2", position: 1, originalUrl: "/demo-photos/audi-a3/1", storagePath: null });
     photos.push({ id: "u1", listingId: "L2", position: 2, originalUrl: null, storagePath: "uploads/x/gone.jpg" });
     expect(await storeListingPhotos("L2", [], 24)).toEqual({ stored: 1, failed: 1 });
+  });
+
+  it("downloads directly for free, never touching the paid reader", async () => {
+    config.SCRAPINGBEE_API_KEY = "key";
+    const urls = Array.from({ length: 24 }, (_, i) => `https://cdn.example/${i}.jpg`);
+    expect(await storeListingPhotos("L3", urls, 24)).toEqual({ stored: 24, failed: 0 });
+    expect(requested.some((u) => u.includes("scrapingbee"))).toBe(false);
+  });
+
+  it("when the photo host blocks direct downloads, pays for at most the budget and skips the rest", async () => {
+    config.SCRAPINGBEE_API_KEY = "key";
+    config.SCRAPER_MAX_PAID_PHOTOS = 3;
+    directStatus = 403;
+    const urls = Array.from({ length: 8 }, (_, i) => `https://cdn.example/${i}.jpg`);
+    expect(await storeListingPhotos("L4", urls, 24)).toEqual({ stored: 3, failed: 5 });
+    expect(requested.filter((u) => u.includes("scrapingbee"))).toHaveLength(3);
+    expect(photos.filter((p) => p.listingId === "L4")).toHaveLength(3);
+  });
+
+  it("never pays when the budget is 0 or no scraper key is set", async () => {
+    directStatus = 403;
+    const urls = ["https://cdn.example/a.jpg", "https://cdn.example/b.jpg"];
+    expect(await storeListingPhotos("L5", urls, 24)).toEqual({ stored: 0, failed: 2 });
+    config.SCRAPINGBEE_API_KEY = "key";
+    config.SCRAPER_MAX_PAID_PHOTOS = 0;
+    expect(await storeListingPhotos("L6", urls, 24)).toEqual({ stored: 0, failed: 2 });
+    expect(requested.some((u) => u.includes("scrapingbee"))).toBe(false);
   });
 });

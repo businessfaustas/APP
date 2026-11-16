@@ -116,13 +116,27 @@ export async function normalizeImage(input: Uint8Array): Promise<{ bytes: Uint8A
   return { bytes: new Uint8Array(data), width: info.width, height: info.height, sha256: createHash("sha256").update(data).digest("hex") };
 }
 
-async function downloadImage(url: string): Promise<Uint8Array> {
+/** Paid page-reader downloads still allowed for the current lot. */
+interface PaidBudget {
+  left: number;
+}
+
+function newPaidBudget(): PaidBudget {
+  return { left: env().SCRAPINGBEE_API_KEY ? env().SCRAPER_MAX_PAID_PHOTOS : 0 };
+}
+
+/**
+ * Downloads one photo directly (free). If the photo host refuses, falls back to the paid page
+ * reader (1 credit) while the lot's budget lasts; after that the photo is skipped.
+ */
+async function downloadImage(url: string, budget: PaidBudget): Promise<Uint8Array> {
   const target = await assertPublicUrl(url);
   let res = await fetchWithTimeout(target.toString(), {
     timeoutMs: 20000,
     headers: { "user-agent": "Mozilla/5.0 (compatible; AuctionPulseBot/1.0)", accept: "image/*" },
   });
-  if (!res.ok && env().SCRAPINGBEE_API_KEY) {
+  if (!res.ok && env().SCRAPINGBEE_API_KEY && budget.left > 0) {
+    budget.left--;
     const api = new URL("https://app.scrapingbee.com/api/v1/");
     api.searchParams.set("api_key", env().SCRAPINGBEE_API_KEY!);
     api.searchParams.set("url", target.toString());
@@ -155,6 +169,7 @@ export async function storeUpload(userId: string, bytes: Uint8Array): Promise<st
 async function healPhotos(rows: { id: string; originalUrl: string | null; storagePath: string | null }[]): Promise<{ stored: number; failed: number }> {
   let stored = 0;
   let failed = 0;
+  const budget = newPaidBudget();
   for (const row of rows) {
     if (!row.storagePath || (await hasObject(row.storagePath))) {
       stored++;
@@ -165,7 +180,7 @@ async function healPhotos(rows: { id: string; originalUrl: string | null; storag
       continue;
     }
     try {
-      const norm = await normalizeImage(await downloadImage(row.originalUrl));
+      const norm = await normalizeImage(await downloadImage(row.originalUrl, budget));
       await putObject(row.storagePath, norm.bytes, "image/jpeg");
       await prisma.listingPhoto.update({ where: { id: row.id }, data: { width: norm.width, height: norm.height, sha256: norm.sha256 } });
       stored++;
@@ -186,6 +201,7 @@ export async function storeListingPhotos(listingId: string, urls: string[], max:
   if (existing.length > 0) return healPhotos(existing);
   let stored = 0;
   let failed = 0;
+  const budget = newPaidBudget();
   const selected = urls.slice(0, max);
   for (let i = 0; i < selected.length; i++) {
     const url = selected[i]!;
@@ -196,7 +212,7 @@ export async function storeListingPhotos(listingId: string, urls: string[], max:
       } else if (url.startsWith(UPLOAD_PREFIX)) {
         await prisma.listingPhoto.create({ data: { listingId, position, originalUrl: null, storagePath: url.slice(UPLOAD_PREFIX.length) } });
       } else {
-        const raw = await downloadImage(url);
+        const raw = await downloadImage(url, budget);
         const norm = await normalizeImage(raw);
         const storagePath = `listings/${listingId}/${position}.jpg`;
         await putObject(storagePath, norm.bytes, "image/jpeg");

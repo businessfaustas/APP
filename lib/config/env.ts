@@ -31,6 +31,9 @@ const EnvSchema = z.object({
   AI_MODEL_VISION: z.string().default("claude-sonnet-5-5"),
   AI_MODEL_TEXT: z.string().default("claude-haiku-4-5-20251001"),
   AI_MAX_PHOTOS: z.coerce.number().int().min(1).max(60).default(24),
+  // Photos per lot that may be fetched through the paid page reader (1 credit each) once the
+  // photo host refuses a direct download. Direct downloads are free and not limited by this.
+  SCRAPER_MAX_PAID_PHOTOS: z.coerce.number().int().min(0).max(60).default(10),
   AI_PRICE_VISION: z.string().default("3,15"),
   AI_PRICE_TEXT: z.string().default("1,5"),
   SCRAPINGBEE_API_KEY: opt,
