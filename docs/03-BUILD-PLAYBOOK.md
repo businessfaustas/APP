@@ -2,7 +2,7 @@
 
 > The app in this repository was built this way. To run it, start with the [README](../README.md). Keep this playbook for rebuilding it or extending it phase by phase.
 
-This guide explains how to use [`02-AI-MASTER-PROMPT.md`](./02-AI-MASTER-PROMPT.md) to get a working AuctionPulse AI app from an AI coding tool, one phase at a time, checking each phase before moving on.
+This guide explains how to use [`02-AI-MASTER-PROMPT.md`](./02-AI-MASTER-PROMPT.md) to get a working BidPilot app from an AI coding tool, one phase at a time, checking each phase before moving on.
 
 ---
 
@@ -98,7 +98,7 @@ Make the full e2e suite pass. Stop when Phase 6 acceptance criteria are met.
 Continue with Phase 7 (Reach) from docs/02-AI-MASTER-PROMPT.md: Chrome MV3 extension, PWA share target,
 watchlist email reminders. Include a README for the extension with build and "load unpacked" steps.
 ```
-**Check yourself:** load the extension in Chrome (`chrome://extensions` → Developer mode → Load unpacked), open a Copart lot, click "Analyze with AuctionPulse", and a report opens.
+**Check yourself:** load the extension in Chrome (`chrome://extensions` → Developer mode → Load unpacked), open a Copart lot, click "Analyze with BidPilot", and a report opens.
 
 ---
 

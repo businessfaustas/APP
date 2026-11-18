@@ -3,6 +3,7 @@ import { GeistSans } from "geist/font/sans";
 import type { Metadata, Viewport } from "next";
 
 import { Providers } from "@/components/providers";
+import { BRAND_NAME } from "@/lib/brand";
 import { getMessages } from "@/lib/i18n/messages";
 import { getLocale, getT } from "@/lib/i18n/server";
 
@@ -11,12 +12,12 @@ import "./globals.css";
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getT();
   return {
-    title: { default: t("site.metaTitle"), template: "%s · AuctionPulse AI" },
+    title: { default: t("site.metaTitle"), template: `%s · ${BRAND_NAME}` },
     description: t("site.metaDescription"),
-    applicationName: "AuctionPulse AI",
+    applicationName: BRAND_NAME,
     manifest: "/manifest.webmanifest",
     icons: { icon: [{ url: "/icon.svg", type: "image/svg+xml" }], apple: "/icons/apple-touch-icon.png" },
-    appleWebApp: { capable: true, title: "AuctionPulse", statusBarStyle: "black-translucent" },
+    appleWebApp: { capable: true, title: BRAND_NAME, statusBarStyle: "black-translucent" },
   };
 }
 

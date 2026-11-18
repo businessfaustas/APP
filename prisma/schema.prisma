@@ -1,4 +1,4 @@
-// AuctionPulse AI — database schema (Prisma 7, PostgreSQL)
+// BidPilot — database schema (Prisma 7, PostgreSQL)
 // Connection URLs live in prisma.config.ts (migrations) and lib/db/prisma.ts (runtime adapter).
 
 generator client {

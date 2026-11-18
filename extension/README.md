@@ -1,8 +1,8 @@
-# AuctionPulse AI — Chrome extension (MV3)
+# BidPilot — Chrome extension (MV3)
 
-Adds an **Analyze with AuctionPulse** button to lot pages on Copart, IAAI and Bid.cars. It
+Adds an **Analyze with BidPilot** button to lot pages on Copart, IAAI and Bid.cars. It
 sends what you can see on the page — the page text, structured data (JSON-LD), the page
-HTML and the vehicle photo URLs — to your AuctionPulse account, then opens the report in a new tab.
+HTML and the vehicle photo URLs — to your BidPilot account, then opens the report in a new tab.
 
 Using the extension helps with:
 
@@ -18,7 +18,7 @@ EXTENSION_APP_URL=https://your-app.example.com pnpm extension:build   # defaults
 
 1. Open `chrome://extensions` and turn on **Developer mode**.
 2. Click **Load unpacked** and choose `extension/dist`.
-3. The options page opens. In AuctionPulse, go to **Settings → Browser extension → Create token**, paste the token into the options page, then click **Test connection**.
+3. The options page opens. In BidPilot, go to **Settings → Browser extension → Create token**, paste the token into the options page, then click **Test connection**.
 
 The token is stored only in this browser (`chrome.storage.local`). You can revoke it at any time in Settings.
 

@@ -1,6 +1,8 @@
+import { BRAND_NAME } from "@/lib/brand";
+
 export const common = {
   common: {
-    appName: "AuctionPulse AI",
+    appName: BRAND_NAME,
     language: "Language",
     english: "English",
     lithuanian: "Lithuanian",

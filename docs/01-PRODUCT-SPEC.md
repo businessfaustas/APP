@@ -1,13 +1,13 @@
-# AuctionPulse AI — Product Summary & Specification
+# BidPilot — Product Summary & Specification
 
-> Working name: **AuctionPulse AI** (alternative: **FlipVault AI**). Spec version 1.0, October 2026.
+> Working name: **BidPilot** (alternative: **FlipVault AI**). Spec version 1.0, October 2026.
 > The build prompt for an AI coding tool is in [`02-AI-MASTER-PROMPT.md`](./02-AI-MASTER-PROMPT.md). Step-by-step instructions for using it are in [`03-BUILD-PLAYBOOK.md`](./03-BUILD-PLAYBOOK.md).
 
 ---
 
 ## 1. Summary
 
-AuctionPulse AI is a web and mobile-web app for people who buy damaged cars at salvage auctions (Copart, IAAI, Bid.cars and broker sites) to repair and resell.
+BidPilot is a web and mobile-web app for people who buy damaged cars at salvage auctions (Copart, IAAI, Bid.cars and broker sites) to repair and resell.
 
 The user pastes a listing link, a VIN, or the listing text. In about a minute the app:
 

@@ -2,6 +2,12 @@
 
 This file records where the code departs from [`docs/02-AI-MASTER-PROMPT.md`](./docs/02-AI-MASTER-PROMPT.md), and the judgement calls the prompt left open. The prompt describes _what_ to build. This file says _how_, and why it differs.
 
+## Name
+
+The product was built as AuctionPulse AI and is now **BidPilot**. The name lives in `lib/brand.ts`; everything else that spells it out (README, legal pages, extension, docs) is kept in step by `node scripts/rename-brand.mjs <OldName> <NewName>`.
+
+Left on the old name on purpose, because they are identifiers rather than branding and changing them would orphan data or break setups: the database name `auctionpulse`, the demo user's email `demo@auctionpulse.app` (its reports belong to that account), the `ap_` cookie prefix, and the deployed `auctionpulse-ai.vercel.app` URL until the Vercel project is renamed.
+
 ## Platform versions
 
 | Area       | Prompt says                                  | Built with                   | Why / what changed                                                                                                                                                                                                                                                              |

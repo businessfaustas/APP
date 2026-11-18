@@ -83,7 +83,7 @@ export async function SiteFooter() {
           </div>
         ))}
       </div>
-      <div className="text-muted-foreground border-t py-4 text-center text-xs">© {new Date().getFullYear()} AuctionPulse AI</div>
+      <div className="text-muted-foreground border-t py-4 text-center text-xs">© {new Date().getFullYear()} BidPilot</div>
     </footer>
   );
 }

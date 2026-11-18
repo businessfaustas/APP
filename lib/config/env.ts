@@ -55,7 +55,7 @@ const EnvSchema = z.object({
   STRIPE_PRICE_BUSINESS: opt,
   STRIPE_PRICE_CREDITS_10: opt,
   RESEND_API_KEY: opt,
-  EMAIL_FROM: z.string().default("AuctionPulse <alerts@example.com>"),
+  EMAIL_FROM: z.string().default("BidPilot <alerts@example.com>"),
 });
 
 export type Env = z.infer<typeof EnvSchema>;

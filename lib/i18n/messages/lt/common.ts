@@ -1,8 +1,10 @@
+import { BRAND_NAME } from "@/lib/brand";
+
 import type { Messages } from "..";
 
 export const common: Pick<Messages, "common" | "nav"> = {
   common: {
-    appName: "AuctionPulse AI",
+    appName: BRAND_NAME,
     language: "Kalba",
     english: "Anglų",
     lithuanian: "Lietuvių",

@@ -15,7 +15,7 @@ import { assertPublicUrl, fetchWithTimeout } from "@/lib/providers/http";
 const MAX_BYTES = 15 * 1024 * 1024;
 const MAX_EDGE = 1568;
 // Local disk is only used when running on a single machine (dev, self-hosting).
-const LOCAL_ROOT = process.env.VERCEL ? path.join(os.tmpdir(), "auctionpulse-photos") : path.join(process.cwd(), ".data", "photos");
+const LOCAL_ROOT = process.env.VERCEL ? path.join(os.tmpdir(), "bidpilot-photos") : path.join(process.cwd(), ".data", "photos");
 
 /**
  * Where files live. Supabase Storage when connected (durable, scales). Otherwise Postgres on
@@ -133,7 +133,7 @@ async function downloadImage(url: string, budget: PaidBudget): Promise<Uint8Arra
   const target = await assertPublicUrl(url);
   let res = await fetchWithTimeout(target.toString(), {
     timeoutMs: 20000,
-    headers: { "user-agent": "Mozilla/5.0 (compatible; AuctionPulseBot/1.0)", accept: "image/*" },
+    headers: { "user-agent": "Mozilla/5.0 (compatible; BidPilotBot/1.0)", accept: "image/*" },
   });
   if (!res.ok && env().SCRAPINGBEE_API_KEY && budget.left > 0) {
     budget.left--;

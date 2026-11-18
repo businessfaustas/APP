@@ -18,7 +18,7 @@ describe("deployment defaults", () => {
       STORAGE_URL: "postgresql://pooled.neon.tech/db",
       STORAGE_URL_UNPOOLED: "postgresql://direct.neon.tech/db",
       STORAGE_PGHOST: "pooled.neon.tech",
-      NEXT_PUBLIC_APP_URL: "https://auctionpulse.app",
+      NEXT_PUBLIC_APP_URL: "https://bidpilot.app",
     };
     expect(databaseUrl(e)).toBe("postgresql://pooled.neon.tech/db");
     expect(directDatabaseUrl(e)).toBe("postgresql://direct.neon.tech/db");
@@ -26,7 +26,7 @@ describe("deployment defaults", () => {
   });
 
   it("uses the explicit app URL, else the Vercel domain, else localhost", () => {
-    expect(appUrl({ NEXT_PUBLIC_APP_URL: "https://auctionpulse.app/" })).toBe("https://auctionpulse.app");
+    expect(appUrl({ NEXT_PUBLIC_APP_URL: "https://bidpilot.app/" })).toBe("https://bidpilot.app");
     expect(appUrl({ VERCEL_PROJECT_PRODUCTION_URL: "ap.vercel.app", VERCEL_URL: "ap-git-x.vercel.app" })).toBe("https://ap.vercel.app");
     expect(appUrl({ VERCEL_URL: "ap-git-x.vercel.app" })).toBe("https://ap-git-x.vercel.app");
     expect(appUrl({})).toBe("http://localhost:3000");

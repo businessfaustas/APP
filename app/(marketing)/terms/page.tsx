@@ -8,8 +8,8 @@ export default function TermsPage() {
   return (
     <LegalPage title="Terms of Service" updated="October 1, 2026">
       <p>
-        These terms govern your use of AuctionPulse AI (&ldquo;the Service&rdquo;). By creating an account or using the Service you agree to them. If you use
-        the Service for a company, you accept these terms on its behalf.
+        These terms govern your use of BidPilot (&ldquo;the Service&rdquo;). By creating an account or using the Service you agree to them. If you use the
+        Service for a company, you accept these terms on its behalf.
       </p>
 
       <h2>1. What the Service does</h2>
@@ -81,7 +81,7 @@ export default function TermsPage() {
       </p>
 
       <h2>10. Contact</h2>
-      <p>Questions about these terms: contact the operator of this AuctionPulse AI deployment through the support address listed in the app.</p>
+      <p>Questions about these terms: contact the operator of this BidPilot deployment through the support address listed in the app.</p>
     </LegalPage>
   );
 }

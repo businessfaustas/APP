@@ -23,7 +23,7 @@ export async function GET() {
   });
   return json(
     { exportedAt: new Date().toISOString(), user: { ...data, apiTokenHash: data?.apiTokenHash ? "[set]" : null } },
-    { headers: { "content-disposition": `attachment; filename="auctionpulse-export.json"` } },
+    { headers: { "content-disposition": `attachment; filename="bidpilot-export.json"` } },
   );
 }
 

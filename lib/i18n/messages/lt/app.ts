@@ -266,7 +266,7 @@ export const app: Pick<
     save: "Išsaugoti nustatymus",
     extension: "Naršyklės plėtinys",
     extensionBody:
-      "Chrome plėtinys Copart, IAAI ir Bid.cars lotų puslapiuose prideda mygtuką „Analyze with AuctionPulse“. Sukurkite raktą ir įklijuokite jį plėtinio nustatymuose. Diegimo instrukcija — {readme}.",
+      "Chrome plėtinys Copart, IAAI ir Bid.cars lotų puslapiuose prideda mygtuką „Analyze with BidPilot“. Sukurkite raktą ir įklijuokite jį plėtinio nustatymuose. Diegimo instrukcija — {readme}.",
     copyNow: "Nukopijuokite šį raktą dabar — daugiau jis nebus rodomas.",
     copyToken: "Kopijuoti raktą",
     copied: "Nukopijuota",

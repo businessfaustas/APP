@@ -9,7 +9,7 @@ export const marketing = {
     bidCalculator: "Bid calculator",
     terms: "Terms of Service",
     privacy: "Privacy Policy",
-    metaTitle: "AuctionPulse AI — know your max bid before you bid",
+    metaTitle: "BidPilot — know your max bid before you bid",
     metaDescription:
       "Paste a Copart, IAAI or Bid.cars link and get an investor report: verdict, maximum bid, itemized repair estimate, market value, profit and risks.",
     footerNote:
@@ -18,7 +18,7 @@ export const marketing = {
   landing: {
     heroTitle: "Know your max bid before you bid.",
     heroBody:
-      "Paste a salvage auction link. AuctionPulse reads the VIN, title and every photo, prices the repair line by line, checks what the car sells for fixed, and tells you exactly where to stop bidding.",
+      "Paste a salvage auction link. BidPilot reads the VIN, title and every photo, prices the repair line by line, checks what the car sells for fixed, and tells you exactly where to stop bidding.",
     showScanning: "AI scan running",
     stat1Value: "~1 min",
     stat1Label: "from link to bid limit",

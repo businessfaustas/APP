@@ -1,5 +1,5 @@
 /**
- * Runs on auction sites. On lot pages it shows an "Analyze with AuctionPulse" button that
+ * Runs on auction sites. On lot pages it shows an "Analyze with BidPilot" button that
  * sends what the user can see (text, structured data, photo URLs) to the app.
  */
 import { LIMITS, lotFromUrl, selectImageUrls, truncate, type ImageCandidate } from "./lot";
@@ -72,7 +72,7 @@ let status: HTMLElement | null = null;
 function mount() {
   if (host) return;
   host = document.createElement("div");
-  host.id = "auctionpulse-root";
+  host.id = "bidpilot-root";
   const root = host.attachShadow({ mode: "closed" });
   const sheet = new CSSStyleSheet();
   sheet.replaceSync(STYLES);
@@ -83,7 +83,7 @@ function mount() {
       <div class="status" role="status" aria-live="polite" hidden></div>
       <button type="button">
         <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M8 36h12l5-14 8 26 6-18 4 6h13" fill="none" stroke="#5cc8ff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        <span>Analyze with AuctionPulse</span>
+        <span>Analyze with BidPilot</span>
       </button>
     </div>`;
   button = root.querySelector("button");
@@ -102,7 +102,7 @@ function showStatus(text: string, error = false) {
 async function run() {
   if (!button) return;
   button.disabled = true;
-  showStatus("Sending this lot to AuctionPulse…");
+  showStatus("Sending this lot to BidPilot…");
   try {
     const r = await analyzeHere();
     if (r.ok) showStatus("Analysis started — it opened in a new tab.");
