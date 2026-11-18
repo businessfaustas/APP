@@ -1,31 +1,35 @@
 import Link from "next/link";
 
-import { brandParts } from "@/lib/brand";
+import { LOGO_ACCENT, LOGO_ACCENT_COLOR, LOGO_ASPECT, LOGO_EMBLEM, LOGO_VIEWBOX, LOGO_WORDMARK } from "@/components/brand-art";
+import { BRAND_NAME } from "@/lib/brand";
 import { cn } from "@/lib/utils";
 
-export function LogoMark({ className }: { className?: string }) {
+/**
+ * The logo artwork. It is sized by its height (1.4 × the surrounding font size unless a
+ * `h-*` class says otherwise); the emblem and letters take the text colour, so it reads on
+ * light and dark backgrounds alike. The needle and speed lines keep their orange.
+ */
+export function LogoArt({ className }: { className?: string }) {
   return (
-    <span
-      className={cn("from-primary to-brand-2 grid size-8 shrink-0 place-items-center rounded-[10px] bg-gradient-to-br shadow-sm", className)}
-      aria-hidden="true"
+    <svg
+      viewBox={LOGO_VIEWBOX}
+      role="img"
+      aria-label={BRAND_NAME}
+      className={cn("h-[1.4em] w-auto shrink-0", className)}
+      style={{ aspectRatio: LOGO_ASPECT }}
+      fill="currentColor"
     >
-      {/* a navigation arrow: the pilot pointing the way */}
-      <svg viewBox="0 0 64 64" className="size-5">
-        <path d="M13 30 L52 12 L35 52 L29 35 Z" fill="white" stroke="white" strokeWidth="5" strokeLinejoin="round" />
-      </svg>
-    </span>
+      <path d={LOGO_EMBLEM} fillRule="evenodd" />
+      <path d={LOGO_WORDMARK} fillRule="evenodd" />
+      <path d={LOGO_ACCENT} fill={LOGO_ACCENT_COLOR} />
+    </svg>
   );
 }
 
 export function Logo({ className, href = "/" }: { className?: string; href?: string }) {
-  const [first, second] = brandParts();
   return (
-    <Link href={href} className={cn("flex items-center gap-2.5 font-semibold tracking-tight", className)}>
-      <LogoMark />
-      <span>
-        {first}
-        {second && <span className="text-primary">{second}</span>}
-      </span>
+    <Link href={href} className={cn("inline-flex items-center", className)}>
+      <LogoArt />
     </Link>
   );
 }

@@ -10,7 +10,8 @@
  *
  * Not touched on purpose: the database name, the demo user's email, cookie prefixes and the
  * deployed URL. Those are identifiers, not branding; changing them would orphan existing data.
- * The favicon and app icons come from app/icon.svg (edit it by hand if the mark should change).
+ * The logo is artwork, not text: after renaming, replace components/brand-art.ts and app/icon.svg
+ * with a drawing of the new name (the favicon, app and extension icons are rendered from app/icon.svg).
  */
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
@@ -47,4 +48,6 @@ for (const file of files) {
   }
 }
 console.log(`\nRenamed ${from} → ${to} in ${changed} file(s).`);
-console.log("Next: pnpm extension:build, pnpm typecheck && pnpm lint && pnpm test, and update the Vercel project name or domain if you want the URL to match.");
+console.log(
+  "Next: new logo artwork (components/brand-art.ts, app/icon.svg), pnpm extension:build, pnpm typecheck && pnpm lint && pnpm test, and update the Vercel project name or domain if you want the URL to match.",
+);

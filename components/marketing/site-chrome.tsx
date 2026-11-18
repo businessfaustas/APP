@@ -17,7 +17,7 @@ export async function SiteHeader() {
   return (
     <header className="bg-background/80 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40 border-b backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-2 px-4 sm:gap-4">
-        <Logo />
+        <Logo className="text-xl" />
         <nav aria-label={t("nav.main")} className="ml-4 hidden items-center gap-1 md:flex">
           {nav.map((n) => (
             <Link
