@@ -131,18 +131,35 @@ export function integrations(): Integration[] {
       checkable: false,
     },
     {
+      key: "parts",
+      name: "eBay Motors (real part prices)",
+      priority: "recommended",
+      enabled: features.partsMarket(),
+      unlocks: "Every replaced part is priced from live new and used listings, with links as proof, instead of estimates.",
+      without: "Part prices come from the built-in reference table and AI estimates, and the report labels them as estimates.",
+      vars: [
+        { name: "EBAY_CLIENT_ID", set: isSet(e.EBAY_CLIENT_ID) },
+        { name: "EBAY_CLIENT_SECRET", set: isSet(e.EBAY_CLIENT_SECRET) },
+        { name: "EBAY_MARKETPLACE", set: isSet(process.env.EBAY_MARKETPLACE), optional: true },
+      ],
+      docs: "https://developer.ebay.com/my/keys",
+      checkable: features.partsMarket(),
+    },
+    {
       key: "stripe",
-      name: "Stripe (subscriptions)",
+      name: "Stripe (car packs and plans)",
       priority: "recommended",
       enabled: features.stripe(),
-      unlocks: "Customers pay for plans and credit packs; the billing portal works.",
+      unlocks: "Customers pay in euros for packs of 10 / 30 / 100 cars and for monthly plans; the billing portal works.",
       without: "Plans are shown, but checkout is switched off — credits can be given from Admin › Users.",
       vars: [
         { name: "STRIPE_SECRET_KEY", set: isSet(e.STRIPE_SECRET_KEY) },
         { name: "STRIPE_WEBHOOK_SECRET", set: isSet(e.STRIPE_WEBHOOK_SECRET) },
-        { name: "STRIPE_PRICE_PRO", set: isSet(e.STRIPE_PRICE_PRO) },
+        { name: "STRIPE_PRICE_PACK_10", set: isSet(e.STRIPE_PRICE_PACK_10) || isSet(e.STRIPE_PRICE_CREDITS_10) },
+        { name: "STRIPE_PRICE_PACK_30", set: isSet(e.STRIPE_PRICE_PACK_30), optional: true },
+        { name: "STRIPE_PRICE_PACK_100", set: isSet(e.STRIPE_PRICE_PACK_100), optional: true },
+        { name: "STRIPE_PRICE_PRO", set: isSet(e.STRIPE_PRICE_PRO), optional: true },
         { name: "STRIPE_PRICE_BUSINESS", set: isSet(e.STRIPE_PRICE_BUSINESS), optional: true },
-        { name: "STRIPE_PRICE_CREDITS_10", set: isSet(e.STRIPE_PRICE_CREDITS_10), optional: true },
       ],
       docs: "https://dashboard.stripe.com/apikeys",
       checkable: true,
@@ -241,6 +258,16 @@ export async function checkIntegration(key: string): Promise<CheckResult> {
     case "stripe":
       if (!e.STRIPE_SECRET_KEY) return { ok: false, message: "Not configured." };
       return probe("https://api.stripe.com/v1/balance", { headers: { authorization: `Bearer ${e.STRIPE_SECRET_KEY}` } }, "Key accepted by Stripe.");
+    case "parts": {
+      if (!features.partsMarket()) return { ok: false, message: "Not configured." };
+      const { checkEbay } = await import("@/lib/providers/parts/ebay");
+      try {
+        await checkEbay();
+        return { ok: true, message: "eBay accepted the keyset." };
+      } catch (err) {
+        return { ok: false, message: err instanceof Error ? err.message : "Couldn't reach eBay." };
+      }
+    }
     case "email":
       if (!e.RESEND_API_KEY) return { ok: false, message: "Not configured." };
       return probe("https://api.resend.com/domains", { headers: { authorization: `Bearer ${e.RESEND_API_KEY}` } }, "Key accepted by Resend.");

@@ -28,6 +28,20 @@ export function formatUsd(amount: number | null | undefined): string {
   return usd.format(amount);
 }
 
+const eurFormats = new Map<string, Intl.NumberFormat>();
+
+/** Formats euros: whole amounts without decimals (€29), others with two (€2.90). `29 €` in Lithuanian. */
+export function formatEur(amount: number, locale = "en-US"): string {
+  const digits = Number.isInteger(amount) ? 0 : 2;
+  const key = `${locale}:${digits}`;
+  let f = eurFormats.get(key);
+  if (!f) {
+    f = new Intl.NumberFormat(locale, { style: "currency", currency: "EUR", minimumFractionDigits: digits, maximumFractionDigits: digits });
+    eurFormats.set(key, f);
+  }
+  return f.format(amount);
+}
+
 /** Formats basis points as a percentage, e.g. 2551 → "25.5%". */
 /** Compact dollars for tight labels: $950, $4.9k, $12k, $1.2M. */
 export function shortUsd(amount: number): string {

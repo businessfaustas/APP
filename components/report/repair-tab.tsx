@@ -18,6 +18,7 @@ import type { Translator } from "@/lib/i18n/translate";
 import { cn, formatBps, formatUsd } from "@/lib/utils";
 
 import { LineCost } from "./line-cost";
+import { PartPrices } from "./part-prices";
 import { useReport } from "./report-context";
 
 function CellNumber({
@@ -200,6 +201,7 @@ export function RepairTab() {
                           </Badge>
                         )}
                         {l.priceOrigin === "AI_ESTIMATE" && <Badge variant="outline">{t("report.aiPrice")}</Badge>}
+                        {l.priceOrigin === "MARKET" && <Badge variant="go">{t("report.marketPrice")}</Badge>}
                         {l.userEdited && <Badge variant="outline">{t("report.edited")}</Badge>}
                       </div>
                     </TableCell>
@@ -278,6 +280,7 @@ export function RepairTab() {
           <AddLine />
         </CardContent>
       </Card>
+      <PartPrices lines={lineItems} />
       {calc && (
         <Card>
           <CardHeader>

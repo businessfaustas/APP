@@ -76,14 +76,32 @@ Left on the old name on purpose, because they are identifiers rather than brandi
 
 ## Defaults worth knowing
 
-| Setting                           | Default                                                                        |
-| --------------------------------- | ------------------------------------------------------------------------------ |
-| Labor rate                        | $70/h; paint materials $40 per paint hour                                      |
-| Parts preference                  | Aftermarket                                                                    |
-| Profit target                     | max(15% of expected resale, $2,500)                                            |
-| Transport                         | $1.50/mi, $150 minimum                                                         |
-| Title / registration / inspection | $300                                                                           |
-| Holding                           | $8/day, 30 days expected (best 0.67×, worst 1.5×)                              |
-| Selling costs                     | 2% of resale                                                                   |
-| Plans                             | Free 3 reports/mo · Pro $39 for 60 · Business $129 for 300 · 10-report pack $9 |
-| Rate limits                       | 30 analyses/hour; batches of up to 10 lots                                     |
+| Setting                           | Default                                                                                                                          |
+| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Labor rate                        | $70/h; paint materials $40 per paint hour                                                                                        |
+| Parts preference                  | Aftermarket                                                                                                                      |
+| Profit target                     | max(15% of expected resale, $2,500)                                                                                              |
+| Transport                         | $1.50/mi, $150 minimum                                                                                                           |
+| Title / registration / inspection | $300                                                                                                                             |
+| Holding                           | $8/day, 30 days expected (best 0.67×, worst 1.5×)                                                                                |
+| Selling costs                     | 2% of resale                                                                                                                     |
+| Pricing                           | EUR: packs of 10 / 30 / 100 cars for €29 / €75 / €199 · Free 3/mo · Pro €59 for 40/mo · Business €149 for 120/mo (see "Pricing") |
+| Rate limits                       | 30 analyses/hour; batches of up to 10 lots                                                                                       |
+
+## Pricing
+
+**What is sold.** A "car" is one report (one lot analyzed). The main offer is a prepaid pack, because the first customer asked for "X euros for ten cars" and a dealer's volume comes in bursts around the auctions: one payment, no subscription to cancel, and credits never expire.
+
+| Pack     | Price | Per car |
+| -------- | ----- | ------- |
+| 10 cars  | €29   | €2.90   |
+| 30 cars  | €75   | €2.50   |
+| 100 cars | €199  | €1.99   |
+
+Monthly plans stay for people who analyze every week (Pro €59 for 40, Business €149 for 120, which is €1.48 and €1.24 a car) and the Free tier gives 3 reports a month to try it.
+
+**Why these numbers.** The cost of one report is small: roughly a cent of page-reading credits, a few cents of AI for the photos and text (the vision model is the largest part), and nothing for the part prices (eBay's API is free). That is guessed at about €0.20–0.50, **not measured**: the Admin overview shows the real AI cost per report once an AI key has been running for a while, so check it after the first 50 reports and move the packs if it is far off. Against that, one wrong bid on a salvage car costs thousands, so a few euros a car is easy to justify to a dealer, and the margin stays large even if the real cost is several times the guess. The sums only stop working below roughly €1 a car. The market for comparable reports was not researched; treat the numbers as a starting point to test with the first clients.
+
+**Changing prices.** Edit `PACKS` and `PLANS` in `lib/billing/plans.ts` (this drives the pricing page and the billing page) and create matching EUR prices in Stripe; checkout charges the Stripe price. VAT is not in the code: use Stripe Tax or set tax-inclusive prices in Stripe.
+
+**Credits.** One credit per new analysis; analyzing the same input again within 24 hours is free; a failed analysis is refunded. A pack adds to the balance and a plan's monthly reset never lowers it, so pack credits are never lost. Credits can also be added by hand in Admin → Users.

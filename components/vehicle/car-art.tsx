@@ -1,6 +1,6 @@
 "use client";
 
-import { useId } from "react";
+import { useId, useState } from "react";
 
 import type { DamageZone } from "@/lib/domain/schemas";
 import { cn } from "@/lib/utils";
@@ -87,14 +87,23 @@ export function CarVisual({
   label?: string;
   scanning?: boolean;
 }) {
-  const real = photo && !photo.startsWith("/demo-photos/") ? photo : null;
+  // A hot-linked auction image can be blocked or expired; then the illustration takes over.
+  const [failed, setFailed] = useState<string | null>(null);
+  const real = photo && !photo.startsWith("/demo-photos/") && photo !== failed ? photo : null;
   const line = "color-mix(in oklab, var(--foreground) 9%, transparent)";
   return (
     <div className={cn("bg-surface-2 relative isolate overflow-hidden", className)}>
       {real ? (
         <>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={real} alt={label ?? ""} className="absolute inset-0 size-full object-cover" loading="lazy" />
+          <img
+            src={real}
+            alt={label ?? ""}
+            className="absolute inset-0 size-full object-cover"
+            loading="lazy"
+            referrerPolicy="no-referrer"
+            onError={() => setFailed(real)}
+          />
           {scanning && (
             <div className="scan absolute inset-0" aria-hidden="true">
               <div className="via-primary/40 h-full w-1/3 bg-gradient-to-r from-transparent to-transparent" />

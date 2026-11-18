@@ -7,10 +7,11 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CREDIT_PACK, PLANS, type PlanId } from "@/lib/billing/plans";
+import { FEATURED_PACK, PACK_ORDER, PACKS, PLANS, pricePerReport, type PackId, type PlanId } from "@/lib/billing/plans";
 import { useT } from "@/lib/i18n/client";
+import { INTL_LOCALE } from "@/lib/i18n/locales";
 import { rich } from "@/lib/i18n/rich";
-import { cn } from "@/lib/utils";
+import { cn, formatEur } from "@/lib/utils";
 
 async function go(path: string, body?: unknown): Promise<void> {
   const res = await fetch(path, { method: "POST", headers: { "content-type": "application/json" }, body: body ? JSON.stringify(body) : undefined });
@@ -21,6 +22,7 @@ async function go(path: string, body?: unknown): Promise<void> {
 
 export function BillingClient({ plan, stripeEnabled, hasCustomer }: { plan: PlanId; stripeEnabled: boolean; hasCustomer: boolean }) {
   const t = useT();
+  const intl = INTL_LOCALE[t.locale];
   const [busy, setBusy] = useState<string | null>(null);
   const run = async (key: string, fn: () => Promise<void>) => {
     setBusy(key);
@@ -36,6 +38,39 @@ export function BillingClient({ plan, stripeEnabled, hasCustomer }: { plan: Plan
       {!stripeEnabled && (
         <p className="bg-muted text-muted-foreground rounded-md px-3 py-2 text-sm">{rich(t("billing.notConfigured"), { vars: <code>STRIPE_*</code> })}</p>
       )}
+      <div className="space-y-3">
+        <div>
+          <div className="font-medium">{t("billing.needMore")}</div>
+          <div className="text-muted-foreground text-sm">{t("billing.packsBody")}</div>
+        </div>
+        <div className="grid gap-4 md:grid-cols-3" data-testid="pack-grid">
+          {PACK_ORDER.map((id: PackId) => {
+            const p = PACKS[id];
+            const featured = id === FEATURED_PACK;
+            return (
+              <Card key={id} className={cn(featured && "ring-primary ring-2")}>
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    {t("pricing.packName", { n: p.reports })} {featured && <Badge>{t("pricing.bestValue")}</Badge>}
+                  </CardTitle>
+                  <CardDescription>{t("pricing.perCar", { price: formatEur(pricePerReport(p), intl) })}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="text-3xl font-semibold">{formatEur(p.price, intl)}</div>
+                  <Button
+                    className="w-full"
+                    variant={featured ? "default" : "outline"}
+                    disabled={!stripeEnabled || busy !== null}
+                    onClick={() => void run(id, () => go("/api/stripe/checkout", { item: id }))}
+                  >
+                    {busy === id && <Loader2Icon className="animate-spin" />} {t("billing.buyPack", { n: p.reports })}
+                  </Button>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      </div>
       <div className="grid gap-4 md:grid-cols-3">
         {(Object.keys(PLANS) as PlanId[]).map((id) => {
           const p = PLANS[id];
@@ -52,7 +87,7 @@ export function BillingClient({ plan, stripeEnabled, hasCustomer }: { plan: Plan
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <span className="text-3xl font-semibold">${p.priceMonthly}</span>
+                  <span className="text-3xl font-semibold">{formatEur(p.priceMonthly, intl)}</span>
                   <span className="text-muted-foreground text-sm"> {t("common.perMonth")}</span>
                 </div>
                 <ul className="space-y-1.5 text-sm">
@@ -76,28 +111,13 @@ export function BillingClient({ plan, stripeEnabled, hasCustomer }: { plan: Plan
           );
         })}
       </div>
-      <Card>
-        <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="font-medium">{t("billing.needMore")}</div>
-            <div className="text-muted-foreground text-sm">{t("billing.packBody", { credits: CREDIT_PACK.credits, price: CREDIT_PACK.price })}</div>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              disabled={!stripeEnabled || busy !== null}
-              onClick={() => void run("credits", () => go("/api/stripe/checkout", { item: "CREDITS_10" }))}
-            >
-              {busy === "credits" && <Loader2Icon className="animate-spin" />} {t("billing.buy", { n: CREDIT_PACK.credits })}
-            </Button>
-            {hasCustomer && (
-              <Button variant="ghost" disabled={!stripeEnabled || busy !== null} onClick={() => void run("portal", () => go("/api/stripe/portal"))}>
-                {t("billing.manage")}
-              </Button>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+      {hasCustomer && (
+        <div className="flex justify-end">
+          <Button variant="ghost" disabled={!stripeEnabled || busy !== null} onClick={() => void run("portal", () => go("/api/stripe/portal"))}>
+            {t("billing.manage")}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

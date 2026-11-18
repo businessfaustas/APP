@@ -309,9 +309,9 @@ export const app = {
     notConfigured: "Billing isn't configured on this server (set the {vars} environment variables). Plans are shown for reference.",
     current: "Current",
     upgradeTo: "Upgrade to {plan}",
-    needMore: "Need a few more reports?",
-    packBody: "{credits} extra reports for ${price}. They never expire.",
-    buy: "Buy {n} credits",
+    needMore: "Need more reports?",
+    packsBody: "Pay once and use them any time. Credits from a pack never expire.",
+    buyPack: "Buy {n} cars",
     manage: "Manage subscription",
   },
   calc: {

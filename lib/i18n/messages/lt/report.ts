@@ -306,6 +306,18 @@ export const report: Pick<Messages, "report"> = {
     likely: "tikimybė {pct}% · {note}",
     rule: "taisyklė",
     aiPrice: "DI kaina",
+    marketPrice: "Rinkos kaina",
+    partPricesTitle: "Dalių kainos: naujos ir naudotos",
+    partPricesLive:
+      "{live} iš {total} dalių įkainotos pagal gyvus skelbimus (žaliai). Likusios – iš orientacinės lentelės arba DI įvertis; pasitikrinkite pas tiekėją.",
+    partPricesNoLive:
+      "Tai orientacinės lentelės kainos ir DI įverčiai, ne gyvi skelbimai. Prijunkite eBay skiltyje Admin → Setup, kad visos dalys būtų įkainotos pagal rinką.",
+    priceLive: "{n} skelb.",
+    priceReference: "orientacinė",
+    priceAi: "DI įvertis",
+    partPricesProof: "Skelbimai, kuriais remiasi kainos",
+    partPricesProofMeta: "{n} kainų intervalai",
+    partPricesFrom: "{n} „{provider}“ skelbimų, rodomas vidurinis intervalas",
     edited: "pakeista",
     sourceFor: "Dalies tipas: {name}",
     auto: "Auto",

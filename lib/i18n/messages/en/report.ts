@@ -307,6 +307,18 @@ export const report = {
     likely: "{pct}% likely · {note}",
     rule: "rule",
     aiPrice: "AI price",
+    marketPrice: "Market price",
+    partPricesTitle: "Part prices: new and used",
+    partPricesLive:
+      "{live} of {total} parts are priced from live listings (shown in green). The rest come from the reference table or an AI estimate; check them with your supplier.",
+    partPricesNoLive:
+      "These are reference-table prices and AI estimates, not live listings. Connect eBay in Admin → Setup to price every part from the market.",
+    priceLive: "{n} listings",
+    priceReference: "reference",
+    priceAi: "AI estimate",
+    partPricesProof: "Listings these prices are based on",
+    partPricesProofMeta: "{n} price ranges",
+    partPricesFrom: "{n} {provider} listings, middle range shown",
     edited: "edited",
     sourceFor: "Source for {name}",
     auto: "Auto",

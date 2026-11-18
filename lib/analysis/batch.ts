@@ -1,6 +1,6 @@
 import "server-only";
 
-import { lotVisual, photoUrl, type LotVisual } from "@/lib/analysis/visual";
+import { lotPhoto, lotVisual, type LotVisual } from "@/lib/analysis/visual";
 import type { CalculationResult } from "@/lib/calc/types";
 import { prisma } from "@/lib/db/prisma";
 import type { DamageAssessment, NormalizedListing, VehicleInfo } from "@/lib/domain/schemas";
@@ -49,7 +49,7 @@ export async function getBatchRows(batchId: string, userId: string): Promise<{ n
       progress: a.progress,
       inputValue: a.inputValue,
       title: l ? [l.year, l.make, l.model].filter(Boolean).join(" ") || a.inputValue : a.inputValue,
-      visual: lotVisual({ listing: l, vehicle: a.vehicleInfo as VehicleInfo | null, damage: d, verdict: a.verdict, photo: photoUrl(p) }),
+      visual: lotVisual({ listing: l, vehicle: a.vehicleInfo as VehicleInfo | null, damage: d, verdict: a.verdict, photo: lotPhoto(p, l) }),
       damage: l?.primaryDamage ?? null,
       title_: l?.titleCategory ?? null,
       saleDate: l?.saleDate ?? null,

@@ -29,7 +29,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { CarVisual } from "@/components/vehicle/car-art";
-import { lotVisual } from "@/lib/analysis/visual";
+import { auctionPhotoUrl, lotVisual } from "@/lib/analysis/visual";
 import { Input } from "@/components/ui/input";
 import { useT } from "@/lib/i18n/client";
 import { countdownLabel, damageLabel, keysLabel, runLabel, titleLabel } from "@/lib/i18n/labels";
@@ -112,7 +112,7 @@ export function ReportHeader() {
     vehicle: view.vehicle,
     damage: view.damage,
     verdict: calc?.verdict ?? view.calc?.verdict,
-    photo: view.photos.find((p) => !p.url.startsWith("/demo-photos/"))?.url,
+    photo: view.photos.find((p) => !p.url.startsWith("/demo-photos/"))?.url ?? (view.readOnly ? null : auctionPhotoUrl(view.listing?.photoUrls)),
   });
 
   return (

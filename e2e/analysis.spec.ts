@@ -34,6 +34,11 @@ test("every repair line shows what it costs, and the Damage tab lists the same p
   const first = table.getByRole("row").nth(1);
   await expect(first).toContainText("Front bumper cover");
   await expect(first).toContainText(/\$[\d,]+/);
+  // new and used prices per part; without an eBay key nothing is claimed to be live
+  const prices = page.getByTestId("part-prices");
+  await expect(prices.getByRole("columnheader", { name: "Used" })).toBeVisible();
+  await expect(prices).toContainText("Front bumper cover");
+  await expect(prices).toContainText("not live listings");
   await page.getByRole("tab", { name: "Damage" }).click();
   await expect(page.getByRole("listitem").filter({ hasText: "Front bumper cover" }).first()).toContainText(/\$[\d,]+/);
 });

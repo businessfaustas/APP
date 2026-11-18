@@ -52,3 +52,19 @@ export function photoUrl(p: { id: string; originalUrl: string | null; storagePat
   if (!p || p.originalUrl?.startsWith("/demo-photos/")) return null;
   return p.storagePath ? `/api/photos/${p.id}` : null;
 }
+
+/** The first photo the auction itself published (an https link), if the listing has one. */
+export function auctionPhotoUrl(urls: readonly string[] | null | undefined): string | null {
+  return urls?.find((u) => /^https:\/\//i.test(u)) ?? null;
+}
+
+/**
+ * The picture for a lot: our stored copy of the first photo when we have one, otherwise the
+ * auction's own image. `CarVisual` falls back to the illustration if that link doesn't load.
+ */
+export function lotPhoto(
+  stored: { id: string; originalUrl: string | null; storagePath: string | null } | undefined,
+  listing: Pick<NormalizedListing, "photoUrls"> | null | undefined,
+): string | null {
+  return photoUrl(stored) ?? auctionPhotoUrl(listing?.photoUrls);
+}

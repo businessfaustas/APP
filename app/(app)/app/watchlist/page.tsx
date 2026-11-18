@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 
 import { EmptyState, PageContainer, PageHeader } from "@/components/page-header";
 import { WatchlistClient, type WatchItemView } from "@/components/watchlist/watchlist-client";
-import { lotVisual, photoUrl } from "@/lib/analysis/visual";
+import { lotPhoto, lotVisual } from "@/lib/analysis/visual";
 import { requireUser } from "@/lib/auth/session";
 import { features } from "@/lib/config/env";
 import { prisma } from "@/lib/db/prisma";
@@ -52,7 +52,7 @@ export default async function WatchlistPage() {
           vehicle: (a?.vehicleInfo as VehicleInfo | null) ?? null,
           damage: (a?.damage as DamageAssessment | null) ?? null,
           verdict: a?.verdict,
-          photo: photoUrl(p),
+          photo: lotPhoto(p, a?.listingSnapshot as NormalizedListing | null),
         }),
       };
     })

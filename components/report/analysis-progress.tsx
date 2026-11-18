@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/input";
 import { CarVisual } from "@/components/vehicle/car-art";
-import { lotVisual } from "@/lib/analysis/visual";
+import { auctionPhotoUrl, lotVisual } from "@/lib/analysis/visual";
 import { Progress, SegmentedControl } from "@/components/ui/misc";
 import type { AnalysisView } from "@/lib/analysis/view";
 import { useT } from "@/lib/i18n/client";
@@ -31,7 +31,7 @@ export function AnalysisProgress({ view }: { view: AnalysisView }) {
     vehicle: view.vehicle,
     damage: view.damage,
     verdict: null,
-    photo: view.photos.find((p) => !p.url.startsWith("/demo-photos/"))?.url,
+    photo: view.photos.find((p) => !p.url.startsWith("/demo-photos/"))?.url ?? (view.readOnly ? null : auctionPhotoUrl(view.listing?.photoUrls)),
   });
   return (
     <Card className="rise mx-auto max-w-4xl gap-0 overflow-hidden py-0" data-testid="analysis-progress">

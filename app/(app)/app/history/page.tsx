@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CarVisual } from "@/components/vehicle/car-art";
-import { lotVisual, photoUrl } from "@/lib/analysis/visual";
+import { lotPhoto, lotVisual } from "@/lib/analysis/visual";
 import { requireUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/prisma";
 import type { DamageAssessment, NormalizedListing, VehicleInfo } from "@/lib/domain/schemas";
@@ -105,7 +105,7 @@ export default async function HistoryPage({ searchParams }: { searchParams: Prom
                               vehicle: a.vehicleInfo as VehicleInfo | null,
                               damage: a.damage as DamageAssessment | null,
                               verdict: a.verdict,
-                              photo: photoUrl(a.listing?.photos[0]),
+                              photo: lotPhoto(a.listing?.photos[0], l),
                             })}
                             label={l ? [l.year, l.make, l.model].filter(Boolean).join(" ") : a.inputValue}
                             className="aspect-[16/10] w-20 shrink-0 rounded-lg border"

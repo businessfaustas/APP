@@ -3,7 +3,9 @@
  *  1. AI-visible parts → lines (hours clamped to reference ranges)
  *  2. hidden-damage suspicions → HIDDEN_LIKELY lines
  *  3. rules engine → collateral lines
- *  4. pricing: reference table → AI batch estimate → placeholder
+ *  4. pricing: live market listings → reference table → AI batch estimate → placeholder
+ *     (market and reference are merged per price column: a column the market couldn't fill
+ *     keeps the reference value)
  * Pure apart from the injected price lookups (unit tested with fakes).
  */
 import { contingencyForSeverity } from "@/lib/calc/repair";
@@ -12,6 +14,7 @@ import type {
   HoursRange,
   NormalizedListing,
   PartSource,
+  PriceEvidence,
   PriceRange,
   RepairEstimate,
   RepairLineItem,
@@ -45,14 +48,26 @@ export type AiPriceFn = (parts: { index: number; name: string; kind: "PART" | "S
   }[]
 >;
 
+/** Live market prices per part (see lib/providers/parts); a part with no usable listings is absent. */
+export type MarketPriceFn = (parts: { index: number; name: string; partKey: string | null }[]) => Promise<
+  {
+    index: number;
+    OEM_NEW: { low: number; mid?: number; high: number } | null;
+    AFTERMARKET: { low: number; mid?: number; high: number } | null;
+    USED: { low: number; mid?: number; high: number } | null;
+    evidence: PriceEvidence[];
+  }[]
+>;
+
 const r1 = (n: number) => Math.round(n * 10) / 10;
 const r10 = (n: number) => Math.round(n / 10) * 10;
 
-function toRange(r: { low: number; high: number } | null): PriceRange | null {
+function toRange(r: { low: number; mid?: number; high: number } | null): PriceRange | null {
   if (!r) return null;
   const low = Math.max(0, Math.round(Math.min(r.low, r.high)));
   const high = Math.max(low, Math.round(Math.max(r.low, r.high)));
-  return { low, mid: Math.max(low, Math.min(high, r10((low + high) / 2))), high };
+  const mid = r.mid !== undefined ? Math.round(r.mid) : r10((low + high) / 2);
+  return { low, mid: Math.max(low, Math.min(high, mid)), high };
 }
 
 /** AI hours clamped into the reference range: low/high = range ends, mid = clamped AI value. */
@@ -94,6 +109,8 @@ export async function buildRepairEstimate(args: {
   listing: NormalizedListing;
   lookup: PriceLookup;
   aiPrices?: AiPriceFn | null;
+  /** Live market listings; checked before the reference table. */
+  marketPrices?: MarketPriceFn | null;
 }): Promise<RepairEstimate> {
   const { damage: d, vehicle: v, lookup } = args;
   const lines: RepairLineItem[] = [];
@@ -214,21 +231,46 @@ export async function buildRepairEstimate(args: {
   // 4. pricing
   const needsPrice = (l: RepairLineItem) => (l.kind === "SUBLET" || l.action === "REPLACE") && !l.prices.AFTERMARKET && !l.prices.OEM_NEW && !l.prices.USED;
   const unpriced: RepairLineItem[] = [];
+
+  // 4a. what the market is asking right now (parts only: a service has no parts market)
+  const marketFor = new Map<RepairLineItem, Awaited<ReturnType<MarketPriceFn>>[number]>();
+  const marketable = lines.filter((l) => needsPrice(l) && l.kind === "PART");
+  if (args.marketPrices && marketable.length > 0) {
+    try {
+      const found = await args.marketPrices(marketable.map((l, i) => ({ index: i, name: l.partName, partKey: l.partKey })));
+      for (const m of found) {
+        const l = marketable[m.index];
+        if (l) marketFor.set(l, m);
+      }
+    } catch (err) {
+      console.error("Market part pricing failed", err);
+    }
+  }
+
+  // 4b. per price column: market first, then the reference table
   for (const l of lines) {
     if (!needsPrice(l)) continue;
-    if (l.partKey) {
-      const prices = {
-        OEM_NEW: toRange(lookup.reference(l.partKey, "OEM_NEW")),
-        AFTERMARKET: toRange(lookup.reference(l.partKey, "AFTERMARKET")),
-        USED: toRange(lookup.reference(l.partKey, "USED")),
-      };
-      if (prices.OEM_NEW || prices.AFTERMARKET || prices.USED) {
-        l.prices = prices;
+    const m = marketFor.get(l);
+    const ref = (source: PartSource) => (l.partKey ? toRange(lookup.reference(l.partKey, source)) : null);
+    const prices = {
+      OEM_NEW: toRange(m?.OEM_NEW ?? null) ?? ref("OEM_NEW"),
+      AFTERMARKET: toRange(m?.AFTERMARKET ?? null) ?? ref("AFTERMARKET"),
+      USED: toRange(m?.USED ?? null) ?? ref("USED"),
+    };
+    if (prices.OEM_NEW || prices.AFTERMARKET || prices.USED) {
+      l.prices = prices;
+      if (m && m.evidence.length > 0) {
+        l.priceOrigin = "MARKET";
+        l.priceEvidence = m.evidence;
+      } else {
         l.priceOrigin = "REFERENCE";
-        continue;
       }
+      continue;
     }
     unpriced.push(l);
+  }
+  if (marketFor.size > 0) {
+    notes.push(`Live market prices (eBay listings) for ${marketFor.size} of ${marketable.length} parts; the rest use the reference table or AI estimates.`);
   }
 
   if (unpriced.length > 0 && args.aiPrices) {

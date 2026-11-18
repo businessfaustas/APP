@@ -7,7 +7,7 @@ import { ActivityChart, KpiTile, LotCard, VerdictMix, type LotCardData } from "@
 import { AnalyzeBar } from "@/components/input/analyze-bar";
 import { EmptyState, PageContainer } from "@/components/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { lotVisual, photoUrl } from "@/lib/analysis/visual";
+import { lotPhoto, lotVisual } from "@/lib/analysis/visual";
 import { requireUser } from "@/lib/auth/session";
 import { DEMO_LOTS } from "@/lib/config/demo";
 import { features } from "@/lib/config/env";
@@ -101,10 +101,12 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         vehicle: a.vehicleInfo as VehicleInfo | null,
         damage: a.damage as DamageAssessment | null,
         verdict: a.verdict,
-        photo: photoUrl(a.listing?.photos[0]),
+        photo: lotPhoto(a.listing?.photos[0], l),
       }),
     };
   });
+
+  const heroLot = lots.find((l) => l.visual.photo);
 
   return (
     <PageContainer>
@@ -120,7 +122,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
               <AnalyzeBar demoLots={features.demoMode() ? DEMO_LOTS : []} initialInput={sp.input ?? ""} />
             </div>
           </div>
-          <HeroScan />
+          <HeroScan photo={heroLot?.visual.photo ?? null} label={heroLot?.title} />
         </div>
       </section>
 

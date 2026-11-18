@@ -315,9 +315,9 @@ export const app: Pick<
     notConfigured: "Mokėjimai šiame serveryje nesukonfigūruoti (nustatykite {vars} aplinkos kintamuosius). Planai rodomi informacijai.",
     current: "Dabartinis",
     upgradeTo: "Pereiti į {plan}",
-    needMore: "Reikia dar kelių ataskaitų?",
-    packBody: "{credits} papildomų ataskaitų už ${price}. Jos nesibaigia.",
-    buy: "Pirkti {n} kreditų",
+    needMore: "Reikia daugiau ataskaitų?",
+    packsBody: "Sumokėkite vieną kartą ir naudokite bet kada. Paketo kreditai nesibaigia.",
+    buyPack: "Pirkti {n} {n:automobilį|automobilius|automobilių}",
     manage: "Valdyti prenumeratą",
   },
   calc: {

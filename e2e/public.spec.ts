@@ -6,7 +6,8 @@ test("landing page shows the live sample report and pricing", async ({ page }) =
   await open(page, "/");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Know your max bid before you bid.");
   await expect(page.locator("#sample")).toContainText("$3,100");
-  await expect(page.locator("#pricing")).toContainText("$39");
+  await expect(page.locator("#pricing")).toContainText("€29");
+  await expect(page.locator("#pricing")).toContainText("€199");
   await page.getByRole("link", { name: "Privacy Policy" }).click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Privacy Policy");
 });

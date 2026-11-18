@@ -142,6 +142,18 @@ export type HoursRange = z.infer<typeof HoursRangeSchema>;
 
 export const ZERO_HOURS: HoursRange = { low: 0, mid: 0, high: 0 };
 
+/** Where a part price came from: live listings we read, with a few of them as proof. */
+export const PriceEvidenceSchema = z.object({
+  /** Which price column the listings support. */
+  source: PartSourceSchema,
+  provider: z.string(),
+  /** How many matching listings the range is based on. */
+  count: z.number().int().min(0),
+  sample: z.array(z.object({ title: z.string(), price: z.number().int().min(0), url: z.string() })).max(5),
+  retrievedAt: z.string(),
+});
+export type PriceEvidence = z.infer<typeof PriceEvidenceSchema>;
+
 export const RepairLineItemSchema = z.object({
   id: z.string(),
   kind: z.enum(["PART", "SUBLET"]),
@@ -159,7 +171,9 @@ export const RepairLineItemSchema = z.object({
     AFTERMARKET: PriceRangeSchema.nullable(),
     USED: PriceRangeSchema.nullable(),
   }),
-  priceOrigin: z.enum(["REFERENCE", "AI_ESTIMATE", "USER", "FIXTURE"]),
+  /** MARKET = at least one of the prices is read from live listings (see priceEvidence). */
+  priceOrigin: z.enum(["MARKET", "REFERENCE", "AI_ESTIMATE", "USER", "FIXTURE"]),
+  priceEvidence: z.array(PriceEvidenceSchema).optional(),
   bodyHours: HoursRangeSchema,
   paintHours: HoursRangeSchema,
   mechHours: HoursRangeSchema,

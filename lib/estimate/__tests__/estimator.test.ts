@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { aggregateRepair } from "@/lib/calc/repair";
 import { findDemoFixtureById } from "@/lib/demo/fixtures";
@@ -103,6 +103,81 @@ describe("buildRepairEstimate", () => {
     const flux2 = noAi.lineItems.find((l) => l.partName === "Flux capacitor")!;
     expect(flux2.prices.AFTERMARKET).not.toBeNull();
     expect(flux2.confidence).toBeLessThanOrEqual(0.35);
+  });
+});
+
+describe("market part prices", () => {
+  const evidence = (source: "USED" | "AFTERMARKET") => ({
+    source,
+    provider: "eBay",
+    count: 5,
+    sample: [{ title: "BMW part", price: 300, url: "https://www.ebay.com/itm/1" }],
+    retrievedAt: "2026-11-18T10:00:00.000Z",
+  });
+
+  it("prefers live listings per column and keeps reference prices for the columns they don't cover", async () => {
+    const est = await buildRepairEstimate({
+      damage: audi.damage,
+      vehicle: audi.vehicle,
+      listing: audi.listing(NOW),
+      lookup,
+      marketPrices: async (parts) =>
+        parts
+          .filter((p) => p.partKey === "front_bumper_cover")
+          .map((p) => ({
+            index: p.index,
+            OEM_NEW: null,
+            AFTERMARKET: { low: 200, mid: 240, high: 300 },
+            USED: { low: 90, mid: 110, high: 160 },
+            evidence: [evidence("AFTERMARKET"), evidence("USED")],
+          })),
+    });
+    const bumper = est.lineItems.find((l) => l.partKey === "front_bumper_cover")!;
+    expect(bumper.priceOrigin).toBe("MARKET");
+    expect(bumper.prices.AFTERMARKET).toEqual({ low: 200, mid: 240, high: 300 });
+    expect(bumper.prices.USED).toEqual({ low: 90, mid: 110, high: 160 });
+    expect(bumper.prices.OEM_NEW).not.toBeNull(); // reference table fills the OEM column
+    expect(bumper.priceEvidence?.map((e) => e.source)).toEqual(["AFTERMARKET", "USED"]);
+    const head = est.lineItems.find((l) => l.partKey === "headlamp_assembly")!;
+    expect(head.priceOrigin).toBe("REFERENCE");
+    expect(head.priceEvidence).toBeUndefined();
+    expect(est.notes.some((n) => n.startsWith("Live market prices"))).toBe(true);
+  });
+
+  it("prices an unknown part from the market when the reference table has nothing", async () => {
+    const damage = { ...audi.damage, damaged_parts: [{ ...audi.damage.damaged_parts[0]!, part_name: "Flux capacitor" }], likely_hidden_damage: [] };
+    const est = await buildRepairEstimate({
+      damage,
+      vehicle: audi.vehicle,
+      listing: audi.listing(NOW),
+      lookup,
+      marketPrices: async (parts) =>
+        parts
+          .filter((p) => p.name === "Flux capacitor")
+          .map((p) => ({ index: p.index, OEM_NEW: null, AFTERMARKET: null, USED: { low: 400, mid: 450, high: 500 }, evidence: [evidence("USED")] })),
+      aiPrices: async () => {
+        throw new Error("the AI estimate must not be asked for a market-priced part");
+      },
+    });
+    const flux = est.lineItems.find((l) => l.partName === "Flux capacitor")!;
+    expect(flux.priceOrigin).toBe("MARKET");
+    expect(flux.prices.USED?.mid).toBe(450);
+  });
+
+  it("falls back to reference prices when the market lookup throws", async () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const est = await buildRepairEstimate({
+      damage: audi.damage,
+      vehicle: audi.vehicle,
+      listing: audi.listing(NOW),
+      lookup,
+      marketPrices: async () => {
+        throw new Error("HTTP 500");
+      },
+    });
+    spy.mockRestore();
+    expect(est.lineItems.every((l) => l.priceOrigin !== "MARKET")).toBe(true);
+    expect(est.lineItems.find((l) => l.partKey === "front_bumper_cover")!.prices.AFTERMARKET).not.toBeNull();
   });
 });
 

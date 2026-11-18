@@ -3,6 +3,7 @@ import "server-only";
 import { createHash } from "node:crypto";
 
 import { llmEstimatePartPrices } from "@/lib/ai/prompts/estimates";
+import { marketPartPrices } from "@/lib/providers/parts";
 import { writeNarrative } from "@/lib/ai/prompts/narrative";
 import { runVisionAudit } from "@/lib/ai/prompts/vision";
 import { analysisAiCost } from "@/lib/ai/usage";
@@ -327,10 +328,22 @@ export async function runAnalysis(analysisId: string, step: StepRunner, now: Dat
         vehicle,
         listing,
         lookup,
+        marketPrices: features.partsMarket()
+          ? (parts) => marketPartPrices({ vehicle: { year: listing.year, make: listing.make, model: listing.model }, parts })
+          : null,
         aiPrices: features.ai() ? (parts) => llmEstimatePartPrices({ vehicle: vehicleLabel(listing), parts, analysisId }) : null,
       });
     });
-    sources.repair = { provider: demoFixture ? "Demo fixture" : "Estimator (reference prices + rules)", isDemo: Boolean(demoFixture), ok: true, note: null };
+    sources.repair = {
+      provider: demoFixture
+        ? "Demo fixture"
+        : features.partsMarket()
+          ? "Estimator (eBay part prices + reference table + rules)"
+          : "Estimator (reference prices + rules)",
+      isDemo: Boolean(demoFixture),
+      ok: true,
+      note: null,
+    };
 
     // ── 5. Flags + calculation ──────────────────────────────────────────────
     const calcOut = await step.run("calculate", async () => {

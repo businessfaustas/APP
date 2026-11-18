@@ -5,7 +5,7 @@ import Stripe from "stripe";
 import { env } from "@/lib/config/env";
 import { prisma } from "@/lib/db/prisma";
 
-import { CREDIT_PACK, PLANS, type PlanId } from "./plans";
+import { isPackId, PACKS, PLANS, type PackId, type PlanId } from "./plans";
 
 let client: Stripe | null = null;
 
@@ -16,9 +16,31 @@ export function stripe(): Stripe {
   return client;
 }
 
-export function priceFor(item: "PRO" | "BUSINESS" | "CREDITS_10"): string | null {
+export type CheckoutItem = "PRO" | "BUSINESS" | PackId;
+export const CHECKOUT_ITEMS = ["PRO", "BUSINESS", "PACK_10", "PACK_30", "PACK_100"] as const;
+
+/** The Stripe price for something we sell. STRIPE_PRICE_CREDITS_10 is the old name of the 10-pack price. */
+export function priceFor(item: CheckoutItem): string | null {
   const e = env();
-  return (item === "PRO" ? e.STRIPE_PRICE_PRO : item === "BUSINESS" ? e.STRIPE_PRICE_BUSINESS : e.STRIPE_PRICE_CREDITS_10) ?? null;
+  switch (item) {
+    case "PRO":
+      return e.STRIPE_PRICE_PRO ?? null;
+    case "BUSINESS":
+      return e.STRIPE_PRICE_BUSINESS ?? null;
+    case "PACK_10":
+      return e.STRIPE_PRICE_PACK_10 ?? e.STRIPE_PRICE_CREDITS_10 ?? null;
+    case "PACK_30":
+      return e.STRIPE_PRICE_PACK_30 ?? null;
+    case "PACK_100":
+      return e.STRIPE_PRICE_PACK_100 ?? null;
+  }
+}
+
+/** Reports to add for a paid checkout session; null when the session isn't a credit purchase. */
+export function creditsForSession(metadata: Record<string, string> | null | undefined): number | null {
+  if (metadata?.kind === "PACK" && isPackId(metadata.pack)) return PACKS[metadata.pack].reports;
+  if (metadata?.kind === "CREDITS_10") return 10; // sessions created before packs existed
+  return null;
 }
 
 export function planForPrice(priceId: string | null | undefined): PlanId | null {
@@ -60,13 +82,14 @@ export async function handleStripeEvent(event: Stripe.Event): Promise<void> {
       const s = event.data.object;
       const userId = s.client_reference_id ?? s.metadata?.userId ?? (await userIdForCustomer(typeof s.customer === "string" ? s.customer : s.customer?.id));
       if (!userId) return;
-      if (s.mode === "payment" && s.metadata?.kind === "CREDITS_10") {
+      const credits = s.mode === "payment" && s.payment_status === "paid" ? creditsForSession(s.metadata) : null;
+      if (credits !== null) {
         const reason = `PURCHASE:${s.id}`;
         const already = await prisma.creditLedger.findFirst({ where: { reason } });
         if (already) return;
         await prisma.$transaction([
-          prisma.user.update({ where: { id: userId }, data: { creditsRemaining: { increment: CREDIT_PACK.credits } } }),
-          prisma.creditLedger.create({ data: { userId, delta: CREDIT_PACK.credits, reason } }),
+          prisma.user.update({ where: { id: userId }, data: { creditsRemaining: { increment: credits } } }),
+          prisma.creditLedger.create({ data: { userId, delta: credits, reason } }),
         ]);
       } else if (s.mode === "subscription" && s.metadata?.plan) {
         const plan = s.metadata.plan as PlanId;
