@@ -39,6 +39,7 @@ export const report = {
     mvTitle: "Enter the market value to get your max bid",
     mvBody:
       "No market-data source is configured, so we can't price this car yet. Enter what it sells for with a clean title in your area (median of local listings).",
+    mvNoAi: "The AI that estimates this automatically from the car's model and details isn't connected on this server yet.",
     mvPlaceholder: "e.g. 17,700",
     mvLabel: "Clean retail market value",
     calculate: "Calculate",

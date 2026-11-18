@@ -41,6 +41,7 @@ export const report: Pick<Messages, "report"> = {
     mvTitle: "Įveskite rinkos vertę, kad gautumėte maksimalų statymą",
     mvBody:
       "Nesukonfigūruotas joks rinkos duomenų šaltinis, todėl šio automobilio kol kas įvertinti negalime. Įveskite, už kiek jūsų regione parduodamas toks automobilis su švariu dokumentu (vietinių skelbimų mediana).",
+    mvNoAi: "DI, kuri šią vertę įvertina automatiškai pagal automobilio modelį ir duomenis, šiame serveryje dar neprijungta.",
     mvPlaceholder: "pvz. 17,700",
     mvLabel: "Rinkos vertė su švariu dokumentu",
     calculate: "Skaičiuoti",

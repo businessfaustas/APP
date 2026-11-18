@@ -7,7 +7,7 @@ import type { z } from "zod";
 
 import { env, features } from "@/lib/config/env";
 
-import { recordAiUsage, type AiPurpose } from "./usage";
+import { recordAiUsage, WEB_SEARCH_USD, type AiPurpose } from "./usage";
 
 export type ModelKind = "vision" | "text";
 
@@ -115,4 +115,49 @@ export async function generatePlainText(args: {
     outputTokens: result.usage.outputTokens ?? 0,
   });
   return result.text;
+}
+
+export interface WebResearch {
+  text: string;
+  searches: number;
+  sources: { url: string; title: string | null }[];
+}
+
+/**
+ * Lets the model search the web and report what it found (Anthropic only: it runs the search
+ * itself, so no search key is needed here). Throws AiUnavailableError for other providers, and
+ * the API's own error when web search isn't enabled for the key's organization; callers fall
+ * back to an answer from the model's own knowledge.
+ */
+export async function generateWebResearch(args: {
+  purpose: AiPurpose;
+  instructions: string;
+  prompt: string;
+  analysisId?: string | null;
+  maxSearches?: number;
+}): Promise<WebResearch> {
+  const e = env();
+  if (!features.ai() || e.AI_PROVIDER !== "anthropic" || !e.ANTHROPIC_API_KEY) throw new AiUnavailableError();
+  const anthropic = createAnthropic({ apiKey: e.ANTHROPIC_API_KEY });
+  const result = await generateText({
+    model: anthropic(modelId("text")),
+    instructions: args.instructions,
+    prompt: args.prompt,
+    tools: { web_search: anthropic.tools.webSearch_20260318({ maxUses: args.maxSearches ?? 4, userLocation: { type: "approximate", country: "US" } }) },
+    maxOutputTokens: 2500,
+    temperature: 0.1,
+    maxRetries: 1,
+  });
+  const searches = result.steps.reduce((n, s) => n + s.toolCalls.filter((c) => c.toolName === "web_search").length, 0);
+  await recordAiUsage({
+    analysisId: args.analysisId ?? null,
+    purpose: args.purpose,
+    model: modelId("text"),
+    kind: "text",
+    inputTokens: result.usage.inputTokens ?? 0,
+    outputTokens: result.usage.outputTokens ?? 0,
+    extraUsd: searches * WEB_SEARCH_USD,
+  });
+  const sources = result.sources.flatMap((s) => (s.sourceType === "url" ? [{ url: s.url, title: s.title ?? null }] : []));
+  return { text: result.text, searches, sources };
 }

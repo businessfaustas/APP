@@ -300,6 +300,7 @@ export const generated = {
       vinaudit: "Based on {n} recent listings nationwide.",
       vinauditDown: "VinAudit market value was unavailable.",
       ai: "No comps provider configured — this is an AI estimate. Check real listings before bidding.",
+      aiWeb: "AI read {n} current listings from the web (links in the table). Verify them before bidding.",
       acv: "Based on the auction's own retail value estimate (often inflated) × 0.85. Enter a real market value for accuracy.",
       none: "No market data source is available. Enter the clean retail value to get a max bid.",
       demoComps: "{n} comps within {radius} mi, year {years}, adjusted to {miles} mi and a {pct}% list-to-sale ratio.",
@@ -330,6 +331,7 @@ export const generated = {
     },
     terms: {
       aiEstimate: "AI estimate — verify",
+      aiWeb: "AI market research (web)",
       demoFixture: "Demo fixture",
       estimator: "Estimator (reference prices + rules)",
       aiSummary: "AI summary",

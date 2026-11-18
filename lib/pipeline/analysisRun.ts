@@ -3,6 +3,7 @@ import "server-only";
 import { createHash } from "node:crypto";
 
 import { llmEstimatePartPrices } from "@/lib/ai/prompts/estimates";
+import { vehicleDetails } from "@/lib/providers/market/details";
 import { marketPartPrices } from "@/lib/providers/parts";
 import { writeNarrative } from "@/lib/ai/prompts/narrative";
 import { runVisionAudit } from "@/lib/ai/prompts/vision";
@@ -41,7 +42,7 @@ import { loadPhotosForVision, storeListingPhotos } from "@/lib/storage/photos";
 import { llmClassifyTitle } from "@/lib/ai/prompts/extractListing";
 
 import { assemble } from "./assemble";
-import { cached, TTL } from "./cache";
+import { cached, cacheGet, cacheSet, TTL } from "./cache";
 import { InputPayloadSchema } from "./types";
 
 export interface StepRunner {
@@ -64,6 +65,19 @@ function vehicleLabel(l: NormalizedListing): string {
  * The analysis workflow. Every step's output is JSON so it works both in-process and as
  * memoized Inngest steps. Optional steps degrade to fallbacks instead of failing.
  */
+/**
+ * Market values are cached for a day per car, except the "nothing available" and "auction's own
+ * guess" answers: those come from a missing key, so they must not outlive adding one.
+ */
+async function cachedMarket(key: string, fn: () => Promise<MarketValuation>): Promise<MarketValuation> {
+  const weak = (m: MarketValuation) => m.provider === "NONE" || m.provider.startsWith("Auction ACV");
+  const hit = await cacheGet<MarketValuation>(key);
+  if (hit && !weak(hit)) return hit;
+  const fresh = await fn();
+  if (!weak(fresh)) await cacheSet(key, fresh, TTL.hours(24));
+  return fresh;
+}
+
 export async function runAnalysis(analysisId: string, step: StepRunner, now: Date = new Date()): Promise<void> {
   const a = await prisma.analysis.findUnique({ where: { id: analysisId } });
   if (!a || a.status === "COMPLETED" || a.status === "FAILED") return;
@@ -270,9 +284,8 @@ export async function runAnalysis(analysisId: string, step: StepRunner, now: Dat
         await progress(analysisId, "market-valuation", 45);
         const market: MarketValuation = demoFixture
           ? demoFixture.market
-          : await cached(
+          : await cachedMarket(
               `market:${[listing.make, listing.model, listing.year, listing.trim, snapshot.homeZip, Math.round((listing.odometer ?? 0) / 5000), snapshot.listToSaleBps].join(":")}`,
-              TTL.hours(24),
               () =>
                 valueMarket({
                   vin: listing.vin,
@@ -284,6 +297,7 @@ export async function runAnalysis(analysisId: string, step: StepRunner, now: Dat
                   zip: snapshot.homeZip,
                   listToSaleBps: snapshot.listToSaleBps ?? 9600,
                   listedRetailValue: listing.listedRetailValue,
+                  details: vehicleDetails(listing, vehicle),
                   analysisId,
                 }),
             );

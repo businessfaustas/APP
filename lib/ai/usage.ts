@@ -3,6 +3,9 @@ import "server-only";
 import { env } from "@/lib/config/env";
 import { prisma } from "@/lib/db/prisma";
 
+/** Anthropic bills web search at $10 per 1,000 searches, on top of tokens. */
+export const WEB_SEARCH_USD = 0.01;
+
 export type AiPurpose = "VISION" | "EXTRACT" | "PARTS_PRICE" | "MARKET_ESTIMATE" | "NARRATIVE" | "TITLE";
 
 /** "3,15" → { input: 3, output: 15 } USD per million tokens. */
@@ -23,6 +26,8 @@ export async function recordAiUsage(u: {
   kind: "vision" | "text";
   inputTokens: number;
   outputTokens: number;
+  /** Anything billed outside tokens, e.g. web searches (USD). */
+  extraUsd?: number;
 }): Promise<void> {
   try {
     await prisma.aiUsage.create({
@@ -32,7 +37,7 @@ export async function recordAiUsage(u: {
         model: u.model,
         inputTokens: u.inputTokens,
         outputTokens: u.outputTokens,
-        costUsd: costUsd(u.kind, u.inputTokens, u.outputTokens),
+        costUsd: costUsd(u.kind, u.inputTokens, u.outputTokens) + (u.extraUsd ?? 0),
       },
     });
   } catch (err) {

@@ -18,6 +18,8 @@ export interface MarketRequest {
   zip: string | null;
   listToSaleBps: number;
   listedRetailValue: number | null;
+  /** Other facts about the car for the AI (see vehicleDetails). */
+  details?: string;
   analysisId: string;
 }
 
@@ -101,6 +103,26 @@ async function vinAuditMarket(req: MarketRequest): Promise<{ p25: number; p50: n
   };
 }
 
+/** A listing the AI read on the web, as a comp. Only https links are kept. */
+function aiListingToComp(year: number | null) {
+  return (l: { price: number; mileage: number | null; trim: string | null; location: string | null; url: string | null }): Comp => {
+    const [city = null, state = null] = (l.location ?? "").split(",").map((s) => s.trim() || null);
+    return {
+      price: l.price,
+      adjustedPrice: l.price,
+      mileage: l.mileage,
+      year,
+      trim: l.trim,
+      distanceMiles: null,
+      sellerType: "dealer",
+      daysOnMarket: null,
+      url: l.url && /^https:\/\//i.test(l.url) ? l.url : null,
+      city,
+      state,
+    };
+  };
+}
+
 function vehicleLabel(r: MarketRequest): string {
   return [r.year, r.make, r.model, r.trim].filter(Boolean).join(" ");
 }
@@ -171,13 +193,20 @@ export async function valueMarket(req: MarketRequest): Promise<MarketValuation> 
 
   if (features.ai() && req.make && req.model) {
     try {
-      const est = await llmEstimateMarket({ vehicle: vehicleLabel(req), mileage: req.mileage, zip: req.zip, analysisId: req.analysisId });
+      const est = await llmEstimateMarket({
+        vehicle: vehicleLabel(req),
+        details: req.details ?? "",
+        mileage: req.mileage,
+        zip: req.zip,
+        analysisId: req.analysisId,
+      });
+      const comps = est.listings.map(aiListingToComp(req.year));
       return {
-        provider: "AI estimate — verify",
+        provider: est.grounded ? "AI market research (web)" : "AI estimate — verify",
         isDemo: false,
-        confidence: 0.25,
-        compsCount: 0,
-        comps: [],
+        confidence: est.grounded ? 0.45 : 0.25,
+        compsCount: comps.length,
+        comps,
         mvClean: {
           worst: applyBps(est.p25, req.listToSaleBps),
           expected: applyBps(est.p50, req.listToSaleBps),
@@ -185,7 +214,13 @@ export async function valueMarket(req: MarketRequest): Promise<MarketValuation> 
         },
         medianDaysOnMarket: null,
         mileageSlopePerMile: null,
-        notes: [...notes, "No comps provider configured — this is an AI estimate. Check real listings before bidding.", est.reasoning],
+        notes: [
+          ...notes,
+          est.grounded
+            ? `AI read ${comps.length} current listings from the web (links in the table). Verify them before bidding.`
+            : "No comps provider configured — this is an AI estimate. Check real listings before bidding.",
+          est.reasoning,
+        ],
       };
     } catch (err) {
       console.error("AI market estimate failed", err);

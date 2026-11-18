@@ -325,6 +325,7 @@ export const generated: Pick<Messages, "gen"> = {
       vinaudit: "Paremta {n} {n:naujausiu skelbimu|naujausiais skelbimais|naujausių skelbimų} visoje šalyje.",
       vinauditDown: "VinAudit rinkos vertė nepasiekiama.",
       ai: "Nesukonfigūruotas palyginimų šaltinis — tai DI įvertis. Prieš statydami patikrinkite tikrus skelbimus.",
+      aiWeb: "DI perskaitė {n} dabartinių skelbimų internete (nuorodos lentelėje). Prieš statydami juos patikrinkite.",
       acv: "Paremta paties aukciono nurodyta rinkos verte (dažnai išpūsta) × 0,85. Tikslumui įveskite tikrą rinkos vertę.",
       none: "Rinkos duomenų šaltinio nėra. Įveskite automobilio su švariu dokumentu rinkos vertę, kad gautumėte maksimalų statymą.",
       demoComps:
@@ -357,6 +358,7 @@ export const generated: Pick<Messages, "gen"> = {
     },
     terms: {
       aiEstimate: "DI įvertis — patikrinkite",
+      aiWeb: "DI rinkos tyrimas (internetas)",
       demoFixture: "Demonstraciniai duomenys",
       estimator: "Skaičiuoklė (etaloninės kainos + taisyklės)",
       aiSummary: "DI santrauka",

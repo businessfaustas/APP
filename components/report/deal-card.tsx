@@ -158,9 +158,10 @@ export function BidLadder({ calc, currentBid }: { calc: CalculationResult; curre
 }
 
 function MarketMissing() {
-  const { setAssumption } = useReport();
+  const { setAssumption, view } = useReport();
   const t = useT();
   const [value, setValue] = useState("");
+  const aiOff = view.dataSources.vision?.note === "No AI key";
   return (
     <Card className="brand-glow overflow-hidden" data-testid="market-missing">
       <CardContent className="space-y-5">
@@ -171,6 +172,7 @@ function MarketMissing() {
           <div className="space-y-1.5">
             <h2 className="text-xl font-semibold tracking-tight">{t("report.mvTitle")}</h2>
             <p className="text-muted-foreground max-w-2xl text-sm leading-relaxed">{t("report.mvBody")}</p>
+            {aiOff && <p className="text-caution max-w-2xl text-sm leading-relaxed">{t("report.mvNoAi")}</p>}
           </div>
         </div>
         <form

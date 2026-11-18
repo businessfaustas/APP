@@ -82,10 +82,12 @@ export function integrations(): Integration[] {
     {
       key: "ai",
       name: ai === "openai" ? "OpenAI (AI vision)" : "Anthropic Claude (AI vision)",
-      priority: "recommended",
+      priority: "required",
       enabled: features.ai(),
-      unlocks: "Reads damage from the photos part by part, extracts pasted listing text and writes the summary.",
-      without: "Damage is estimated from the listing's damage type with built-in rules; no photo reading.",
+      unlocks:
+        "Reads the damage from the photos part by part, researches the car's clean market value on the web from its exact model, trim and mileage, extracts pasted listing text and writes the summary. For the web research, turn on web search in the Anthropic console (Settings → Privacy).",
+      without:
+        "The photos aren't analyzed (damage comes from the listing's damage type with built-in rules) and the market value isn't estimated: the report asks you to type it.",
       vars: [
         { name: "AI_PROVIDER", set: isSet(process.env.AI_PROVIDER), optional: true },
         ai === "openai" ? { name: "OPENAI_API_KEY", set: isSet(e.OPENAI_API_KEY) } : { name: "ANTHROPIC_API_KEY", set: isSet(e.ANTHROPIC_API_KEY) },
