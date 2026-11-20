@@ -28,7 +28,14 @@ export function Separator({ className, orientation = "horizontal", decorative = 
 
 export function Progress({ className, value, ...props }: React.ComponentProps<typeof ProgressPrimitive.Root>) {
   return (
-    <ProgressPrimitive.Root className={cn("bg-muted relative h-2 w-full overflow-hidden rounded-full", className)} value={value} {...props}>
+    <ProgressPrimitive.Root
+      className={cn(
+        "bg-muted relative h-2.5 w-full overflow-hidden rounded-[1px] [mask-image:repeating-linear-gradient(90deg,#000_0_7px,transparent_7px_9px)]",
+        className,
+      )}
+      value={value}
+      {...props}
+    >
       <ProgressPrimitive.Indicator
         className="bg-primary h-full w-full flex-1 transition-all duration-500"
         style={{ transform: `translateX(-${100 - (value ?? 0)}%)` }}
@@ -41,7 +48,7 @@ export function Checkbox({ className, ...props }: React.ComponentProps<typeof Ch
   return (
     <CheckboxPrimitive.Root
       className={cn(
-        "peer border-input focus-visible:ring-ring/50 dark:bg-input/30 data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground dark:data-[state=checked]:bg-primary size-4 shrink-0 rounded-[4px] border shadow-xs outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50",
+        "peer border-input focus-visible:ring-ring/50 dark:bg-input/30 data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground dark:data-[state=checked]:bg-primary size-4 shrink-0 rounded-[2px] border outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50",
         className,
       )}
       {...props}
@@ -92,13 +99,13 @@ export function SegmentedControl<T extends string>({
       onValueChange={(v) => {
         if (v) onValueChange(v as T);
       }}
-      className={cn("bg-muted inline-flex w-full rounded-lg p-1", className)}
+      className={cn("bg-muted inline-flex w-full rounded-[3px] p-1", className)}
     >
       {options.map((o) => (
         <ToggleGroupPrimitive.Item
           key={o.value}
           value={o.value}
-          className="text-muted-foreground focus-visible:ring-ring/50 data-[state=on]:bg-card data-[state=on]:text-foreground dark:data-[state=on]:bg-surface-2 hover:text-foreground flex-1 cursor-pointer rounded-md px-2 py-1.5 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none data-[state=on]:shadow-sm"
+          className="text-muted-foreground focus-visible:ring-ring/50 data-[state=on]:bg-card data-[state=on]:text-foreground dark:data-[state=on]:bg-surface-2 hover:text-foreground font-display flex-1 cursor-pointer rounded-[2px] px-2 py-1.5 text-[0.85rem] font-semibold tracking-[0.05em] uppercase transition-colors focus-visible:ring-2 focus-visible:outline-none data-[state=on]:shadow-[inset_0_-2px_0_var(--primary)]"
         >
           {o.label}
         </ToggleGroupPrimitive.Item>

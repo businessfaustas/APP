@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 
 import { ManualFields } from "./manual-fields";
 import { PhotoUpload } from "./photo-upload";
+import { VinCard } from "./vin-card";
 
 export function AnalyzeBar({ demoLots, initialInput = "" }: { demoLots: DemoLot[]; initialInput?: string }) {
   const router = useRouter();
@@ -118,6 +119,8 @@ export function AnalyzeBar({ demoLots, initialInput = "" }: { demoLots: DemoLot[
         {parsed.warnings.length > 0 && <p className="text-caution px-2 pt-1 text-xs">{parsedWarnings(t, parsed).join(" ")}</p>}
       </form>
 
+      {parsed.type === "VIN" && <VinCard vin={parsed.vin} />}
+
       {more && (
         <div className="bg-card space-y-4 rounded-xl border p-4">
           {parsed.type === "TEXT" && (
@@ -182,7 +185,7 @@ function DemoChip({ lot, disabled, onPick }: { lot: DemoLot; disabled: boolean; 
       disabled={disabled}
       onClick={onPick}
       title={description}
-      className="bg-background hover:border-primary hover:text-primary rounded-full border px-3 py-1 text-xs transition-colors disabled:opacity-50"
+      className="bg-background hover:border-primary hover:text-primary rounded-[3px] border px-3 py-1 text-[0.85rem] transition-colors disabled:opacity-50"
     >
       {label}
     </button>

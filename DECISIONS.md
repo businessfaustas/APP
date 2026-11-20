@@ -105,3 +105,17 @@ Monthly plans stay for people who analyze every week (Pro €59 for 40, Business
 **Changing prices.** Edit `PACKS` and `PLANS` in `lib/billing/plans.ts` (this drives the pricing page and the billing page) and create matching EUR prices in Stripe; checkout charges the Stripe price. VAT is not in the code: use Stripe Tax or set tax-inclusive prices in Stripe.
 
 **Credits.** One credit per new analysis; analyzing the same input again within 24 hours is free; a failed analysis is refunded. A pack adds to the balance and a plan's monthly reset never lowers it, so pack credits are never lost. Credits can also be added by hand in Admin → Users.
+
+## Look and feel
+
+The look comes from the logo: an italic wordmark, a speedometer, orange speed lines. The idea is a motorsport timing board, not the usual dark-blue SaaS template.
+
+- **Colour:** warm paper (light) and asphalt (dark) with the logo's signal orange. Buttons are ink (black on paper, bone on asphalt) and turn orange on hover; orange marks what is active, live or selected. Tokens are in `app/globals.css`.
+- **Type:** Barlow for text and Barlow Condensed for headings, figures, tags and buttons (`@fontsource`, bundled, no network at runtime). Page titles are condensed italic capitals; money figures use `.display` (condensed italic, tabular).
+- **Shape:** small radii everywhere (the Tailwind steps are overridden in the theme block). Buttons and tags are slanted plates (`.slant`, a skewed pseudo-element so the text stays upright). Cards carry two registration ticks as background layers. Labels have a skewed orange dash (`.eyebrow`). Every lucide icon is drawn with square ends by one CSS rule; the sidebar icons are BidPilot's own (`components/icons.tsx`).
+- **Details:** GO / BE CAUTIOUS / WALK AWAY are the green, yellow and red race flags; credits are a fuel gauge; sliders are gauge tracks with a tick every 10%; the landing page is a typographic spec sheet instead of icon cards.
+- **When changing it:** keep the tokens, not hard-coded colours, so light and dark both work, and keep the contrast of text on `--primary` (the light theme's orange is darker than the logo's for that reason).
+
+## VIN input
+
+A VIN pasted into the analyze box is checked and decoded live (`/api/vin/[vin]`, the free NHTSA decoder, cached 30 days, 60 checks an hour per user) and shown as a plate with the car's year, model, engine and drive before anything is charged. When the analysis runs, `lib/providers/listing/vinLookup.ts` decodes the VIN again and, with an AI key, searches the web for an auction lot of that exact VIN (damage, odometer, title, location, photos). A lot is used only if the notes name this VIN and say something about damage or photos; it is marked as found by search and may be an earlier sale. Without a lot, the form opens with the decoded car filled in and asks only for the damage, odometer and bid. In demo mode the VIN of a sample car runs the offline fixture.

@@ -137,7 +137,7 @@ export function CalculatorClient({
         <Card>
           <CardHeader className="flex-row flex-wrap items-center justify-between gap-2">
             <CardTitle className="text-base">{t("calc.yourNumbers")}</CardTitle>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button size="sm" variant="outline" onClick={fillFromExpected}>
                 <WandSparklesIcon /> {t("calc.fill")}
               </Button>

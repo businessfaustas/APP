@@ -355,10 +355,15 @@ export const generated: Pick<Messages, "gen"> = {
       pasteOrFill: "Įklijuokite skelbimo tekstą arba užpildykite laukus.",
       invalidInput: "Neatpažinta — įklijuokite aukciono nuorodą, 17 simbolių VIN arba visą skelbimo tekstą",
       emptyInput: "Įklijuokite nuorodą, VIN arba skelbimo tekstą",
+      vinKnown: "VIN iššifravome kaip {car}. Iš loto puslapio įrašykite pažeidimus, ridą ir dabartinį statymą arba įklijuokite viso puslapio tekstą.",
+      vinWebSold:
+        "Rasta ieškant internete pagal šį VIN. Pardavimas atrodo pasibaigęs, todėl tai gali būti ankstesnis pardavimas: patikrinkite pažeidimus, ridą ir statymą loto puslapyje.",
+      vinWebActive: "Rasta ieškant internete pagal šį VIN. Prieš statydami palyginkite duomenis su loto puslapiu.",
     },
     terms: {
       aiEstimate: "DI įvertis — patikrinkite",
       aiWeb: "DI rinkos tyrimas (internetas)",
+      vinSearch: "VIN paieška (internetas)",
       demoFixture: "Demonstraciniai duomenys",
       estimator: "Skaičiuoklė (etaloninės kainos + taisyklės)",
       aiSummary: "DI santrauka",

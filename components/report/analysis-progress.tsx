@@ -46,7 +46,7 @@ export function AnalysisProgress({ view }: { view: AnalysisView }) {
               </div>
             </div>
             {visual.zones.length > 0 && (
-              <div className="bg-background/80 rise flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium backdrop-blur">
+              <div className="bg-background/80 rise font-display flex items-center gap-1.5 rounded-[3px] border px-3 py-1.5 text-[0.85rem] font-semibold tracking-[0.06em] uppercase backdrop-blur">
                 <span className="bg-stop glow-pulse size-2 rounded-full" aria-hidden="true" />
                 {t("report.zonesFound", { n: visual.zones.length })}
               </div>

@@ -2,7 +2,7 @@ import "server-only";
 
 import { llmExtractListing } from "@/lib/ai/prompts/extractListing";
 import { features } from "@/lib/config/env";
-import { findDemoFixture } from "@/lib/demo/fixtures";
+import { findDemoFixture, findDemoFixtureByVin } from "@/lib/demo/fixtures";
 import type { AuctionSource, NormalizedListing } from "@/lib/domain/schemas";
 import { describeHints, hintsFromAuctionUrl, hintsIdentifyVehicle, type UrlHints } from "@/lib/input/urlHints";
 import { sourceLabel } from "@/lib/input/urls";
@@ -12,6 +12,7 @@ import { extractionScore, heuristicExtract } from "./heuristicExtract";
 import { extractFromHtml } from "./htmlExtract";
 import { finalizeListing, hasVehicleIdentity, mergeRaw, type RawListing } from "./normalize";
 import { fetchListingPage, fetchListingPageDirect } from "./scrapingApi";
+import { lookupByVin } from "./vinLookup";
 
 export interface ManualListingInput {
   vin?: string | null;
@@ -145,8 +146,8 @@ export async function fetchListing(req: ListingRequest, now: Date = new Date()):
   const uploaded = req.uploadedPhotoUrls ?? [];
 
   // 1. Demo fixtures
-  if (features.demoMode() && req.lotNumber) {
-    const fx = findDemoFixture(req.source ?? null, req.lotNumber);
+  if (features.demoMode()) {
+    const fx = req.lotNumber ? findDemoFixture(req.source ?? null, req.lotNumber) : req.type === "VIN" && req.vin ? findDemoFixtureByVin(req.vin) : null;
     if (fx) return { data: fx.listing(now), provider: "Demo fixture", isDemo: true };
   }
 
@@ -238,12 +239,37 @@ export async function fetchListing(req: ListingRequest, now: Date = new Date()):
 
   // 5. VIN and/or manual form
   if (manualRaw || req.vin) {
-    const raw = mergeRaw(manualRaw, { vin: req.vin ?? null, photoUrls: uploaded, source: "MANUAL" });
-    const listing = finalizeListing(raw, "MANUAL");
-    if (!listing.primaryDamage && uploaded.length === 0) {
-      throw new NeedsInputError("Add the damage details (primary damage) or photos so we can estimate repairs — or paste the full listing text.");
+    // A VIN alone: find out who the car is (free decode) and, with AI, which lot it is.
+    const lookup = req.vin && !manualRaw?.primaryDamage && uploaded.length === 0 ? await lookupByVin(req.vin, req.analysisId) : null;
+    const identity = lookup?.identity
+      ? ({
+          year: lookup.identity.year,
+          make: lookup.identity.make,
+          model: lookup.identity.model,
+          trim: lookup.identity.trim,
+          engine: lookup.identity.engine,
+          drive: lookup.identity.drive,
+          fuel: lookup.identity.fuel,
+          transmission: lookup.identity.transmission,
+        } satisfies RawListing)
+      : null;
+    const raw = mergeRaw(manualRaw, lookup?.found?.raw, identity, { vin: req.vin ?? null, photoUrls: uploaded, source: "MANUAL" });
+    const viaWeb = Boolean(lookup?.found);
+    const listing = finalizeListing(raw, viaWeb ? "LLM" : "MANUAL", lookup?.found?.warnings ?? []);
+    if (!listing.primaryDamage && listing.photoUrls.length === 0) {
+      const car = [listing.year, listing.make, listing.model, listing.trim].filter(Boolean).join(" ");
+      throw new NeedsInputError(
+        car
+          ? `We decoded the VIN as ${car}. Add the damage, odometer and current bid from the lot page, or paste the whole page text.`
+          : "Add the damage details (primary damage) or photos so we can estimate repairs — or paste the full listing text.",
+        lookup?.identity
+          ? { vin: req.vin ?? null, year: lookup.identity.year, make: lookup.identity.make, model: lookup.identity.model, trim: lookup.identity.trim }
+          : req.vin
+            ? { vin: req.vin }
+            : null,
+      );
     }
-    return { data: listing, provider: "Manual entry", isDemo: false };
+    return { data: listing, provider: viaWeb ? "VIN search (web)" : "Manual entry", isDemo: false };
   }
 
   throw new NeedsInputError("Paste the listing text or fill in the vehicle details to continue.");

@@ -17,7 +17,7 @@ export async function SiteHeader() {
   return (
     <header className="bg-background/80 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40 border-b backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-2 px-4 sm:gap-4">
-        <Logo className="text-base sm:text-xl" />
+        <Logo className="text-[0.9rem] sm:text-xl" />
         <nav aria-label={t("nav.main")} className="ml-4 hidden items-center gap-1 md:flex">
           {nav.map((n) => (
             <Link
@@ -37,7 +37,7 @@ export async function SiteHeader() {
           <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
             <Link href="/login">{t("common.signIn")}</Link>
           </Button>
-          <Button asChild size="sm">
+          <Button asChild size="sm" className="px-3 sm:px-4">
             <Link href="/app">{t("common.analyzeLot")}</Link>
           </Button>
         </div>

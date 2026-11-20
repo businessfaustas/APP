@@ -57,7 +57,7 @@ function CellNumber({
       onKeyDown={(e) => {
         if (e.key === "Enter") (e.target as HTMLInputElement).blur();
       }}
-      className="num h-7 w-16 px-2 text-right text-xs"
+      className="num h-7 w-12 px-1 text-right text-xs"
     />
   );
 }
@@ -162,7 +162,6 @@ export function RepairTab() {
                   <span className="sr-only">{t("report.include")}</span>
                 </TableHead>
                 <TableHead>{t("report.partService")}</TableHead>
-                <TableHead>{t("report.source")}</TableHead>
                 <TableHead className="text-right">{t("report.price")}</TableHead>
                 <TableHead className="text-right">{t("report.bodyH")}</TableHead>
                 <TableHead className="text-right">{t("report.paintH")}</TableHead>
@@ -187,7 +186,7 @@ export function RepairTab() {
                         onCheckedChange={(c) => updateLine(l.id, { included: c === true })}
                       />
                     </TableCell>
-                    <TableCell className="max-w-56 min-w-40 whitespace-normal">
+                    <TableCell className="max-w-56 min-w-36 whitespace-normal">
                       <div className="text-sm font-medium">{name}</div>
                       <div className="text-muted-foreground mt-0.5 flex flex-wrap items-center gap-1 text-[11px]">
                         <span>
@@ -204,30 +203,30 @@ export function RepairTab() {
                         {l.priceOrigin === "MARKET" && <Badge variant="go">{t("report.marketPrice")}</Badge>}
                         {l.userEdited && <Badge variant="outline">{t("report.edited")}</Badge>}
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      {available.length > 1 && !ro ? (
-                        <Select
-                          value={l.selectedSource ?? "AUTO"}
-                          onValueChange={(v) => updateLine(l.id, { selectedSource: v === "AUTO" ? null : (v as PartSource) })}
-                        >
-                          <SelectTrigger size="sm" className="h-7 w-28 text-xs" aria-label={t("report.sourceFor", { name })}>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="AUTO">{t("report.auto")}</SelectItem>
-                            {available.map((s) => (
-                              <SelectItem key={s} value={s}>
-                                {t(`domain.partSource.${s}`)}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <span className="text-muted-foreground text-xs">
-                          {available.length === 1 ? t(`domain.partSource.${available[0]!}`) : l.kind === "SUBLET" ? t("report.shop") : "—"}
-                        </span>
-                      )}
+                      <div className="mt-1.5">
+                        {available.length > 1 && !ro ? (
+                          <Select
+                            value={l.selectedSource ?? "AUTO"}
+                            onValueChange={(v) => updateLine(l.id, { selectedSource: v === "AUTO" ? null : (v as PartSource) })}
+                          >
+                            <SelectTrigger size="sm" className="h-6 w-[6.5rem] text-[11px]" aria-label={t("report.sourceFor", { name })}>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="AUTO">{t("report.auto")}</SelectItem>
+                              {available.map((s) => (
+                                <SelectItem key={s} value={s}>
+                                  {t(`domain.partSource.${s}`)}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <span className="text-muted-foreground text-[11px]">
+                            {available.length === 1 ? t(`domain.partSource.${available[0]!}`) : l.kind === "SUBLET" ? t("report.shop") : "—"}
+                          </span>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell className="text-right">
                       <CellNumber label={t("report.priceFor", { name })} value={price} disabled={ro} onCommit={(v) => updateLine(l.id, { priceOverride: v })} />

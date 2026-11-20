@@ -13,7 +13,7 @@ import { refundAnalysis } from "@/lib/billing/credits";
 import { assumptionsFromSettings, runAnalysisCalc } from "@/lib/calc/build";
 import { env, features } from "@/lib/config/env";
 import { prisma } from "@/lib/db/prisma";
-import { findDemoFixture } from "@/lib/demo/fixtures";
+import { findDemoFixture, findDemoFixtureByVin } from "@/lib/demo/fixtures";
 import type {
   DamageAssessment,
   DataSources,
@@ -85,7 +85,11 @@ export async function runAnalysis(analysisId: string, step: StepRunner, now: Dat
   try {
     const payload = InputPayloadSchema.parse(a.inputPayload);
     const snapshot = a.settingsSnapshot as unknown as SettingsSnapshot;
-    const demoFixture = features.demoMode() ? findDemoFixture(payload.parsed.source, payload.parsed.lotNumber) : null;
+    // demo mode: a sample lot's link, or the VIN of one of the sample cars, runs the offline fixture
+    const demoFixture = features.demoMode()
+      ? (findDemoFixture(payload.parsed.source, payload.parsed.lotNumber) ??
+        (payload.parsed.type === "VIN" && payload.parsed.vin ? findDemoFixtureByVin(payload.parsed.vin) : null))
+      : null;
     const sources: DataSources = {};
 
     // ── 1. Listing ──────────────────────────────────────────────────────────

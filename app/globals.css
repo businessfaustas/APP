@@ -4,7 +4,8 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Barlow", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Barlow Condensed", "Barlow", ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 
   --color-background: var(--background);
@@ -50,55 +51,59 @@
   --color-surface-2: var(--surface-2);
   --color-brand-2: var(--brand-2);
 
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  /* Engineered, not bubbly: small radii everywhere, including the large Tailwind steps. */
+  --radius-sm: 2px;
+  --radius-md: 3px;
+  --radius-lg: 4px;
+  --radius-xl: 5px;
+  --radius-2xl: 6px;
+  --radius-3xl: 8px;
 }
 
+/*
+ * BidPilot palette: pit-board paper and asphalt, with the logo's signal orange.
+ * Ink (the text colour) carries the buttons; orange is for what is active, live or selected.
+ */
 :root {
-  --radius: 0.875rem;
-  --background: oklch(0.975 0.004 275);
-  --foreground: oklch(0.21 0.02 275);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.21 0.02 275);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.21 0.02 275);
-  --primary: oklch(0.52 0.2 275);
-  --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.955 0.008 275);
-  --secondary-foreground: oklch(0.27 0.02 275);
-  --muted: oklch(0.955 0.007 275);
-  --muted-foreground: oklch(0.49 0.02 275);
-  --accent: oklch(0.945 0.025 275);
-  --accent-foreground: oklch(0.36 0.13 275);
-  --destructive: oklch(0.56 0.21 25);
-  --border: oklch(0.915 0.008 275);
-  --input: oklch(0.88 0.01 275);
-  --ring: oklch(0.58 0.18 275);
-  --sidebar: oklch(0.985 0.003 275);
-  --surface-2: oklch(0.965 0.006 275);
-  --brand-2: oklch(0.62 0.17 220);
+  --radius: 4px;
+  --background: oklch(0.962 0.009 85);
+  --foreground: oklch(0.19 0.012 60);
+  --card: oklch(0.992 0.004 85);
+  --card-foreground: oklch(0.19 0.012 60);
+  --popover: oklch(0.992 0.004 85);
+  --popover-foreground: oklch(0.19 0.012 60);
+  --primary: oklch(0.585 0.215 38);
+  --primary-foreground: oklch(0.99 0.004 85);
+  --secondary: oklch(0.935 0.01 85);
+  --secondary-foreground: oklch(0.25 0.012 60);
+  --muted: oklch(0.94 0.009 85);
+  --muted-foreground: oklch(0.46 0.014 70);
+  --accent: oklch(0.925 0.022 70);
+  --accent-foreground: oklch(0.3 0.04 45);
+  --destructive: oklch(0.52 0.21 15);
+  --border: oklch(0.875 0.011 80);
+  --input: oklch(0.8 0.013 80);
+  --ring: oklch(0.585 0.215 38);
+  --sidebar: oklch(0.948 0.01 85);
+  --surface-2: oklch(0.945 0.01 85);
+  --brand-2: oklch(0.55 0.1 215);
 
-  /* how a raised surface is lit: top edge highlight, soft drop shadow, slightly lighter top */
-  --surface-top: var(--card);
-  --surface-highlight: inset 0 1px 0 rgb(255 255 255 / 0.9);
-  --surface-shadow: 0 1px 2px rgb(22 24 48 / 0.05), 0 14px 30px -20px rgb(22 24 48 / 0.2);
-  --ambient-a: color-mix(in oklab, var(--primary) 7%, transparent);
-  --ambient-b: color-mix(in oklab, var(--brand-2) 6%, transparent);
+  --surface-shadow: 0 1px 0 rgb(40 30 15 / 0.04), 0 10px 24px -18px rgb(40 30 15 / 0.28);
+  --tick: color-mix(in oklab, var(--foreground) 34%, transparent);
+  --hatch: color-mix(in oklab, var(--foreground) 5%, transparent);
 
-  --go: oklch(0.52 0.14 158);
-  --go-soft: oklch(0.95 0.045 158);
-  --caution: oklch(0.6 0.15 65);
-  --caution-soft: oklch(0.96 0.055 85);
-  --stop: oklch(0.55 0.2 20);
-  --stop-soft: oklch(0.955 0.035 15);
+  --go: oklch(0.5 0.14 152);
+  --go-soft: oklch(0.945 0.05 150);
+  --caution: oklch(0.56 0.13 78);
+  --caution-soft: oklch(0.955 0.07 90);
+  --stop: oklch(0.5 0.22 15);
+  --stop-soft: oklch(0.945 0.04 15);
 
-  --chart-1: oklch(0.52 0.2 275);
-  --chart-2: oklch(0.6 0.14 158);
-  --chart-3: oklch(0.7 0.15 70);
-  --chart-4: oklch(0.6 0.19 15);
-  --chart-5: oklch(0.6 0.12 220);
+  --chart-1: oklch(0.585 0.215 38);
+  --chart-2: oklch(0.58 0.13 152);
+  --chart-3: oklch(0.72 0.15 85);
+  --chart-4: oklch(0.52 0.2 15);
+  --chart-5: oklch(0.55 0.1 215);
 
   /* validated data-viz slots (light) */
   --series-1: #2a78d6;
@@ -108,51 +113,49 @@
   --status-good: #0ca30c;
   --status-critical: #d03b3b;
   --status-warning: #fab219;
-  --chart-grid: #e4e4ec;
-  --chart-axis: #c5c5d2;
+  --chart-grid: #e6e1d6;
+  --chart-axis: #cbc4b4;
 }
 
 .dark {
-  --background: oklch(0.135 0.013 275);
-  --foreground: oklch(0.965 0.005 275);
-  --card: oklch(0.182 0.015 275);
-  --card-foreground: oklch(0.96 0.005 275);
-  --popover: oklch(0.205 0.016 275);
-  --popover-foreground: oklch(0.96 0.005 275);
-  --primary: oklch(0.7 0.16 275);
-  --primary-foreground: oklch(0.16 0.03 275);
-  --secondary: oklch(0.24 0.016 275);
-  --secondary-foreground: oklch(0.94 0.005 275);
-  --muted: oklch(0.23 0.014 275);
-  --muted-foreground: oklch(0.72 0.018 275);
-  --accent: oklch(0.27 0.04 275);
-  --accent-foreground: oklch(0.9 0.05 275);
-  --destructive: oklch(0.66 0.19 20);
-  --border: oklch(0.27 0.017 275);
-  --input: oklch(0.32 0.018 275);
-  --ring: oklch(0.66 0.15 275);
-  --sidebar: oklch(0.125 0.012 275);
-  --surface-2: oklch(0.215 0.016 275);
-  --brand-2: oklch(0.74 0.13 220);
+  --background: oklch(0.15 0.007 60);
+  --foreground: oklch(0.955 0.01 85);
+  --card: oklch(0.19 0.008 60);
+  --card-foreground: oklch(0.95 0.01 85);
+  --popover: oklch(0.21 0.009 60);
+  --popover-foreground: oklch(0.95 0.01 85);
+  --primary: oklch(0.715 0.19 45);
+  --primary-foreground: oklch(0.16 0.02 50);
+  --secondary: oklch(0.25 0.009 60);
+  --secondary-foreground: oklch(0.94 0.01 85);
+  --muted: oklch(0.23 0.008 60);
+  --muted-foreground: oklch(0.72 0.014 80);
+  --accent: oklch(0.28 0.025 55);
+  --accent-foreground: oklch(0.92 0.04 60);
+  --destructive: oklch(0.66 0.2 15);
+  --border: oklch(0.29 0.009 60);
+  --input: oklch(0.36 0.01 60);
+  --ring: oklch(0.715 0.19 45);
+  --sidebar: oklch(0.125 0.006 60);
+  --surface-2: oklch(0.225 0.009 60);
+  --brand-2: oklch(0.74 0.1 215);
 
-  --surface-top: color-mix(in oklab, var(--card) 93%, white);
-  --surface-highlight: inset 0 1px 0 rgb(255 255 255 / 0.06);
-  --surface-shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 20px 44px -26px rgb(0 0 0 / 0.75);
-  --ambient-a: color-mix(in oklab, var(--primary) 13%, transparent);
-  --ambient-b: color-mix(in oklab, var(--brand-2) 8%, transparent);
+  --surface-shadow: 0 1px 0 rgb(0 0 0 / 0.5), 0 18px 36px -24px rgb(0 0 0 / 0.8);
+  --tick: color-mix(in oklab, var(--foreground) 38%, transparent);
+  --hatch: color-mix(in oklab, var(--foreground) 5%, transparent);
 
-  --go: oklch(0.76 0.15 158);
-  --go-soft: oklch(0.29 0.055 158);
-  --caution: oklch(0.82 0.14 80);
-  --caution-soft: oklch(0.31 0.055 75);
-  --stop: oklch(0.72 0.16 18);
-  --stop-soft: oklch(0.29 0.065 15);
+  --go: oklch(0.76 0.16 152);
+  --go-soft: oklch(0.29 0.06 152);
+  --caution: oklch(0.83 0.15 88);
+  --caution-soft: oklch(0.31 0.06 85);
+  --stop: oklch(0.7 0.19 15);
+  --stop-soft: oklch(0.29 0.07 15);
 
-  --chart-1: oklch(0.7 0.16 275);
-  --chart-2: oklch(0.72 0.14 158);
-  --chart-3: oklch(0.8 0.14 80);
-  --chart-4: oklch(0.7 0.17 15);
-  --chart-5: oklch(0.74 0.13 220);
+  --chart-1: oklch(0.715 0.19 45);
+  --chart-2: oklch(0.74 0.15 152);
+  --chart-3: oklch(0.82 0.15 88);
+  --chart-4: oklch(0.68 0.19 15);
+  --chart-5: oklch(0.74 0.1 215);
 
   /* validated data-viz slots (dark) */
   --series-1: #3987e5;
@@ -162,8 +165,8 @@
   --status-good: #0ca30c;
   --status-critical: #d03b3b;
   --status-warning: #fab219;
-  --chart-grid: #2a2a35;
-  --chart-axis: #3a3a48;
+  --chart-grid: #2c2a25;
+  --chart-axis: #403d35;
 }
 
 @layer base {
@@ -172,18 +175,19 @@
   }
   html {
     -webkit-text-size-adjust: 100%;
+    font-size: 106.25%;
     scrollbar-color: color-mix(in oklab, var(--muted-foreground) 35%, transparent) transparent;
   }
   body {
     @apply bg-background text-foreground antialiased;
-    font-feature-settings: "cv11", "ss01";
-    /* two soft lights behind everything, so pages never read as a flat fill */
-    background-image:
-      radial-gradient(58rem 34rem at 88% -8%, var(--ambient-a), transparent 62%), radial-gradient(46rem 30rem at 4% 108%, var(--ambient-b), transparent 60%);
-    background-attachment: fixed;
+    /* a faint diagonal hatch in the top corner, like a pit-wall board: no glows */
+    background-image: repeating-linear-gradient(-45deg, var(--hatch) 0 1px, transparent 1px 9px);
+    background-size: 100% 22rem;
+    background-repeat: no-repeat;
+    -webkit-mask-image: none;
   }
   ::selection {
-    background: color-mix(in oklab, var(--primary) 30%, transparent);
+    background: color-mix(in oklab, var(--primary) 35%, transparent);
   }
   .num {
     font-variant-numeric: tabular-nums;
@@ -191,41 +195,90 @@
   h1,
   h2,
   h3 {
-    letter-spacing: -0.022em;
+    font-family: var(--font-display);
+    letter-spacing: 0;
+  }
+  /* Page titles: condensed, italic and capitalised, like the wordmark. */
+  h1 {
+    font-style: italic;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.005em;
+  }
+  h2,
+  h3 {
+    font-weight: 650;
+  }
+  /* Every icon in the app gets square ends and sharp joins (the logo has no round corners). */
+  svg.lucide {
+    stroke-linecap: square;
+    stroke-linejoin: miter;
   }
 }
 
 @layer components {
-  /* A raised surface: lighter at the top edge, with a hairline highlight and a soft shadow. */
+  /*
+   * A card is a hairline frame with two registration ticks, top-left and bottom-right,
+   * the way a drawing sheet is marked. The ticks are background layers, so no element is used up.
+   */
   [data-slot="card"],
   .surface {
-    background-image: linear-gradient(180deg, var(--surface-top), var(--card) 56%);
-    box-shadow: var(--surface-highlight), var(--surface-shadow);
+    background-color: var(--card);
+    background-image:
+      linear-gradient(var(--tick), var(--tick)), linear-gradient(var(--tick), var(--tick)), linear-gradient(var(--tick), var(--tick)),
+      linear-gradient(var(--tick), var(--tick));
+    background-size:
+      11px 1px,
+      1px 11px,
+      11px 1px,
+      1px 11px;
+    background-position:
+      0 0,
+      0 0,
+      100% 100%,
+      100% 100%;
+    background-repeat: no-repeat;
+    box-shadow: var(--surface-shadow);
   }
-  /* The same surface when the whole thing is a link or button. */
+  /* The same surface when the whole thing is a link or button: the ticks turn orange and the card lifts. */
   .surface-link {
     transition:
-      transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1),
-      border-color 220ms,
-      box-shadow 220ms;
+      transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      border-color 180ms,
+      box-shadow 180ms;
   }
   .surface-link:hover {
     transform: translateY(-2px);
-    border-color: color-mix(in oklab, var(--primary) 45%, var(--border));
-    box-shadow:
-      var(--surface-highlight),
-      0 2px 4px rgb(0 0 0 / 0.12),
-      0 24px 44px -24px color-mix(in oklab, var(--primary) 55%, black);
+    border-color: color-mix(in oklab, var(--primary) 55%, var(--border));
+    --tick: var(--primary);
   }
-  .btn-primary {
-    background-image: linear-gradient(180deg, color-mix(in oklab, var(--primary) 90%, white), color-mix(in oklab, var(--primary) 90%, black));
-    box-shadow:
-      inset 0 1px 0 rgb(255 255 255 / 0.24),
-      0 1px 2px rgb(0 0 0 / 0.22),
-      0 10px 22px -12px var(--primary);
+  /*
+   * A slanted plate: the shape sits on a skewed pseudo-element so the text stays upright.
+   * Set --slant-bg and --slant-line on the element (buttons and tags do this).
+   */
+  .slant {
+    position: relative;
+    isolation: isolate;
+    border-color: transparent !important;
+    background: none !important;
+    box-shadow: none !important;
   }
-  .btn-primary:hover {
-    filter: brightness(1.07);
+  .slant::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: 2px;
+    transform: skewX(var(--slant-skew, -12deg));
+    background: var(--slant-bg, transparent);
+    box-shadow: inset 0 0 0 1px var(--slant-line, transparent);
+    transition:
+      background-color 140ms,
+      box-shadow 140ms;
+  }
+  /* Faint hatching for hero panels. */
+  .hatch {
+    background-image: repeating-linear-gradient(-45deg, var(--hatch) 0 1px, transparent 1px 8px);
   }
 }
 
@@ -331,41 +384,68 @@
   }
   /* Small uppercase label above a value or a section ("eyebrow"). */
   .eyebrow {
-    font-size: 0.6875rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-display);
+    font-size: 0.8125rem;
     font-weight: 600;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
     color: var(--muted-foreground);
   }
-  /* Big numbers: tight, tabular, slightly heavier. */
+  /* the speed line before every label: a short orange dash, skewed like the wordmark */
+  .eyebrow::before {
+    content: "";
+    flex: none;
+    width: 14px;
+    height: 3px;
+    background: var(--primary);
+    transform: skewX(-30deg);
+  }
+  /* Big numbers: condensed italic, tabular, like the figures on a timing board. */
   .display {
+    font-family: var(--font-display);
+    font-style: italic;
     font-variant-numeric: tabular-nums;
-    letter-spacing: -0.035em;
-    font-weight: 650;
+    letter-spacing: 0;
+    font-weight: 700;
   }
-  /* Faint blueprint grid for hero panels (mask it with a gradient where used). */
+  .font-display {
+    font-family: var(--font-display);
+  }
+  /* Faint hatching for hero panels (mask it with a gradient where used). */
   .grid-lines {
-    background-image:
-      linear-gradient(to right, color-mix(in oklab, var(--foreground) 6%, transparent) 1px, transparent 1px),
-      linear-gradient(to bottom, color-mix(in oklab, var(--foreground) 6%, transparent) 1px, transparent 1px);
-    background-size: 32px 32px;
+    background-image: repeating-linear-gradient(-45deg, color-mix(in oklab, var(--foreground) 7%, transparent) 0 1px, transparent 1px 10px);
   }
-  /* A thin coloured line along the top edge of a panel (set --line). */
+  /* Speed lines along the top edge of a panel: a long bar and a short one, skewed (set --line). */
   .top-line {
     position: relative;
   }
-  .top-line::before {
+  .top-line::before,
+  .top-line::after {
     content: "";
     position: absolute;
-    inset: 0 12% auto 12%;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, var(--line, var(--primary)), transparent);
-    opacity: 0.9;
+    top: 0;
+    height: 3px;
+    background: var(--line, var(--primary));
+    transform: skewX(-30deg);
     pointer-events: none;
   }
-  /* Soft brand glow used once per page, behind the main answer. */
+  .top-line::before {
+    left: 1.25rem;
+    width: 3.5rem;
+  }
+  .top-line::after {
+    left: calc(1.25rem + 4.1rem);
+    width: 1.1rem;
+    opacity: 0.55;
+  }
+  /* Used once per page behind the main answer: a corner of hatching, no glow. */
   .brand-glow {
-    background-image: radial-gradient(120% 140% at 0% 0%, color-mix(in oklab, var(--primary) 14%, transparent), transparent 60%);
+    background-image: repeating-linear-gradient(-45deg, color-mix(in oklab, var(--primary) 9%, transparent) 0 1px, transparent 1px 9px);
+    background-size: 55% 100%;
+    background-repeat: no-repeat;
   }
 }
 

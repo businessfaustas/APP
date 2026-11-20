@@ -328,10 +328,15 @@ export const generated = {
       pasteOrFill: "Paste the listing text or fill in the details.",
       invalidInput: "Not recognized — paste an auction link, a 17-character VIN, or the full listing text",
       emptyInput: "Paste a link, a VIN or the listing text",
+      vinKnown: "We decoded the VIN as {car}. Add the damage, odometer and current bid from the lot page, or paste the whole page text.",
+      vinWebSold:
+        "Found by searching the web for this VIN. The sale looks finished, so this may be an earlier sale: check the damage, odometer and bid on the lot page.",
+      vinWebActive: "Found by searching the web for this VIN. Check the details against the lot page before bidding.",
     },
     terms: {
       aiEstimate: "AI estimate — verify",
       aiWeb: "AI market research (web)",
+      vinSearch: "VIN search (web)",
       demoFixture: "Demo fixture",
       estimator: "Estimator (reference prices + rules)",
       aiSummary: "AI summary",

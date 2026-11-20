@@ -37,7 +37,7 @@ export function HeroScan({ photo, label }: { photo?: string | null; label?: stri
       {CHIPS.map((c, i) => (
         <div key={c.key} aria-hidden="true" className={`rise absolute ${c.pos}`} style={{ ["--i" as string]: 3 + i * 2 }}>
           <div
-            className="float bg-card/90 flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium shadow-sm backdrop-blur"
+            className="float bg-card/90 font-display flex items-center gap-2 rounded-[3px] border px-3 py-1.5 text-[0.85rem] font-semibold tracking-[0.06em] uppercase shadow-sm backdrop-blur"
             style={{ animationDelay: c.delay }}
           >
             <span className="bg-primary/12 text-primary grid size-5 place-items-center rounded-full">

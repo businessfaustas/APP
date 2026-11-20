@@ -15,6 +15,26 @@ test("Audi A3 reference lot: GO with a $3,100 max bid", async ({ page }) => {
   await expect(page.getByTestId("disclaimer").first()).toBeVisible();
 });
 
+test("a VIN shows the decoded car first, then runs the full report", async ({ page }) => {
+  const vin = "WAUAUGFF5K1012345"; // the sample Audi's VIN
+  await open(page, "/app");
+  await page.getByRole("textbox", { name: "Auction link, VIN or listing text" }).fill(vin);
+  await expect(page.getByTestId("vin-card")).toBeVisible();
+  await expect(page.getByTestId("vin-car")).toContainText(/audi a3/i);
+  await page.getByRole("button", { name: "Analyze", exact: true }).click();
+  await expectNavigation(page, /\/app\/analyses\/[^/]+$/);
+  await expect(page.getByTestId("deal-card")).toBeVisible({ timeout: 45_000 });
+  await expect(page.getByTestId("max-bid")).toHaveText("$3,100");
+});
+
+test("a VIN nobody knows asks only for the damage and keeps the VIN", async ({ page }) => {
+  await open(page, "/app");
+  await page.getByRole("textbox", { name: "Auction link, VIN or listing text" }).fill("1HGCM82633A004352");
+  await page.getByRole("button", { name: "Analyze", exact: true }).click();
+  await expectNavigation(page, /\/app\/analyses\/[^/]+$/);
+  await expect(page.getByTestId("needs-input")).toBeVisible({ timeout: 45_000 });
+});
+
 test("the Audi overview charts the reference numbers and links to the damage tab", async ({ page }) => {
   await analyze(page, LOTS.audi);
   const money = page.getByTestId("money-card");

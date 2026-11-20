@@ -4,22 +4,27 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
+/**
+ * Buttons are slanted plates (see .slant in globals.css) set in the condensed display face.
+ * The default is ink: black on paper, bone on asphalt, turning signal orange on hover.
+ */
 const buttonVariants = cva(
-  "inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all outline-none active:scale-[0.98] focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "font-display inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 text-[0.95rem] leading-none font-semibold tracking-[0.06em] whitespace-nowrap uppercase transition-colors outline-none active:translate-y-px focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
-        default: "btn-primary bg-primary text-primary-foreground",
-        destructive: "bg-destructive text-white shadow-xs hover:bg-destructive/90",
-        outline: "border bg-card shadow-xs hover:border-primary/40 hover:bg-accent hover:text-accent-foreground dark:bg-surface-2 dark:hover:bg-accent",
-        secondary: "bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
-        link: "text-primary underline-offset-4 hover:underline",
+        default: "slant text-background hover:text-primary-foreground [--slant-bg:var(--foreground)] hover:[--slant-bg:var(--primary)]",
+        destructive: "slant text-white [--slant-bg:var(--destructive)] hover:[--slant-bg:color-mix(in_oklab,var(--destructive)_82%,black)]",
+        outline:
+          "slant text-foreground [--slant-line:var(--input)] hover:text-primary hover:[--slant-bg:color-mix(in_oklab,var(--primary)_8%,transparent)] hover:[--slant-line:var(--primary)]",
+        secondary: "slant text-secondary-foreground [--slant-bg:var(--secondary)] hover:[--slant-line:var(--input)]",
+        ghost: "rounded-[3px] hover:bg-accent hover:text-accent-foreground",
+        link: "text-primary font-sans text-sm tracking-normal normal-case underline-offset-4 hover:underline",
       },
       size: {
-        default: "h-9 px-4 py-2 has-[>svg]:px-3",
-        sm: "h-8 gap-1.5 rounded-lg px-3 has-[>svg]:px-2.5",
-        lg: "h-11 rounded-xl px-6 text-base has-[>svg]:px-4",
+        default: "h-9 px-5 has-[>svg]:px-4",
+        sm: "h-8 gap-1.5 px-4 text-[0.85rem] has-[>svg]:px-3.5",
+        lg: "h-11 px-7 text-base has-[>svg]:px-5",
         icon: "size-9",
       },
     },

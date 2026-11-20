@@ -11,7 +11,9 @@ export function CardHeader({ className, ...props }: React.ComponentProps<"div">)
 }
 
 export function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
-  return <div data-slot="card-title" className={cn("text-base leading-tight font-semibold tracking-tight", className)} {...props} />;
+  return (
+    <div data-slot="card-title" className={cn("font-display text-[1.2rem] leading-tight font-semibold tracking-[0.04em] uppercase", className)} {...props} />
+  );
 }
 
 export function CardDescription({ className, ...props }: React.ComponentProps<"div">) {

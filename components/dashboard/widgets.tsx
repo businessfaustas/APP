@@ -148,7 +148,9 @@ export function LotCard({ lot, index = 0 }: { lot: LotCardData; index?: number }
           )}
         </div>
         {lot.dealScore !== null && lot.status === "COMPLETED" && (
-          <span className="bg-background/85 num absolute top-3 right-3 rounded-full px-2 py-0.5 text-xs font-semibold backdrop-blur">{lot.dealScore}</span>
+          <span className="bg-background/85 font-display absolute top-3 right-3 rounded-[3px] px-2 py-0.5 text-[1rem] font-bold italic tabular-nums backdrop-blur">
+            {lot.dealScore}
+          </span>
         )}
       </div>
       <div className="flex items-end justify-between gap-3 p-4">
