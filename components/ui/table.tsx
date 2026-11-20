@@ -27,15 +27,7 @@ export function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
 }
 
 export function TableHead({ className, ...props }: React.ComponentProps<"th">) {
-  return (
-    <th
-      className={cn(
-        "text-muted-foreground font-display h-9 px-1.5 text-left align-middle text-[0.78rem] font-semibold tracking-[0.06em] whitespace-nowrap uppercase",
-        className,
-      )}
-      {...props}
-    />
-  );
+  return <th className={cn("text-muted-foreground h-9 px-1.5 text-left align-middle text-xs font-medium whitespace-nowrap", className)} {...props} />;
 }
 
 export function TableCell({ className, ...props }: React.ComponentProps<"td">) {

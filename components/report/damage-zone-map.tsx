@@ -103,7 +103,7 @@ export function DamageZoneMap({
             type="button"
             onClick={() => onSelect(selected === "undercarriage" ? null : "undercarriage")}
             className={cn(
-              "font-display rounded-[3px] border px-3 py-1 text-[0.85rem] font-semibold tracking-[0.05em] uppercase",
+              "rounded-full border px-3 py-1 text-xs",
               under ? (under > 6 ? "border-stop/50 bg-stop-soft" : "border-caution/50 bg-caution-soft") : "text-muted-foreground",
               selected === "undercarriage" && "ring-foreground ring-2",
             )}

@@ -35,9 +35,7 @@ function FlagRow({ flag }: { flag: RiskFlag }) {
         <summary className="hover:bg-muted/70 flex cursor-pointer list-none items-start gap-3 rounded-lg px-2.5 py-2 [&::-webkit-details-marker]:hidden">
           <m.Icon className={cn("mt-0.5 size-4 shrink-0", m.cls)} aria-hidden="true" />
           <span className="flex-1 text-sm leading-snug font-medium">{title}</span>
-          <span className={cn("font-display shrink-0 rounded-[2px] px-2 py-0.5 text-[0.8rem] font-semibold tracking-[0.06em] uppercase", m.pill)}>
-            {t(`domain.level.${flag.level}`)}
-          </span>
+          <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium", m.pill)}>{t(`domain.level.${flag.level}`)}</span>
           <ChevronDownIcon className="text-muted-foreground mt-0.5 size-4 shrink-0 transition-transform group-open:rotate-180" aria-hidden="true" />
         </summary>
         <p className="text-muted-foreground pr-9 pb-2 pl-9.5 text-sm leading-relaxed">{detail}</p>
@@ -65,9 +63,7 @@ export function RiskFlagsList({ flags, interactive = true }: { flags: RiskFlag[]
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2 text-sm font-medium">
                   {title}
-                  <span className={cn("font-display rounded-[2px] px-2 py-0.5 text-[0.8rem] font-semibold tracking-[0.06em] uppercase", m.pill)}>
-                    {t(`domain.level.${f.level}`)}
-                  </span>
+                  <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-medium", m.pill)}>{t(`domain.level.${f.level}`)}</span>
                 </div>
                 <div className="text-muted-foreground mt-0.5 text-sm">{detail}</div>
               </div>
@@ -132,7 +128,7 @@ function Checklist({ items }: { items: string[] }) {
           <span className="flex items-center gap-3">
             {t("report.beforeYouBid")}
             <span className="bg-muted hidden h-1.5 w-24 overflow-hidden rounded-full sm:block" aria-hidden="true">
-              <span className="bg-go block h-full rounded-[1px] transition-[width] duration-300" style={{ width: `${pct}%` }} />
+              <span className="bg-go block h-full rounded-full transition-[width] duration-300" style={{ width: `${pct}%` }} />
             </span>
           </span>
         }
@@ -317,8 +313,8 @@ function DamageCard({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
                     <span className="truncate">{t(`report.zone.${z}`)}</span>
                     <span className="num text-muted-foreground text-xs">{n}/10</span>
                   </div>
-                  <div className="bg-muted h-1.5 overflow-hidden rounded-[1px]">
-                    <div className="grow-x h-full rounded-[1px]" style={{ width: `${n * 10}%`, background: sevTone(n), ["--i" as string]: i }} />
+                  <div className="bg-muted h-1.5 overflow-hidden rounded-full">
+                    <div className="grow-x h-full rounded-full" style={{ width: `${n * 10}%`, background: sevTone(n), ["--i" as string]: i }} />
                   </div>
                 </li>
               ))}

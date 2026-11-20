@@ -108,13 +108,13 @@ Monthly plans stay for people who analyze every week (Pro €59 for 40, Business
 
 ## Look and feel
 
-The look comes from the logo: an italic wordmark, a speedometer, orange speed lines. The idea is a motorsport timing board, not the usual dark-blue SaaS template.
+A modern dashboard look: soft rounded panels, one electric lime accent, pill controls. Dark is a deep green-black with glassy cards and a faint green glow; light is a soft grey with white cards. (An earlier attempt with slanted plates, condensed italic capitals and racing flags was dropped: it read as a game.)
 
-- **Colour:** warm paper (light) and asphalt (dark) with the logo's signal orange. Buttons are ink (black on paper, bone on asphalt) and turn orange on hover; orange marks what is active, live or selected. Tokens are in `app/globals.css`.
-- **Type:** Barlow for text and Barlow Condensed for headings, figures, tags and buttons (`@fontsource`, bundled, no network at runtime). Page titles are condensed italic capitals; money figures use `.display` (condensed italic, tabular).
-- **Shape:** small radii everywhere (the Tailwind steps are overridden in the theme block). Buttons and tags are slanted plates (`.slant`, a skewed pseudo-element so the text stays upright). Cards carry two registration ticks as background layers. Labels have a skewed orange dash (`.eyebrow`). Every lucide icon is drawn with square ends by one CSS rule; the sidebar icons are BidPilot's own (`components/icons.tsx`).
-- **Details:** GO / BE CAUTIOUS / WALK AWAY are the green, yellow and red race flags; credits are a fuel gauge; sliders are gauge tracks with a tick every 10%; the landing page is a typographic spec sheet instead of icon cards.
-- **When changing it:** keep the tokens, not hard-coded colours, so light and dark both work, and keep the contrast of text on `--primary` (the light theme's orange is darker than the logo's for that reason).
+- **Colour:** `app/globals.css`. `--lime` is the fill (primary buttons, the active nav pill, active tabs, sliders, progress, the credits card) and always carries dark text (`--lime-foreground`). `--primary` is the same hue made readable as text and thin lines on the current background (dark green on light, lime on dark). Verdict colours (`--go`, `--caution`, `--stop`) are separate hues from the lime so GO is never confused with "primary".
+- **Shape:** large radii (the theme block sets the Tailwind radius steps), pill buttons, tabs and badges, cards with a soft shadow and a bright top edge. No hard edges or uppercase headings.
+- **Type:** Geist. Money figures use `.display` (heavier, tight, tabular).
+- **Charts:** the validated `--series-*` slots are unchanged; only the single-series activity bars use `--lime-bar`.
+- **When changing it:** use the tokens, not hard-coded colours, so light and dark both work; put lime fills on `bg-lime text-lime-foreground`, and use `text-primary` for lime-coloured text.
 
 ## VIN input
 

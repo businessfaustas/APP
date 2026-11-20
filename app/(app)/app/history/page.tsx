@@ -67,7 +67,7 @@ export default async function HistoryPage({ searchParams }: { searchParams: Prom
             key={f}
             href={f === "all" ? "/app/history" : `/app/history?verdict=${f}`}
             className={cn(
-              "font-display rounded-[3px] border px-3 py-1 text-[0.85rem] font-semibold tracking-[0.05em] uppercase",
+              "rounded-full border px-3 py-1 text-xs",
               (verdict ?? "all") === f ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground",
             )}
           >

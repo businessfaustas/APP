@@ -185,7 +185,7 @@ function DemoChip({ lot, disabled, onPick }: { lot: DemoLot; disabled: boolean; 
       disabled={disabled}
       onClick={onPick}
       title={description}
-      className="bg-background hover:border-primary hover:text-primary rounded-[3px] border px-3 py-1 text-[0.85rem] transition-colors disabled:opacity-50"
+      className="bg-background hover:border-primary hover:text-primary rounded-full border px-3 py-1 text-xs transition-colors disabled:opacity-50"
     >
       {label}
     </button>

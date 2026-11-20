@@ -14,7 +14,7 @@ export function TabsList({ className, ...props }: React.ComponentProps<typeof Ta
     <TabsPrimitive.List
       data-slot="tabs-list"
       className={cn(
-        "text-muted-foreground inline-flex h-11 w-full [scrollbar-width:none] items-stretch justify-start gap-7 overflow-x-auto border-b",
+        "bg-muted/70 text-muted-foreground inline-flex h-12 w-full [scrollbar-width:none] items-center justify-start gap-1 overflow-x-auto rounded-full p-1.5",
         className,
       )}
       {...props}
@@ -27,7 +27,7 @@ export function TabsTrigger({ className, ...props }: React.ComponentProps<typeof
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"
       className={cn(
-        "focus-visible:ring-ring/50 hover:text-foreground data-[state=active]:text-foreground data-[state=active]:after:bg-primary font-display relative inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 px-0.5 text-[1.02rem] font-semibold tracking-[0.06em] whitespace-nowrap uppercase transition-colors after:absolute after:inset-x-[-4px] after:-bottom-px after:h-[3px] after:skew-x-[-30deg] after:bg-transparent after:transition-colors focus-visible:rounded-sm focus-visible:ring-[3px] focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4 [&_svg]:opacity-70 data-[state=active]:[&_svg]:opacity-100",
+        "focus-visible:ring-ring/50 hover:text-foreground data-[state=active]:bg-lime data-[state=active]:text-lime-foreground relative inline-flex h-9 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-full px-4 text-sm font-semibold whitespace-nowrap transition-colors focus-visible:ring-[3px] focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4 [&_svg]:opacity-70 data-[state=active]:[&_svg]:opacity-100",
         className,
       )}
       {...props}

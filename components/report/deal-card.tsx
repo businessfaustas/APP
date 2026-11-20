@@ -32,9 +32,9 @@ export function ScoreMeter({ score }: { score: number }) {
           <span className="text-muted-foreground">/100</span>
         </span>
       </div>
-      <div className={cn("h-2 overflow-hidden rounded-[1px]", tone === "go" ? "bg-go-soft" : tone === "caution" ? "bg-caution-soft" : "bg-stop-soft")}>
+      <div className={cn("h-2 overflow-hidden rounded-full", tone === "go" ? "bg-go-soft" : tone === "caution" ? "bg-caution-soft" : "bg-stop-soft")}>
         <div
-          className={cn("h-full rounded-[1px] transition-[width] duration-300", tone === "go" ? "bg-go" : tone === "caution" ? "bg-caution" : "bg-stop")}
+          className={cn("h-full rounded-full transition-[width] duration-300", tone === "go" ? "bg-go" : tone === "caution" ? "bg-caution" : "bg-stop")}
           style={{ width: `${score}%` }}
         />
       </div>
@@ -290,7 +290,7 @@ export function DealSummary({ calc, currentBid }: { calc: CalculationResult; cur
                         {calc.headroomBps !== null && (
                           <span
                             className={cn(
-                              "font-display rounded-[2px] px-2 py-0.5 text-[0.85rem] font-semibold tracking-[0.05em] uppercase",
+                              "rounded-full px-2 py-0.5 text-xs font-medium",
                               calc.headroomBps < 1500 ? "bg-caution-soft text-caution" : "bg-go-soft text-go",
                             )}
                           >

@@ -57,7 +57,7 @@ function CellNumber({
       onKeyDown={(e) => {
         if (e.key === "Enter") (e.target as HTMLInputElement).blur();
       }}
-      className="num h-7 w-12 px-1 text-right text-xs"
+      className="num h-7 w-[3.75rem] px-2 text-right text-xs"
     />
   );
 }

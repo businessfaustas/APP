@@ -1,20 +1,11 @@
 import { GeistMono } from "geist/font/mono";
+import { GeistSans } from "geist/font/sans";
 import type { Metadata, Viewport } from "next";
 
 import { Providers } from "@/components/providers";
 import { BRAND_NAME } from "@/lib/brand";
 import { getMessages } from "@/lib/i18n/messages";
 import { getLocale, getT } from "@/lib/i18n/server";
-
-import "@fontsource/barlow/400.css";
-import "@fontsource/barlow/500.css";
-import "@fontsource/barlow/600.css";
-import "@fontsource/barlow/700.css";
-import "@fontsource/barlow-condensed/500.css";
-import "@fontsource/barlow-condensed/600.css";
-import "@fontsource/barlow-condensed/700.css";
-import "@fontsource/barlow-condensed/600-italic.css";
-import "@fontsource/barlow-condensed/700-italic.css";
 
 import "./globals.css";
 
@@ -32,8 +23,8 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: dark)", color: "#1b1917" },
-    { media: "(prefers-color-scheme: light)", color: "#f4f1eb" },
+    { media: "(prefers-color-scheme: dark)", color: "#16181d" },
+    { media: "(prefers-color-scheme: light)", color: "#f8f9fb" },
   ],
   width: "device-width",
   initialScale: 1,
@@ -43,7 +34,7 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const locale = await getLocale();
   return (
-    <html lang={locale} className={GeistMono.variable} suppressHydrationWarning>
+    <html lang={locale} className={`${GeistSans.variable} ${GeistMono.variable}`} suppressHydrationWarning>
       <body className="min-h-dvh font-sans">
         <Providers locale={locale} messages={getMessages(locale)}>
           {children}

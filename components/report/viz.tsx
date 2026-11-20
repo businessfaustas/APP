@@ -143,8 +143,8 @@ export function DayColumns({
         {days.map((d, i) => (
           <div key={d.date} className="group relative flex h-full flex-1 items-end justify-center" title={`${d.label}: ${valueLabel(d.count)}`}>
             <div
-              className="grow-y w-full max-w-6 rounded-t-[4px]"
-              style={{ height: d.count ? `${(d.count / max) * 100}%` : 0, background: "var(--series-1)", ["--i" as string]: i }}
+              className="grow-y w-full max-w-6 rounded-t-lg"
+              style={{ height: d.count ? `${(d.count / max) * 100}%` : 0, background: "var(--lime-bar)", ["--i" as string]: i }}
             />
             {d.count > 0 && (
               <span className="bg-popover text-popover-foreground pointer-events-none absolute -top-7 hidden rounded-md border px-1.5 py-0.5 text-[11px] whitespace-nowrap shadow-sm group-hover:block">

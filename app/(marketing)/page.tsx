@@ -1,4 +1,19 @@
-import { ArrowRightIcon, ClipboardCheckIcon } from "lucide-react";
+import {
+  ArrowRightIcon,
+  BellIcon,
+  CalculatorIcon,
+  ChartScatterIcon,
+  ClipboardCheckIcon,
+  FileTextIcon,
+  GaugeIcon,
+  GlobeIcon,
+  LayersIcon,
+  LinkIcon,
+  PuzzleIcon,
+  ScanSearchIcon,
+  ShieldAlertIcon,
+  WrenchIcon,
+} from "lucide-react";
 import Link from "next/link";
 
 import { PricingTable } from "@/components/marketing/pricing-table";
@@ -6,6 +21,7 @@ import { Showcase } from "@/components/marketing/showcase";
 import { BidLadder, ScoreMeter } from "@/components/report/deal-card";
 import { ChecklistItems, RiskFlagsList } from "@/components/report/overview-tab";
 import { VerdictBadge } from "@/components/report/verdict-badge";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DEFAULT_SETTINGS } from "@/lib/calc/build";
@@ -17,9 +33,23 @@ import { getT } from "@/lib/i18n/server";
 import type { Translator } from "@/lib/i18n/translate";
 import { cn, formatNumber, formatUsd } from "@/lib/utils";
 
-const STEPS = [1, 2, 3] as const;
-const FEATURES = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const;
-const pad = (n: number) => String(n).padStart(2, "0");
+const STEPS = [
+  { Icon: LinkIcon, n: 1 },
+  { Icon: ScanSearchIcon, n: 2 },
+  { Icon: GaugeIcon, n: 3 },
+] as const;
+
+const FEATURES = [
+  { Icon: WrenchIcon, n: 1 },
+  { Icon: ChartScatterIcon, n: 2 },
+  { Icon: ShieldAlertIcon, n: 3 },
+  { Icon: CalculatorIcon, n: 4 },
+  { Icon: LayersIcon, n: 5 },
+  { Icon: BellIcon, n: 6 },
+  { Icon: GlobeIcon, n: 7 },
+  { Icon: FileTextIcon, n: 8 },
+  { Icon: PuzzleIcon, n: 9 },
+] as const;
 
 const FAQ = [1, 2, 3, 4, 5, 6] as const;
 
@@ -45,15 +75,15 @@ function SampleSummaryCard({ sample, t, className }: { sample: Sample; t: Transl
         <div className="grid grid-cols-3 gap-3">
           <div>
             <div className="text-muted-foreground text-xs">{t("report.maxBid")}</div>
-            <div className="display num text-4xl">{formatUsd(calc.maxBid)}</div>
+            <div className="num text-2xl font-semibold tracking-tight">{formatUsd(calc.maxBid)}</div>
           </div>
           <div>
             <div className="text-muted-foreground text-xs">{t("report.comfortBid")}</div>
-            <div className="display num text-2xl">{formatUsd(calc.comfortBid)}</div>
+            <div className="num text-lg font-medium">{formatUsd(calc.comfortBid)}</div>
           </div>
           <div>
             <div className="text-muted-foreground text-xs">{t("report.breakEven")}</div>
-            <div className="display num text-2xl">{formatUsd(calc.breakEvenBid)}</div>
+            <div className="num text-lg font-medium">{formatUsd(calc.breakEvenBid)}</div>
           </div>
         </div>
         <BidLadder calc={calc} currentBid={listing.currentBid} />
@@ -176,11 +206,17 @@ export default async function LandingPage() {
   return (
     <>
       <section className="relative overflow-hidden border-b">
-        <div aria-hidden="true" className="grid-lines pointer-events-none absolute inset-0 [mask-image:linear-gradient(to_bottom,black,transparent_85%)]" />
-        <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-4 pt-14 pb-12 md:pt-20 lg:grid-cols-[1fr_1.05fr]">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,color-mix(in_oklab,var(--color-primary)_20%,transparent),transparent_62%)]"
+        />
+        <div aria-hidden="true" className="grid-lines pointer-events-none absolute inset-0 [mask-image:radial-gradient(70%_60%_at_50%_0%,black,transparent)]" />
+        <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-4 pt-16 pb-12 md:pt-24 lg:grid-cols-[1fr_1.05fr]">
           <div className="space-y-6">
-            <div className="eyebrow rise">Copart · IAAI · Bid.cars</div>
-            <h1 className="rise text-[2.9rem] leading-[0.95] text-balance sm:text-6xl xl:text-7xl" style={{ ["--i" as string]: 1 }}>
+            <Badge variant="outline" className="rise bg-card/60 gap-2 py-1 backdrop-blur">
+              <span className="bg-go size-1.5 rounded-full" aria-hidden="true" /> Copart · IAAI · Bid.cars
+            </Badge>
+            <h1 className="rise text-4xl leading-[1.05] font-semibold tracking-tight text-balance sm:text-5xl xl:text-6xl" style={{ ["--i" as string]: 1 }}>
               {t("landing.heroTitle")}
             </h1>
             <p className="rise text-muted-foreground max-w-xl text-lg text-pretty" style={{ ["--i" as string]: 2 }}>
@@ -202,38 +238,36 @@ export default async function LandingPage() {
           </div>
           <Showcase data={demoShowcase(t, now)} className="rise" />
         </div>
-        {/* the timing board: four figures, each marked with a slanted orange bar */}
-        <dl className="relative mx-auto grid max-w-6xl grid-cols-2 gap-y-6 px-4 pb-14 md:grid-cols-4">
+        <dl className="relative mx-auto grid max-w-6xl grid-cols-2 gap-px px-4 pb-14 md:grid-cols-4">
           {([1, 2, 3, 4] as const).map((n) => (
-            <div
-              key={n}
-              className="rise before:bg-primary relative pl-6 before:absolute before:top-1 before:bottom-1 before:left-0 before:w-[3px] before:skew-x-[-12deg]"
-              style={{ ["--i" as string]: 4 + n }}
-            >
-              <dd className="display text-5xl leading-none">{t(`landing.stat${n}Value`)}</dd>
-              <dt className="eyebrow mt-2 before:hidden">{t(`landing.stat${n}Label`)}</dt>
+            <div key={n} className="rise border-l px-5 py-1 first:border-l-0 md:first:border-l" style={{ ["--i" as string]: 4 + n }}>
+              <dd className="display text-3xl">{t(`landing.stat${n}Value`)}</dd>
+              <dt className="text-muted-foreground mt-1 text-sm">{t(`landing.stat${n}Label`)}</dt>
             </div>
           ))}
         </dl>
       </section>
 
       <section id="how-it-works" className="scroll-mt-16 border-b">
-        <div className="mx-auto max-w-6xl space-y-12 px-4 py-20">
+        <div className="mx-auto max-w-6xl space-y-10 px-4 py-20">
           <div className="max-w-2xl space-y-3">
-            <h2 className="text-4xl sm:text-5xl">{t("landing.howTitle")}</h2>
+            <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">{t("landing.howTitle")}</h2>
             <p className="text-muted-foreground text-lg">{t("landing.howBody")}</p>
           </div>
-          <ol className="grid gap-12 md:grid-cols-3 md:gap-10">
-            {STEPS.map((n) => (
-              <li key={n}>
-                <div className="flex items-end gap-4">
-                  <span className="display text-8xl leading-[0.8] text-transparent [-webkit-text-stroke:1.5px_var(--primary)]" aria-hidden="true">
-                    {pad(n)}
+          <ol className="grid gap-5 md:grid-cols-3">
+            {STEPS.map((s) => (
+              <li key={s.n} className="surface bg-card relative overflow-hidden rounded-2xl border p-6">
+                <span className="display text-foreground/6 pointer-events-none absolute -top-3 right-3 text-8xl select-none" aria-hidden="true">
+                  {s.n}
+                </span>
+                <div className="mb-5 flex items-center gap-3">
+                  <span className="bg-primary/12 text-primary flex size-10 items-center justify-center rounded-xl">
+                    <s.Icon className="size-5" aria-hidden="true" />
                   </span>
-                  <span className="bg-primary/50 mb-1 h-[3px] flex-1 skew-x-[-30deg]" aria-hidden="true" />
+                  <span className="eyebrow">{t("landing.step", { n: s.n })}</span>
                 </div>
-                <h3 className="font-display mt-5 text-2xl tracking-[0.03em] uppercase">{t(`landing.step${n}Title`)}</h3>
-                <p className="text-muted-foreground mt-2 leading-relaxed">{t(`landing.step${n}Body`)}</p>
+                <h3 className="text-lg font-semibold tracking-tight">{t(`landing.step${s.n}Title`)}</h3>
+                <p className="text-muted-foreground mt-2 text-sm leading-relaxed">{t(`landing.step${s.n}Body`)}</p>
               </li>
             ))}
           </ol>
@@ -244,7 +278,7 @@ export default async function LandingPage() {
         <div className="mx-auto max-w-6xl space-y-10 px-4 py-20">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div className="max-w-2xl space-y-3">
-              <h2 className="text-4xl sm:text-5xl">{t("landing.sampleTitle")}</h2>
+              <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">{t("landing.sampleTitle")}</h2>
               <p className="text-muted-foreground text-lg">{t("landing.sampleBody")}</p>
             </div>
             <Button asChild variant="outline">
@@ -260,30 +294,27 @@ export default async function LandingPage() {
       <section className="border-b">
         <div className="mx-auto max-w-6xl space-y-10 px-4 py-20">
           <div className="max-w-2xl space-y-3">
-            <h2 className="text-4xl sm:text-5xl">{t("landing.featuresTitle")}</h2>
+            <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">{t("landing.featuresTitle")}</h2>
             <p className="text-muted-foreground text-lg">{t("landing.featuresBody")}</p>
           </div>
-          {/* a spec sheet, not a grid of cards: numbered rows between hairlines */}
-          <ul className="grid border-t md:grid-cols-2 md:gap-x-14">
-            {FEATURES.map((n) => (
-              <li key={n} className="group hover:bg-accent/40 grid grid-cols-[3.25rem_1fr] gap-4 border-b px-1 py-5 transition-colors">
-                <span className="display text-primary text-4xl leading-none" aria-hidden="true">
-                  {pad(n)}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {FEATURES.map((f) => (
+              <div key={f.n} className="surface surface-link bg-card rounded-2xl border p-5">
+                <span className="bg-primary/12 text-primary mb-4 flex size-10 items-center justify-center rounded-xl">
+                  <f.Icon className="size-5" aria-hidden="true" />
                 </span>
-                <div>
-                  <h3 className="font-display text-xl tracking-[0.04em] uppercase">{t(`landing.f${n}Title`)}</h3>
-                  <p className="text-muted-foreground mt-1.5 text-[0.95rem] leading-relaxed">{t(`landing.f${n}Body`)}</p>
-                </div>
-              </li>
+                <h3 className="font-semibold tracking-tight">{t(`landing.f${f.n}Title`)}</h3>
+                <p className="text-muted-foreground mt-1.5 text-sm leading-relaxed">{t(`landing.f${f.n}Body`)}</p>
+              </div>
             ))}
-          </ul>
+          </div>
         </div>
       </section>
 
       <section id="pricing" className="scroll-mt-16 border-b">
         <div className="mx-auto max-w-6xl space-y-10 px-4 py-20">
           <div className="mx-auto max-w-2xl space-y-3 text-center">
-            <h2 className="text-4xl sm:text-5xl">{t("landing.pricingTitle")}</h2>
+            <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">{t("landing.pricingTitle")}</h2>
             <p className="text-muted-foreground text-lg">{t("landing.pricingBody")}</p>
           </div>
           <PricingTable />
@@ -292,15 +323,15 @@ export default async function LandingPage() {
 
       <section id="faq" className="scroll-mt-16 border-b">
         <div className="mx-auto max-w-3xl space-y-8 px-4 py-20">
-          <h2 className="text-4xl sm:text-5xl">{t("landing.faqTitle")}</h2>
+          <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">{t("landing.faqTitle")}</h2>
           <div className="surface bg-card divide-y rounded-2xl border">
             {FAQ.map((n) => (
               <details key={n} className="group px-6 py-4.5 [&_summary::-webkit-details-marker]:hidden">
-                <summary className="font-display flex cursor-pointer list-none items-center justify-between gap-4 text-lg font-semibold tracking-[0.03em] uppercase">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-medium">
                   {t(`landing.q${n}`)}
                   <span
                     aria-hidden="true"
-                    className="bg-muted text-muted-foreground grid size-6 shrink-0 skew-x-[-12deg] place-items-center rounded-[2px] transition-transform group-open:rotate-45"
+                    className="bg-muted text-muted-foreground grid size-6 shrink-0 place-items-center rounded-full transition-transform group-open:rotate-45"
                   >
                     +
                   </span>
@@ -313,9 +344,13 @@ export default async function LandingPage() {
       </section>
 
       <section className="px-4 py-20">
-        <div className="top-line dark text-foreground relative isolate mx-auto flex max-w-6xl flex-col items-center gap-6 overflow-hidden rounded-3xl border border-white/10 bg-[#13110f] px-6 py-16 text-center">
-          <div aria-hidden="true" className="grid-lines absolute inset-0 -z-10 [mask-image:linear-gradient(to_top,black,transparent_75%)]" />
-          <h2 className="max-w-3xl text-4xl text-balance italic sm:text-6xl">{t("landing.ctaTitle")}</h2>
+        <div className="top-line dark text-foreground relative isolate mx-auto flex max-w-6xl flex-col items-center gap-6 overflow-hidden rounded-3xl border border-white/10 bg-[#0a0c14] px-6 py-16 text-center">
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 -z-10 bg-[radial-gradient(60%_80%_at_50%_0%,color-mix(in_oklab,var(--color-primary)_34%,transparent),transparent_70%)]"
+          />
+          <div aria-hidden="true" className="grid-lines absolute inset-0 -z-10 [mask-image:radial-gradient(60%_70%_at_50%_100%,black,transparent)]" />
+          <h2 className="max-w-2xl text-3xl font-semibold tracking-tight text-balance sm:text-4xl">{t("landing.ctaTitle")}</h2>
           <Button asChild size="lg">
             <Link href="/app">
               {t("common.analyzeLot")} <ArrowRightIcon />
