@@ -264,7 +264,7 @@ export const app = {
     save: "Save settings",
     extension: "Browser extension",
     extensionBody:
-      "The Chrome extension adds an “Analyze with BidPilot” button to Copart, IAAI and Bid.cars lot pages. Create a token and paste it into the extension's settings. See {readme} to install it.",
+      "The Chrome extension adds an “Analyze with FlagBid” button to Copart, IAAI and Bid.cars lot pages. Create a token and paste it into the extension's settings. See {readme} to install it.",
     copyNow: "Copy this token now — it won't be shown again.",
     copyToken: "Copy token",
     copied: "Copied",

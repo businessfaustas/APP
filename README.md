@@ -1,8 +1,8 @@
-# BidPilot
+# FlagBid
 
 **Live demo:** <https://auctionpulse-ai.vercel.app>. It runs in demo mode: click **Analyze a lot → Continue as demo user**.
 
-**Know your max bid before you bid.** Paste a Copart, IAAI or Bid.cars link, a VIN or the listing text. BidPilot decodes the VIN and reads the title and every photo. It builds an itemized repair estimate and values the car from market comparables. Then it adds auction fees, transport, holding and selling costs and returns:
+**Know your max bid before you bid.** Paste a Copart, IAAI or Bid.cars link, a VIN or the listing text. FlagBid decodes the VIN and reads the title and every photo. It builds an itemized repair estimate and values the car from market comparables. Then it adds auction fees, transport, holding and selling costs and returns:
 
 - a **GO / BE CAUTIOUS / WALK AWAY** verdict
 - your **maximum bid** for your profit target, a **comfort bid** that still breaks even in the worst case, and the **break-even bid**
@@ -206,8 +206,8 @@ If you run a public demo with `DEMO_MODE=true`, every visitor shares one demo ac
 
 ## Browser extension and mobile
 
-- **Chrome extension** (`extension/`): adds **Analyze with BidPilot** to lot pages. It sends what you can see on the page, including details that only appear when you're signed in to the auction. Build and install it as described in [`extension/README.md`](./extension/README.md). Users create the token in **Settings → Browser extension**.
-- **PWA**: the app is installable. On Android, **Share → BidPilot** from the auction app or browser opens `/app/share`, which picks the lot link (or VIN) and prefills the analyze box.
+- **Chrome extension** (`extension/`): adds **Analyze with FlagBid** to lot pages. It sends what you can see on the page, including details that only appear when you're signed in to the auction. Build and install it as described in [`extension/README.md`](./extension/README.md). Users create the token in **Settings → Browser extension**.
+- **PWA**: the app is installable. On Android, **Share → FlagBid** from the auction app or browser opens `/app/share`, which picks the lot link (or VIN) and prefills the analyze box.
 
 ---
 

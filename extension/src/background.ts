@@ -2,7 +2,7 @@ import { type AnalyzeResult, type Capture, getConfig, type Message, type TestRes
 
 async function readError(res: Response): Promise<string> {
   const body = (await res.json().catch(() => ({}))) as { error?: string };
-  if (res.status === 401) return "Your API token was rejected. Create a new one in BidPilot → Settings.";
+  if (res.status === 401) return "Your API token was rejected. Create a new one in FlagBid → Settings.";
   if (res.status === 402) return body.error ?? "You're out of report credits.";
   return body.error ?? `Request failed (${res.status})`;
 }

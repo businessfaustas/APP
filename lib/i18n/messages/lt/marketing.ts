@@ -11,7 +11,7 @@ export const marketing: Pick<Messages, "site" | "landing" | "pricing" | "legal" 
     bidCalculator: "Statymo skaičiuoklė",
     terms: "Naudojimo sąlygos",
     privacy: "Privatumo politika",
-    metaTitle: "BidPilot — žinokite maksimalų statymą dar prieš statydami",
+    metaTitle: "FlagBid — žinokite maksimalų statymą dar prieš statydami",
     metaDescription:
       "Įklijuokite Copart, IAAI ar Bid.cars nuorodą ir gaukite investuotojo ataskaitą: verdiktą, maksimalų statymą, detalią remonto sąmatą, rinkos vertę, pelną ir rizikas.",
     footerNote:
@@ -20,7 +20,7 @@ export const marketing: Pick<Messages, "site" | "landing" | "pricing" | "legal" 
   landing: {
     heroTitle: "Žinokite maksimalų statymą dar prieš statydami.",
     heroBody:
-      "Įklijuokite aukciono nuorodą. BidPilot perskaito VIN, dokumentus ir kiekvieną nuotrauką, įkainoja remontą eilutė po eilutės, patikrina, už kiek parduodamas sutvarkytas automobilis, ir tiksliai pasako, kur sustoti statant.",
+      "Įklijuokite aukciono nuorodą. FlagBid perskaito VIN, dokumentus ir kiekvieną nuotrauką, įkainoja remontą eilutė po eilutės, patikrina, už kiek parduodamas sutvarkytas automobilis, ir tiksliai pasako, kur sustoti statant.",
     showScanning: "Vyksta DI analizė",
     stat1Value: "~1 min",
     stat1Label: "nuo nuorodos iki statymo ribos",

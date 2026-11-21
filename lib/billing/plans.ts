@@ -1,5 +1,5 @@
 /**
- * What BidPilot sells (isomorphic). Prices are display values in whole euros; the amount actually
+ * What FlagBid sells (isomorphic). Prices are display values in whole euros; the amount actually
  * charged is the Stripe price, so create the Stripe prices in EUR with the same numbers.
  * The reasoning behind the numbers is in DECISIONS.md ("Pricing").
  */

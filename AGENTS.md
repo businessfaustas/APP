@@ -8,7 +8,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 <!-- END:nextjs-agent-rules -->
 
-# BidPilot — working in this repo
+# FlagBid — working in this repo
 
 - Read `README.md` (setup, env, scripts) and `DECISIONS.md` (how the code departs from `docs/02-AI-MASTER-PROMPT.md`, and why) first.
 - **Money is integer dollars; percentages are basis points.** Use `applyBps` / `hoursCost` from `lib/calc/money.ts`. Never use float percentages in `lib/calc`.

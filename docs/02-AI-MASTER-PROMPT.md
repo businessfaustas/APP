@@ -1,10 +1,10 @@
 <!-- Copy EVERYTHING in this file into your AI coding tool (Claude Code, Cursor, Windsurf…). How to use it: docs/03-BUILD-PLAYBOOK.md -->
 
-# MASTER BUILD PROMPT — "BidPilot"
+# MASTER BUILD PROMPT — "FlagBid"
 
 > **Built:** this repository contains the app built from this prompt. For where the implementation differs, see [`DECISIONS.md`](../DECISIONS.md): Next.js 16 `proxy.ts` instead of middleware, Prisma 7, AI SDK 7 structured output, optional Inngest with an in-process runner, and placeholder fee tables.
 
-You are a senior full-stack engineer and AI architect. Build a **production-ready web + mobile-web application called "BidPilot"** for salvage-car flippers, body shops, small dealers and exporters. The user pastes a salvage-auction listing link (Copart, IAAI, Bid.cars, broker sites), a VIN, or the listing text. The app researches the car and returns an investor report: is the car worth buying, **the maximum they should bid**, an itemized repair cost, the market value after repair, profit, ROI and risks.
+You are a senior full-stack engineer and AI architect. Build a **production-ready web + mobile-web application called "FlagBid"** for salvage-car flippers, body shops, small dealers and exporters. The user pastes a salvage-auction listing link (Copart, IAAI, Bid.cars, broker sites), a VIN, or the listing text. The app researches the car and returns an investor report: is the car worth buying, **the maximum they should bid**, an itemized repair cost, the market value after repair, profit, ROI and risks.
 
 Read this whole prompt before writing any code. It is the single source of truth.
 
@@ -1167,7 +1167,7 @@ EMAIL_FROM=
 **Phase 7 — Reach**
 - Chrome MV3 extension in `/extension`:
   - content scripts for Copart, IAAI and Bid.cars lot pages
-  - an "Analyze with BidPilot" button that sends page text, JSON-LD and image URLs to `/api/extension/ingest` using the user's token, then opens the report
+  - an "Analyze with FlagBid" button that sends page text, JSON-LD and image URLs to `/api/extension/ingest` using the user's token, then opens the report
   - its own README with build/load instructions
 - PWA share target.
 - Watchlist email reminders (Inngest cron every 15 min + Resend).

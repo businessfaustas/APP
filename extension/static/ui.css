@@ -1,22 +1,24 @@
 :root {
   color-scheme: light dark;
-  --bg: #f8f9fb;
-  --fg: #1d2433;
-  --muted: #5b6475;
+  --bg: #f1f2ee;
+  --fg: #1b2014;
+  --muted: #5d6552;
   --card: #fff;
-  --border: #dde1e8;
-  --primary: #2a78d6;
+  --border: #dfe2d8;
+  --primary: #c6f432;
+  --link: #3f7a0c;
   --ok: #137a4f;
   --err: #b42318;
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #16181d;
-    --fg: #e8eaee;
-    --muted: #9aa3b2;
-    --card: #1e2128;
-    --border: #2e333d;
-    --primary: #5cc8ff;
+    --bg: #0f1512;
+    --fg: #eef3e8;
+    --muted: #9aa793;
+    --card: #172019;
+    --border: #28352c;
+    --primary: #c6f432;
+    --link: #c6f432;
     --ok: #4fd39a;
     --err: #ff8a80;
   }
@@ -78,14 +80,14 @@ button {
 button.primary {
   background: var(--primary);
   border-color: var(--primary);
-  color: #0b1220;
+  color: #14170b;
 }
 button[disabled] {
   opacity: 0.6;
   cursor: progress;
 }
 a {
-  color: var(--primary);
+  color: var(--link);
 }
 .row {
   display: flex;

@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: "Privacy Policy" };
 export default function PrivacyPage() {
   return (
     <LegalPage title="Privacy Policy" updated="October 1, 2026">
-      <p>This policy explains what BidPilot collects, why, who we share it with and the choices you have.</p>
+      <p>This policy explains what FlagBid collects, why, who we share it with and the choices you have.</p>
 
       <h2>What we collect</h2>
       <ul>
@@ -79,8 +79,8 @@ export default function PrivacyPage() {
 
       <h2>Changes and contact</h2>
       <p>
-        We&apos;ll post changes here and notify you of material ones. For privacy questions, contact the operator of this BidPilot deployment through the
-        support address listed in the app.
+        We&apos;ll post changes here and notify you of material ones. For privacy questions, contact the operator of this FlagBid deployment through the support
+        address listed in the app.
       </p>
     </LegalPage>
   );

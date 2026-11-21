@@ -63,7 +63,7 @@ const EnvSchema = z.object({
   // Old name of the 10-report pack price; still read when STRIPE_PRICE_PACK_10 is not set.
   STRIPE_PRICE_CREDITS_10: opt,
   RESEND_API_KEY: opt,
-  EMAIL_FROM: z.string().default("BidPilot <alerts@example.com>"),
+  EMAIL_FROM: z.string().default("FlagBid <alerts@example.com>"),
 });
 
 export type Env = z.infer<typeof EnvSchema>;

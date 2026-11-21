@@ -1,9 +1,9 @@
 /**
  * Renames the product everywhere it is written out.
  *
- *   node scripts/rename-brand.mjs BidPilot NewName
+ *   node scripts/rename-brand.mjs FlagBid NewName
  *
- * Replaces the display name ("BidPilot") and its lowercase slug ("bidpilot", used in a few
+ * Replaces the display name ("FlagBid") and its lowercase slug ("flagbid", used in a few
  * identifiers such as the extension's element id) in every git-tracked text file. Both names
  * must be a single CamelCase word. Review the diff afterwards (`git diff --stat`), rebuild the
  * extension (`pnpm extension:build`) and run the checks.
@@ -19,7 +19,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 const [from, to] = process.argv.slice(2);
 const valid = /^[A-Z][A-Za-z0-9]*$/;
 if (!from || !to || !valid.test(from) || !valid.test(to)) {
-  console.error("Usage: node scripts/rename-brand.mjs <OldName> <NewName>   (single CamelCase words, e.g. BidPilot BidLens)");
+  console.error("Usage: node scripts/rename-brand.mjs <OldName> <NewName>   (single CamelCase words, e.g. FlagBid BidLens)");
   process.exit(1);
 }
 if (from === to) {

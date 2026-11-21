@@ -60,7 +60,7 @@ test("extension: connect with a token, then analyze a Copart lot page in one cli
 
     const lot = await ctx.newPage();
     await lot.goto("https://www.copart.com/lot/43562513");
-    await expect(lot.locator("#bidpilot-root")).toBeAttached();
+    await expect(lot.locator("#flagbid-root")).toBeAttached();
     const reportOpened = ctx.waitForEvent("page");
     // The button lives in a closed shadow root at the bottom-right corner.
     await lot.mouse.click(1280 - 130, 800 - 40);

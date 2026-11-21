@@ -96,7 +96,7 @@ export function AppShell({ user, children }: { user: ShellUser; children: React.
           className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-56 bg-[radial-gradient(120%_100%_at_0%_0%,color-mix(in_oklab,var(--color-primary)_16%,transparent),transparent_70%)]"
         />
         <div className="px-5 pt-5 pb-4">
-          <Logo href="/app" className="text-lg" />
+          <Logo href="/app" className="text-xl" />
         </div>
         <div className="px-4 pb-2">
           <Button asChild className="w-full justify-start" size="default">

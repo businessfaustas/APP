@@ -8,7 +8,7 @@ import { runMaintenance, sendDueReminders } from "@/lib/jobs/maintenance";
 import { runAnalysis, type StepRunner } from "./analysisRun";
 
 export const inngest = new Inngest({
-  id: "bidpilot",
+  id: "flagbid",
   eventKey: env().INNGEST_EVENT_KEY,
   isDev: env().INNGEST_DEV,
 });

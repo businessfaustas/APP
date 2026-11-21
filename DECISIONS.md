@@ -4,9 +4,9 @@ This file records where the code departs from [`docs/02-AI-MASTER-PROMPT.md`](./
 
 ## Name
 
-The product was built as AuctionPulse AI and is now **BidPilot**. The name lives in `lib/brand.ts`; everything else that spells it out (README, legal pages, extension, docs) is kept in step by `node scripts/rename-brand.mjs <OldName> <NewName>`.
+The product was built as AuctionPulse AI and is now **FlagBid**. The name lives in `lib/brand.ts`; everything else that spells it out (README, legal pages, extension, docs) is kept in step by `node scripts/rename-brand.mjs <OldName> <NewName>`.
 
-The logo is supplied artwork (a PNG), traced to vector paths in `components/brand-art.ts` with potrace (8× upscale, light blur, threshold) so it stays sharp at any size and follows light and dark themes: the emblem and letters use the text colour, the needle and speed lines keep their orange. `app/icon.svg` (favicon, app icon, extension icon) is the emblem on a near-black tile. A rename needs new artwork.
+The logo is generated, not hand-drawn: a lime rounded tile with a flag, and "Flag" (Plus Jakarta Sans 600) "Bid" (800) converted to outline paths with opentype.js, so it needs no font and stays sharp at any size. The tile and flag keep their colours (lime `#c6f432`, near-black `#14170b`); the letters use the text colour, so it reads on light and dark backgrounds. The paths are in `components/brand-art.ts`; `app/icon.svg` (favicon, app icon, extension icon) is the tile with the flag. A rename needs new artwork. The name was picked after a web search for existing products under candidate names (BidPilot, BidLens, LotLens, BidSight, BidSense and BidWise were taken); that is not a trademark search, so check EUIPO and the Lithuanian patent office before building a brand on it.
 
 Left on the old name on purpose, because they are identifiers rather than branding and changing them would orphan data or break setups: the database name `auctionpulse`, the demo user's email `demo@auctionpulse.app` (its reports belong to that account), the `ap_` cookie prefix, and the deployed `auctionpulse-ai.vercel.app` URL until the Vercel project is renamed.
 

@@ -6,4 +6,4 @@
  * (`components/brand-art.ts`, `app/icon.svg`) is a drawing of the current name, so a rename needs
  * new artwork as well.
  */
-export const BRAND_NAME = "BidPilot";
+export const BRAND_NAME = "FlagBid";
