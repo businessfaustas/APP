@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { LOGO_ACCENT, LOGO_ACCENT_COLOR, LOGO_ASPECT, LOGO_EMBLEM, LOGO_EMBLEM_COLOR, LOGO_VIEWBOX, LOGO_WORDMARK } from "@/components/brand-art";
+import { LOGO_ASPECT, LOGO_VIEWBOX, LOGO_WORDMARK } from "@/components/brand-art";
 
 import { BRAND_NAME } from "../brand";
 
@@ -13,9 +13,7 @@ describe("brand", () => {
     const [x, y, w, h] = LOGO_VIEWBOX.split(" ").map(Number);
     expect([x, y, w, h].every(Number.isFinite)).toBe(true);
     expect(LOGO_ASPECT).toBeCloseTo(w! / h!, 2);
-    expect(LOGO_EMBLEM_COLOR).toMatch(/^#[0-9a-f]{6}$/i);
-    expect(LOGO_ACCENT_COLOR).toMatch(/^#[0-9a-f]{6}$/i);
-    for (const d of [LOGO_EMBLEM, LOGO_WORDMARK, LOGO_ACCENT]) {
+    for (const d of [LOGO_WORDMARK]) {
       expect(d).toMatch(/^M[\d.\- C L Z M]+$/); // only move, curve, line and close commands
       const nums = d.match(/-?\d*\.?\d+/g)!.map(Number);
       expect(nums.every(Number.isFinite)).toBe(true);

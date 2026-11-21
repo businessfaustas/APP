@@ -31,7 +31,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   return (
     <div className="grid min-h-dvh lg:grid-cols-[1.08fr_1fr]">
       <aside className="bg-sidebar relative hidden flex-col justify-between gap-8 overflow-hidden border-r p-10 lg:flex xl:p-14">
-        <Logo className="text-2xl" />
+        <Logo className="text-3xl" />
         <div className="mx-auto w-full max-w-xl space-y-8">
           <Showcase data={demoShowcase(t)} />
           <div>
@@ -53,7 +53,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       <main className="flex flex-col items-center justify-center gap-6 px-4 py-10">
         <div className="flex w-full max-w-sm items-center justify-between">
           <div className="lg:invisible">
-            <Logo className="text-xl" />
+            <Logo className="text-2xl" />
           </div>
           <LanguageSwitcher />
         </div>

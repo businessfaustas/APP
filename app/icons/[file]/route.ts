@@ -28,7 +28,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ file: s
     // Full-bleed background with the mark inside the 80% safe zone.
     const inner = Math.round(spec.size * 0.8);
     const mark = await sharp(svg, { density: 512 }).resize(inner, inner).png().toBuffer();
-    png = await sharp({ create: { width: spec.size, height: spec.size, channels: 4, background: "#5a6bf2" } })
+    png = await sharp({ create: { width: spec.size, height: spec.size, channels: 4, background: "#10301f" } })
       .composite([{ input: mark, gravity: "center" }])
       .png()
       .toBuffer();

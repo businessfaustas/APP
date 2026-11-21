@@ -6,7 +6,7 @@ This file records where the code departs from [`docs/02-AI-MASTER-PROMPT.md`](./
 
 The product was built as AuctionPulse AI and is now **FlagBid**. The name lives in `lib/brand.ts`; everything else that spells it out (README, legal pages, extension, docs) is kept in step by `node scripts/rename-brand.mjs <OldName> <NewName>`.
 
-The logo is generated, not hand-drawn: an indigo rounded tile with a white flag, and "Flag" (Plus Jakarta Sans 600) "Bid" (800) converted to outline paths with opentype.js, so it needs no font and stays sharp at any size. The tile and flag keep their colours (indigo `#5a6bf2`, white); the letters use the text colour, so it reads on light and dark backgrounds. The paths are in `components/brand-art.ts`; `app/icon.svg` (favicon, app icon, extension icon) is the tile with the flag. A rename needs new artwork. The name was picked after a web search for existing products under candidate names (BidPilot, BidLens, LotLens, BidSight, BidSense and BidWise were taken); that is not a trademark search, so check EUIPO and the Lithuanian patent office before building a brand on it.
+The logo is the supplied lowercase "flagbid" wordmark (with its dot), traced from the artwork to a vector path with potrace, so it needs no font or image and stays sharp at any size. It is drawn in `--logo` (`app/globals.css`): mint `#7fedbd` on dark, a deeper green `#0a8f5a` on light so it keeps 3:1 contrast. The path is in `components/brand-art.ts` (generated, not hand-edited; regenerate from new artwork). `app/icon.svg` (favicon, app icon, extension icon) is the "f" in mint on a dark green tile, and the maskable icon background in `app/icons/[file]/route.ts` is `#10301f`. A rename needs new artwork. The name was picked after a web search for existing products under candidate names (BidPilot, BidLens, LotLens, BidSight, BidSense and BidWise were taken); that is not a trademark search, so check EUIPO and the Lithuanian patent office before building a brand on it.
 
 Left on the old name on purpose, because they are identifiers rather than branding and changing them would orphan data or break setups: the database name `auctionpulse`, the demo user's email `demo@auctionpulse.app` (its reports belong to that account), the `ap_` cookie prefix, and the deployed `auctionpulse-ai.vercel.app` URL until the Vercel project is renamed.
 
@@ -114,7 +114,7 @@ A modern dashboard look: soft rounded panels, one indigo-blue accent, pill contr
 - **Shape:** large radii (the theme block sets the Tailwind radius steps), pill buttons, tabs and badges, cards with a soft shadow and a bright top edge. No hard edges or uppercase headings.
 - **Type:** Geist. Money figures use `.display` (heavier, tight, tabular).
 - **Charts:** the validated `--series-*` slots are unchanged; only the single-series activity bars use `--brand-bar`.
-- **Logo and icons:** an indigo tile (`#5a6bf2`) with a white flag; the same tile is the favicon, app icon and extension icon, and the manifest and theme colours follow the dark background.
+- **Logo and icons:** the mint "flagbid" wordmark (theme-aware, `--logo`); the favicon, app icon and extension icon are the "f" on a dark green tile, and the manifest and theme colours follow the dark background.
 - **When changing it:** use the tokens, not hard-coded colours, so light and dark both work; put accent fills on `bg-brand text-brand-foreground`, and use `text-primary` for accent-coloured text.
 
 ## Car pictures
