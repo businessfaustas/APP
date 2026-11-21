@@ -4,12 +4,12 @@ import { useId, useState } from "react";
 
 import type { DamageZone } from "@/lib/domain/schemas";
 import { cn } from "@/lib/utils";
-import { carArtMarkup, type BodyType } from "@/lib/vehicle/art";
+import { damageSpot, type BodyType } from "@/lib/vehicle/art";
 
 export type { BodyType };
 export type Tone = "go" | "caution" | "stop" | "neutral";
 
-/** Picks a silhouette from what we know about the car. */
+/** Picks a body from what we know about the car. */
 export function bodyTypeOf(v: { bodyClass?: string | null; make?: string | null; model?: string | null; vehicleClass?: string | null }): BodyType {
   const s = `${v.bodyClass ?? ""} ${v.make ?? ""} ${v.model ?? ""}`.toLowerCase();
   if (/pickup|truck|f-?150|f-?250|silverado|sierra|\bram\b|tacoma|tundra|ranger|frontier|colorado|titan|gladiator|cybertruck/.test(s)) return "pickup";
@@ -20,6 +20,8 @@ export function bodyTypeOf(v: { bodyClass?: string | null; make?: string | null;
   )
     return "suv";
   if (v.vehicleClass === "truck_suv") return "suv";
+  if (/\bm[2-8]\b|mustang|camaro|corvette|challenger|supra|\b911\b|cayman|boxster|\bgt-?r\b|370z|400z|\bbrz\b|gr86|coupe|roadster|convertible/.test(s))
+    return "coupe";
   return "sedan";
 }
 
@@ -30,11 +32,23 @@ const TONE_GLOW: Record<Tone, string> = {
   neutral: "var(--primary)",
 };
 
+/** The car photos, cut out of their studio backgrounds and all facing right (front on the right). */
+const CARS: Record<BodyType, { src: string; ratio: number }> = {
+  sedan: { src: "/cars/sedan.webp", ratio: 900 / 336 },
+  coupe: { src: "/cars/coupe.webp", ratio: 760 / 250 },
+  suv: { src: "/cars/suv.webp", ratio: 900 / 343 },
+  pickup: { src: "/cars/suv.webp", ratio: 900 / 343 }, // no pickup photo yet: the SUV stands in
+};
+
+/**
+ * A car on a studio floor: the cut-out photo, a soft ground shadow and glow in the verdict's
+ * colour, and (when asked) the damaged zones marked and a scan sweeping over it.
+ * It fills the same 400 : 180 stage the old drawing did, so it can be dropped in anywhere.
+ */
 export function CarArt({
   body = "sedan",
   zones = [],
   tone = "neutral",
-  paint,
   scanning = false,
   showDamage = true,
   className,
@@ -43,24 +57,79 @@ export function CarArt({
   body?: BodyType;
   zones?: { zone: DamageZone; severity: number }[];
   tone?: Tone;
-  /** Paint colour as #rrggbb (see paintOf); silver when omitted. */
+  /** Kept for callers that still pass the listing's paint colour: the photos have their own. */
   paint?: string;
   scanning?: boolean;
   showDamage?: boolean;
   className?: string;
   label?: string;
 }) {
-  const id = useId().replace(/[^a-zA-Z0-9]/g, "");
-  // Markup is built from constants and numbers only (lib/vehicle/art.ts); no user text reaches it.
-  const html = carArtMarkup({ id: `c${id}`, body, paint, zones: showDamage ? zones : [], glow: TONE_GLOW[tone], scanning });
+  const id = useId();
+  const car = CARS[body];
+  const hits = showDamage ? zones.filter((z) => z.severity > 0) : [];
+  const glow = TONE_GLOW[tone];
   return (
-    <svg
-      viewBox="0 0 400 180"
-      className={cn("h-auto w-full", className)}
+    <div
+      className={cn("[container-type:inline-size] relative aspect-[400/180] w-full", className)}
       role="img"
       aria-label={label ?? "Vehicle"}
-      dangerouslySetInnerHTML={{ __html: html }}
-    />
+      data-testid="car-art"
+    >
+      <div
+        aria-hidden="true"
+        className="absolute inset-x-[5%] bottom-[2%] h-[26%] rounded-[50%] blur-sm"
+        style={{ background: `radial-gradient(closest-side, color-mix(in oklab, ${glow} 38%, transparent), transparent)` }}
+      />
+      <div
+        aria-hidden="true"
+        className="absolute inset-x-[10%] bottom-[10.5%] h-[7%] rounded-[50%]"
+        style={{ background: "radial-gradient(closest-side, rgb(0 0 0 / 0.5), transparent)" }}
+      />
+      {/* the car box: the same left edge, width and ground line as the drawing it replaces */}
+      <div className="absolute bottom-[15.5%] left-[7%] w-[86.5%]">
+        {/* eslint-disable @next/next/no-img-element */}
+        <img
+          src={car.src}
+          alt=""
+          width={900}
+          height={Math.round(900 / car.ratio)}
+          className="block h-auto w-full select-none"
+          draggable={false}
+          decoding="async"
+        />
+        {/* eslint-enable @next/next/no-img-element */}
+        {hits.map((h) => {
+          const s = damageSpot(body, h.zone);
+          const k = 0.8 + Math.min(10, h.severity) / 18;
+          const w = Math.min(0.45, s.w * k);
+          return (
+            <span key={`${id}-${h.zone}`} aria-hidden="true" className="absolute" style={{ left: `${s.x * 100}%`, top: `${s.y * 100}%` }}>
+              <span
+                className="glow-pulse absolute aspect-[1.25] -translate-x-1/2 -translate-y-1/2 rounded-[50%]"
+                style={{
+                  width: `${w * 346 * 0.29}%`,
+                  minWidth: "12%",
+                  background: "radial-gradient(closest-side, rgb(255 59 59 / 0.75), rgb(255 59 59 / 0.25) 55%, transparent)",
+                }}
+              />
+              <span className="ping absolute size-[clamp(9px,4.6cqw,20px)] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#ff4d4d]" />
+              <span className="absolute size-[clamp(5px,2.3cqw,11px)] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white bg-[#ff4040] shadow-[0_0_8px_rgb(255_64_64/0.8)]" />
+            </span>
+          );
+        })}
+        {scanning && (
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -inset-x-[4%] -inset-y-[6%] overflow-hidden [mask-image:linear-gradient(to_bottom,transparent,black_25%,black_75%,transparent)]"
+          >
+            <div
+              className="scan absolute inset-y-0 left-0 w-[45%]"
+              style={{ background: "linear-gradient(90deg, transparent, color-mix(in oklab, var(--primary) 34%, transparent) 50%, transparent)" }}
+            />
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 

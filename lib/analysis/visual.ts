@@ -1,10 +1,10 @@
 /** What the car picture needs for a lot: a real photo if any, its silhouette, damaged areas and verdict tone. */
 import type { DamageAssessment, DamageZone, NormalizedListing, VehicleInfo } from "@/lib/domain/schemas";
-import { paintOf } from "@/lib/vehicle/art";
+import { paintOf, type BodyType } from "@/lib/vehicle/art";
 
 export interface LotVisual {
   photo: string | null;
-  body: "sedan" | "suv" | "pickup";
+  body: BodyType;
   zones: { zone: DamageZone; severity: number }[];
   tone: "go" | "caution" | "stop" | "neutral";
   /** Paint colour (#rrggbb) from the listing's colour. */
@@ -12,16 +12,15 @@ export interface LotVisual {
 }
 
 const PICKUP = /pickup|truck|f-?150|f-?250|silverado|sierra|\bram\b|tacoma|tundra|ranger|frontier|colorado|titan|gladiator|cybertruck/;
+const COUPE = /\bm[2-8]\b|\bmustang\b|camaro|corvette|challenger|supra|\b911\b|cayman|boxster|\bgt-?r\b|370z|400z|\bbrz\b|gr86|coupe|roadster|convertible/;
 const SUV =
   /suv|sport utility|crossover|multipurpose|\bvan\b|wagon|rav4|cr-v|cx-5|x3|x5|q5|q7|explorer|tahoe|highlander|pilot|model y|outback|forester|wrangler|grand cherokee/;
 
-export function bodyOf(
-  listing: Pick<NormalizedListing, "make" | "model"> | null,
-  vehicle: Pick<VehicleInfo, "bodyClass" | "vehicleClass"> | null,
-): LotVisual["body"] {
+export function bodyOf(listing: Pick<NormalizedListing, "make" | "model"> | null, vehicle: Pick<VehicleInfo, "bodyClass" | "vehicleClass"> | null): BodyType {
   const s = `${vehicle?.bodyClass ?? ""} ${listing?.make ?? ""} ${listing?.model ?? ""}`.toLowerCase();
   if (PICKUP.test(s)) return "pickup";
   if (SUV.test(s) || vehicle?.vehicleClass === "truck_suv") return "suv";
+  if (COUPE.test(s)) return "coupe";
   return "sedan";
 }
 

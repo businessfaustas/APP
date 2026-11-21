@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { renderDemoPhoto } from "@/lib/demo/photoSvg";
 
-import { carArtMarkup, paintOf } from "../art";
+import { carArtMarkup, damageSpot, paintOf } from "../art";
 
 describe("paintOf", () => {
   it("maps listing colour names (English and Lithuanian) to a paint hex", () => {
@@ -56,5 +56,30 @@ describe("renderDemoPhoto", () => {
       expect(svg).not.toContain("undefined");
       expect(svg).not.toContain("NaN");
     }
+  });
+});
+
+describe("damageSpot", () => {
+  it("places zones on the car's own box: front on the right, rear on the left, roof on top", () => {
+    const front = damageSpot("sedan", "front");
+    const rear = damageSpot("sedan", "rear");
+    const roof = damageSpot("sedan", "roof");
+    expect(front.x).toBeGreaterThan(0.9);
+    expect(rear.x).toBeLessThan(0.1);
+    expect(roof.y).toBeLessThan(0.1);
+    expect(damageSpot("sedan", "undercarriage").y).toBeGreaterThan(0.85);
+  });
+  it("stays inside the box for every body and zone, and a coupe uses the sedan's spots", () => {
+    for (const body of ["sedan", "suv", "pickup", "coupe"] as const) {
+      for (const zone of ["front", "front_left", "rear", "left_side", "roof", "undercarriage", "interior"] as const) {
+        const s = damageSpot(body, zone);
+        expect(s.x).toBeGreaterThanOrEqual(0);
+        expect(s.x).toBeLessThanOrEqual(1);
+        expect(s.y).toBeGreaterThanOrEqual(0);
+        expect(s.y).toBeLessThanOrEqual(1);
+        expect(s.w).toBeGreaterThan(0);
+      }
+    }
+    expect(damageSpot("coupe", "front")).toEqual(damageSpot("sedan", "front"));
   });
 });

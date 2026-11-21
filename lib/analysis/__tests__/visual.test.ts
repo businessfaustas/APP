@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { auctionPhotoUrl, lotPhoto, photoUrl } from "../visual";
+import { auctionPhotoUrl, bodyOf, lotPhoto, photoUrl } from "../visual";
 
 const stored = { id: "p1", originalUrl: "https://cs.copart.com/a.jpg", storagePath: "photos/p1.jpg" };
 
@@ -23,5 +23,16 @@ describe("lot photo choice", () => {
   it("is null without any photo", () => {
     expect(lotPhoto(undefined, null)).toBeNull();
     expect(lotPhoto(undefined, { photoUrls: [] })).toBeNull();
+  });
+});
+
+describe("which car picture", () => {
+  it("picks a coupe, an SUV, a pickup or the everyday sedan from the make and model", () => {
+    expect(bodyOf({ make: "BMW", model: "M4" }, null)).toBe("coupe");
+    expect(bodyOf({ make: "FORD", model: "MUSTANG" }, null)).toBe("coupe");
+    expect(bodyOf({ make: "AUDI", model: "Q8" }, { bodyClass: "Sport Utility Vehicle (SUV)", vehicleClass: "truck_suv" })).toBe("suv");
+    expect(bodyOf({ make: "FORD", model: "F-150" }, null)).toBe("pickup");
+    expect(bodyOf({ make: "TOYOTA", model: "CAMRY" }, null)).toBe("sedan");
+    expect(bodyOf(null, null)).toBe("sedan");
   });
 });

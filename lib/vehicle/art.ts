@@ -5,7 +5,10 @@
  */
 import type { DamageZone } from "@/lib/domain/schemas";
 
-export type BodyType = "sedan" | "suv" | "pickup";
+export type BodyType = "sedan" | "suv" | "pickup" | "coupe";
+
+/** The hand-drawn shapes cover three bodies; a coupe is drawn as a sedan in the demo-photo drawings. */
+type DrawnBody = Exclude<BodyType, "coupe">;
 
 interface Shape {
   /** Silhouette with both wheel arches cut out. */
@@ -33,7 +36,7 @@ interface Shape {
 
 export const VIEW = { w: 400, h: 180, ground: 152 } as const;
 
-const SHAPES: Record<BodyType, Shape> = {
+const SHAPES: Record<DrawnBody, Shape> = {
   sedan: {
     body: "M36 138 Q28 136 28 124 L30 102 Q31 95 40 93 L70 90 C96 74 122 57 156 53 C186 50 214 50 232 54 C254 60 270 74 288 88 C320 89 350 94 364 102 Q374 107 374 120 L373 132 Q372 138 364 138 L326.2 138 A28 28 0 1 0 273.8 138 L130.2 138 A28 28 0 1 0 77.8 138 Z",
     glass: ["M104 88 C120 74 138 65 158 61 L196 59 L196 88 Z", "M202 59 L227 59 C245 62 260 75 273 88 L202 88 Z"],
@@ -109,7 +112,7 @@ const SHAPES: Record<BodyType, Shape> = {
 };
 
 /** Where each damage zone sits on the side view: cx, cy, rx, ry. */
-const SPOTS: Record<BodyType, Record<DamageZone, [number, number, number, number]>> = {
+const SPOTS: Record<DrawnBody, Record<DamageZone, [number, number, number, number]>> = {
   sedan: {
     front: [362, 118, 22, 18],
     front_left: [330, 102, 26, 18],
@@ -231,7 +234,7 @@ export interface CarArtOptions {
 /** Inner markup for an `<svg viewBox="0 0 400 180">`. */
 export function carArtMarkup(o: CarArtOptions): string {
   const id = o.id;
-  const kind = o.body ?? "sedan";
+  const kind: DrawnBody = o.body === "coupe" ? "sedan" : (o.body ?? "sedan");
   const s = SHAPES[kind];
   const paint = o.paint ?? "#aab1bd";
   const hits = (o.zones ?? []).filter((z) => z.severity > 0);
@@ -312,4 +315,20 @@ ${s.handles.map(([x, y]) => `<rect x="${x}" y="${y}" width="13" height="3.2" rx=
   const scan = o.scanning ? `<g clip-path="url(#${id}-clip)"><rect class="scan" x="0" y="20" width="96" height="140" fill="url(#${id}-beam)"/></g>` : "";
 
   return `${defs}${ground}${wells}${body}${glass}${details}${wheels}${damage}${scan}${markers}`;
+}
+
+/**
+ * Where a damage zone sits on a side view of the car, as fractions of the car's own box
+ * (x: 0 = rear bumper, 1 = front bumper; y: 0 = roof, 1 = bottom of the tyres), plus the size of
+ * its glow as fractions of the car's width. Derived from the drawn side view, so the markers on the
+ * real car photos land in the same places.
+ */
+export function damageSpot(body: BodyType, zone: DamageZone): { x: number; y: number; w: number } {
+  const [cx, cy, rx] = SPOTS[body === "coupe" ? "sedan" : body][zone];
+  // the drawn car spans x 28..374 and y 50..ground
+  return {
+    x: Math.min(1, Math.max(0, (cx - 28) / 346)),
+    y: Math.min(1, Math.max(0, (cy - 50) / (VIEW.ground - 50))),
+    w: (rx * 2) / 346,
+  };
 }

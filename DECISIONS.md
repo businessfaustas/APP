@@ -117,6 +117,12 @@ A modern dashboard look: soft rounded panels, one indigo-blue accent, pill contr
 - **Logo and icons:** an indigo tile (`#5a6bf2`) with a white flag; the same tile is the favicon, app icon and extension icon, and the manifest and theme colours follow the dark background.
 - **When changing it:** use the tokens, not hard-coded colours, so light and dark both work; put accent fills on `bg-brand text-brand-foreground`, and use `text-primary` for accent-coloured text.
 
+## Car pictures
+
+Where a lot has no real photo, the app shows a car on a studio floor. These are three photos cut out of their studio backgrounds (`public/cars/*.webp`, transparent, all facing right): a coupe, an everyday hatchback/sedan and an SUV. `bodyOf` (server) and `bodyTypeOf` (client) pick one from the make and model; a pickup uses the SUV photo until a pickup photo is added. `CarArt` adds a ground shadow and a glow in the verdict colour, marks damaged zones (positions come from `damageSpot` in `lib/vehicle/art.ts`, so they match the old drawing's zones) and can run a scan sweep. The drawn side views in `lib/vehicle/art.ts` remain only for the demo lots' fake "photos" (`lib/demo/photoSvg.ts`).
+
+To change the cars: cut the new photo out (flood the studio background in from the border, remove the floor shadow below the sill line, keep the tyres, feather the edge), flip it to face right, and save it as a WebP with alpha in `public/cars/`. The BMW source photo was small (246 px wide), so the coupe is softer than the others; swap in a larger photo for a crisper one. `/cars/` is excluded from the auth proxy so the landing page and login can show it.
+
 ## VIN input
 
 A VIN pasted into the analyze box is checked and decoded live (`/api/vin/[vin]`, the free NHTSA decoder, cached 30 days, 60 checks an hour per user) and shown as a plate with the car's year, model, engine and drive before anything is charged. When the analysis runs, `lib/providers/listing/vinLookup.ts` decodes the VIN again and, with an AI key, searches the web for an auction lot of that exact VIN (damage, odometer, title, location, photos). A lot is used only if the notes name this VIN and say something about damage or photos; it is marked as found by search and may be an earlier sale. Without a lot, the form opens with the decoded car filled in and asks only for the damage, odometer and bid. In demo mode the VIN of a sample car runs the offline fixture.
