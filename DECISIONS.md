@@ -6,7 +6,7 @@ This file records where the code departs from [`docs/02-AI-MASTER-PROMPT.md`](./
 
 The product was built as AuctionPulse AI and is now **FlagBid**. The name lives in `lib/brand.ts`; everything else that spells it out (README, legal pages, extension, docs) is kept in step by `node scripts/rename-brand.mjs <OldName> <NewName>`.
 
-The logo is generated, not hand-drawn: a lime rounded tile with a flag, and "Flag" (Plus Jakarta Sans 600) "Bid" (800) converted to outline paths with opentype.js, so it needs no font and stays sharp at any size. The tile and flag keep their colours (lime `#c6f432`, near-black `#14170b`); the letters use the text colour, so it reads on light and dark backgrounds. The paths are in `components/brand-art.ts`; `app/icon.svg` (favicon, app icon, extension icon) is the tile with the flag. A rename needs new artwork. The name was picked after a web search for existing products under candidate names (BidPilot, BidLens, LotLens, BidSight, BidSense and BidWise were taken); that is not a trademark search, so check EUIPO and the Lithuanian patent office before building a brand on it.
+The logo is generated, not hand-drawn: an indigo rounded tile with a white flag, and "Flag" (Plus Jakarta Sans 600) "Bid" (800) converted to outline paths with opentype.js, so it needs no font and stays sharp at any size. The tile and flag keep their colours (indigo `#5a6bf2`, white); the letters use the text colour, so it reads on light and dark backgrounds. The paths are in `components/brand-art.ts`; `app/icon.svg` (favicon, app icon, extension icon) is the tile with the flag. A rename needs new artwork. The name was picked after a web search for existing products under candidate names (BidPilot, BidLens, LotLens, BidSight, BidSense and BidWise were taken); that is not a trademark search, so check EUIPO and the Lithuanian patent office before building a brand on it.
 
 Left on the old name on purpose, because they are identifiers rather than branding and changing them would orphan data or break setups: the database name `auctionpulse`, the demo user's email `demo@auctionpulse.app` (its reports belong to that account), the `ap_` cookie prefix, and the deployed `auctionpulse-ai.vercel.app` URL until the Vercel project is renamed.
 
@@ -108,13 +108,14 @@ Monthly plans stay for people who analyze every week (Pro €59 for 40, Business
 
 ## Look and feel
 
-A modern dashboard look: soft rounded panels, one electric lime accent, pill controls. Dark is a deep green-black with glassy cards and a faint green glow; light is a soft grey with white cards. (An earlier attempt with slanted plates, condensed italic capitals and racing flags was dropped: it read as a game.)
+A modern dashboard look: soft rounded panels, one indigo-blue accent, pill controls. Dark is a deep blue-black with glassy cards and a faint blue glow; light is a soft off-white with white cards. (An earlier attempt with slanted plates, condensed italic capitals and racing flags was dropped because it read as a game; a lime-green variant was dropped in favour of the original blue.)
 
-- **Colour:** `app/globals.css`. `--lime` is the fill (primary buttons, the active nav pill, active tabs, sliders, progress, the credits card) and always carries dark text (`--lime-foreground`). `--primary` is the same hue made readable as text and thin lines on the current background (dark green on light, lime on dark). Verdict colours (`--go`, `--caution`, `--stop`) are separate hues from the lime so GO is never confused with "primary".
+- **Colour:** `app/globals.css`. `--brand` is the fill (primary buttons, the active nav pill, active tabs, sliders, progress, the credits card) and always carries white text (`--brand-foreground`). `--primary` is the same hue made readable as text and thin lines on the current background (deep indigo on light, light periwinkle on dark). Verdict colours (`--go`, `--caution`, `--stop`) are separate hues, so GO is never confused with "primary".
 - **Shape:** large radii (the theme block sets the Tailwind radius steps), pill buttons, tabs and badges, cards with a soft shadow and a bright top edge. No hard edges or uppercase headings.
 - **Type:** Geist. Money figures use `.display` (heavier, tight, tabular).
-- **Charts:** the validated `--series-*` slots are unchanged; only the single-series activity bars use `--lime-bar`.
-- **When changing it:** use the tokens, not hard-coded colours, so light and dark both work; put lime fills on `bg-lime text-lime-foreground`, and use `text-primary` for lime-coloured text.
+- **Charts:** the validated `--series-*` slots are unchanged; only the single-series activity bars use `--brand-bar`.
+- **Logo and icons:** an indigo tile (`#5a6bf2`) with a white flag; the same tile is the favicon, app icon and extension icon, and the manifest and theme colours follow the dark background.
+- **When changing it:** use the tokens, not hard-coded colours, so light and dark both work; put accent fills on `bg-brand text-brand-foreground`, and use `text-primary` for accent-coloured text.
 
 ## VIN input
 

@@ -14,13 +14,13 @@ export function Slider({ className, ...props }: React.ComponentProps<typeof Slid
       {...props}
     >
       <SliderPrimitive.Track className="bg-muted relative h-1.5 w-full grow overflow-hidden rounded-full">
-        <SliderPrimitive.Range className="bg-lime absolute h-full" />
+        <SliderPrimitive.Range className="bg-brand absolute h-full" />
       </SliderPrimitive.Track>
       {Array.from({ length: count }, (_, i) => (
         <SliderPrimitive.Thumb
           key={i}
           aria-label={props["aria-label"]}
-          className="border-lime bg-background hover:ring-ring/40 focus-visible:ring-ring/50 block size-4 shrink-0 rounded-full border shadow-sm transition-[box-shadow] hover:ring-4 focus-visible:ring-4 focus-visible:outline-hidden"
+          className="border-brand bg-background hover:ring-ring/40 focus-visible:ring-ring/50 block size-4 shrink-0 rounded-full border shadow-sm transition-[box-shadow] hover:ring-4 focus-visible:ring-4 focus-visible:outline-hidden"
         />
       ))}
     </SliderPrimitive.Root>

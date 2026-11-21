@@ -30,7 +30,7 @@ export function Progress({ className, value, ...props }: React.ComponentProps<ty
   return (
     <ProgressPrimitive.Root className={cn("bg-muted relative h-2 w-full overflow-hidden rounded-full", className)} value={value} {...props}>
       <ProgressPrimitive.Indicator
-        className="bg-lime h-full w-full flex-1 rounded-full transition-all duration-500"
+        className="bg-brand h-full w-full flex-1 rounded-full transition-all duration-500"
         style={{ transform: `translateX(-${100 - (value ?? 0)}%)` }}
       />
     </ProgressPrimitive.Root>
@@ -41,7 +41,7 @@ export function Checkbox({ className, ...props }: React.ComponentProps<typeof Ch
   return (
     <CheckboxPrimitive.Root
       className={cn(
-        "peer border-input focus-visible:ring-ring/50 dark:bg-input/30 data-[state=checked]:border-lime data-[state=checked]:bg-lime data-[state=checked]:text-lime-foreground dark:data-[state=checked]:bg-lime size-4 shrink-0 rounded-[4px] border shadow-xs outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50",
+        "peer border-input focus-visible:ring-ring/50 dark:bg-input/30 data-[state=checked]:border-brand data-[state=checked]:bg-brand data-[state=checked]:text-brand-foreground dark:data-[state=checked]:bg-brand size-4 shrink-0 rounded-[4px] border shadow-xs outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50",
         className,
       )}
       {...props}

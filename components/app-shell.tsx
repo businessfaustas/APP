@@ -75,7 +75,7 @@ function NavLink({ item, active, label }: { item: NavItem; active: boolean; labe
       aria-current={active ? "page" : undefined}
       className={cn(
         "group text-muted-foreground hover:bg-accent/60 hover:text-foreground relative flex items-center gap-3 rounded-full px-3.5 py-2.5 text-sm font-medium transition-colors",
-        active && "bg-lime text-lime-foreground hover:bg-lime hover:text-lime-foreground font-semibold shadow-[0_10px_24px_-14px_var(--lime)]",
+        active && "bg-brand text-brand-foreground hover:bg-brand hover:text-brand-foreground font-semibold shadow-[0_10px_24px_-14px_var(--brand)]",
       )}
     >
       <item.icon className={cn("size-[18px] shrink-0", !active && "opacity-80")} />
@@ -132,9 +132,9 @@ export function AppShell({ user, children }: { user: ShellUser; children: React.
         <div className="space-y-3 border-t p-4">
           <Link
             href="/app/billing"
-            className="bg-lime text-lime-foreground group flex items-center gap-3 rounded-2xl px-4 py-3 shadow-[0_14px_30px_-18px_var(--lime)] transition-[filter,transform] hover:brightness-105"
+            className="bg-brand text-brand-foreground group flex items-center gap-3 rounded-2xl px-4 py-3 shadow-[0_14px_30px_-18px_var(--brand)] transition-[filter,transform] hover:brightness-105"
           >
-            <span className="bg-lime-foreground/12 grid size-9 shrink-0 place-items-center rounded-full">
+            <span className="bg-brand-foreground/12 grid size-9 shrink-0 place-items-center rounded-full">
               <CoinsIcon className="size-4" />
             </span>
             <span className="min-w-0 flex-1">

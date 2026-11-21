@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 /**
  * The logo artwork. It is sized by its height (1.4 × the surrounding font size unless a
  * `h-*` class says otherwise); the letters take the text colour, so it reads on light and dark
- * backgrounds alike. The tile and its flag keep their own colours (lime and near-black).
+ * backgrounds alike. The tile and its flag keep their own colours (indigo and white).
  */
 export function LogoArt({ className }: { className?: string }) {
   return (
