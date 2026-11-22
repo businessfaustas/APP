@@ -38,12 +38,17 @@ describe("sitemap.xml", () => {
   it("lists only public pages, as absolute URLs, and none that robots.txt blocks", () => {
     process.env.NEXT_PUBLIC_APP_URL = "https://flagbid.example";
     const entries = sitemap();
-    expect(entries.map((e) => e.url)).toEqual(expect.arrayContaining(["https://flagbid.example", "https://flagbid.example/pricing", "https://flagbid.example/privacy"]));
+    expect(entries.map((e) => e.url)).toEqual(
+      expect.arrayContaining(["https://flagbid.example", "https://flagbid.example/pricing", "https://flagbid.example/privacy"]),
+    );
     const rules = robots().rules as { userAgent: string; disallow: string[] }[];
     const blocked = rules.find((r) => r.userAgent === "*")!.disallow;
     for (const e of entries) {
       const path = new URL(e.url).pathname;
-      expect(blocked.some((b) => path.startsWith(b)), path).toBe(false);
+      expect(
+        blocked.some((b) => path.startsWith(b)),
+        path,
+      ).toBe(false);
       expect(e.lastModified).toBeInstanceOf(Date);
     }
     expect(new Set(entries.map((e) => e.url)).size).toBe(entries.length);

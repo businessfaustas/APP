@@ -1,6 +1,7 @@
 import { devices, expect, test, type Page } from "@playwright/test";
 
 import { LOTS, open, signInAsDemo } from "./helpers";
+import { resetDemoRateLimit } from "./db";
 
 /**
  * Real-world conditions: small and mid-range phones, tablets, a slow mobile network with a
@@ -19,6 +20,8 @@ async function noHorizontalScroll(page: Page, label: string) {
   const { scrollWidth, innerWidth } = await page.evaluate(() => ({ scrollWidth: document.documentElement.scrollWidth, innerWidth: window.innerWidth }));
   expect(scrollWidth, `${label}: page is wider than the screen`).toBeLessThanOrEqual(innerWidth + 1);
 }
+
+test.beforeAll(resetDemoRateLimit);
 
 for (const name of DEVICES) {
   test.describe(`@devices ${name}`, () => {

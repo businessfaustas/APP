@@ -104,17 +104,24 @@ Copy `.env.example` to `.env`. Only `DATABASE_URL` is required. On Vercel, the n
 
 ## Scripts
 
-| Command                                                  | What it does                                                                                                         |
-| -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `pnpm dev`                                               | Dev server on :3000                                                                                                  |
-| `pnpm build` / `pnpm start`                              | Production build (runs `prisma generate` first) and server                                                           |
-| `pnpm typecheck`                                         | `tsc` for the app and the extension                                                                                  |
-| `pnpm lint` / `pnpm format`                              | ESLint (Next + TypeScript rules) / Prettier                                                                          |
-| `pnpm test`                                              | Vitest unit tests: calculator reference case, fees, solver, repair aggregation, parsers, flags, demo lots end to end |
-| `pnpm e2e`                                               | Playwright in demo mode. It reuses a running `pnpm dev`, or starts one                                               |
-| `pnpm db:migrate` / `db:deploy` / `db:seed` / `db:reset` | Prisma migrate (dev) / apply migrations (prod) / seed / reset                                                        |
-| `pnpm inngest:dev`                                       | Local Inngest dev server                                                                                             |
-| `pnpm extension:build`                                   | Build the Chrome extension into `extension/dist`                                                                     |
+| Command                                                  | What it does                                                                                                                                                                     |
+| -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm dev`                                               | Dev server on :3000                                                                                                                                                              |
+| `pnpm build` / `pnpm start`                              | Production build (runs `prisma generate` first) and server                                                                                                                       |
+| `pnpm typecheck`                                         | `tsc` for the app and the extension                                                                                                                                              |
+| `pnpm lint` / `pnpm format`                              | ESLint (Next + TypeScript rules) / Prettier                                                                                                                                      |
+| `pnpm test`                                              | Vitest unit and integration tests: calculator reference case, fees, solver, parsers, API auth on every route, ownership, Stripe, AI gateway, prompt injection, SEO, legal guards |
+| `pnpm e2e`                                               | Playwright in demo mode (smoke, regression, 6 device emulations, slow network, offline, accessibility). Reuses a running `pnpm dev`, or starts one                               |
+| `pnpm test:smoke`                                        | Read-only checks that are safe to run against production: `E2E_BASE_URL=https://your-domain pnpm test:smoke`                                                                     |
+| `pnpm test:visual` / `test:visual:update`                | Screenshot comparison of the stable pages (baselines are per platform)                                                                                                           |
+| `pnpm eval` / `pnpm eval:live`                           | Listing-reader accuracy and prompt-injection evaluations (offline; `:live` also calls the real model)                                                                            |
+| `pnpm db:check-rls`                                      | Fails if any table lacks row-level security                                                                                                                                      |
+| `pnpm db:backup` / `pnpm db:restore-test`                | Encrypted `pg_dump` / restore into a scratch database and compare every table                                                                                                    |
+| `pnpm secrets:scan` / `pnpm audit:deps`                  | Secrets in files and git history / dependency vulnerabilities (with an expiring allowlist)                                                                                       |
+| `pnpm email:check-dns <domain>`                          | Checks SPF, DKIM and DMARC                                                                                                                                                       |
+| `pnpm db:migrate` / `db:deploy` / `db:seed` / `db:reset` | Prisma migrate (dev) / apply migrations (prod) / seed / reset                                                                                                                    |
+| `pnpm inngest:dev`                                       | Local Inngest dev server                                                                                                                                                         |
+| `pnpm extension:build`                                   | Build the Chrome extension into `extension/dist`                                                                                                                                 |
 
 ---
 
@@ -183,24 +190,35 @@ The repo deploys to Vercel as-is. `vercel.json` runs `scripts/vercel-build.mjs`,
 2. **Database**: on Vercel, the build applies migrations and seeds automatically (`scripts/vercel-build.mjs`). Elsewhere, run `pnpm db:deploy && pnpm db:seed` against the production database.
 3. **Vercel**: import the repo, set the env vars above with `DEMO_MODE=false`, and deploy. Proxy and route handlers run on the Node.js runtime.
 4. **Inngest**: install the Vercel integration, or set `INNGEST_EVENT_KEY` / `INNGEST_SIGNING_KEY` and sync `https://YOUR_DOMAIN/api/inngest`. This gives durable analysis runs, watchlist reminders every 15 minutes, and daily maintenance (expired runs refunded, photos older than 90 days deleted, caches pruned).
-   - Without Inngest, analyses run in-process. Schedule the two jobs yourself, for example with Vercel Cron and `CRON_SECRET` set (Vercel sends it as the bearer token). The 15-minute schedule needs a Vercel plan that allows it:
-     ```json
-     {
-       "crons": [
-         { "path": "/api/cron/reminders", "schedule": "*/15 * * * *" },
-         { "path": "/api/cron/maintenance", "schedule": "0 4 * * *" }
-       ]
-     }
-     ```
+   - Without Inngest, analyses run in-process. `vercel.json` already runs the daily maintenance job through Vercel Cron (set `CRON_SECRET`; Vercel sends it as the bearer token). For reminders every 15 minutes add `{ "path": "/api/cron/reminders", "schedule": "*/15 * * * *" }` to its `crons` (needs a Vercel plan that allows it). When Inngest is connected the cron endpoint stands down so nothing runs twice.
 5. **Stripe**:
    - Create the prices **in EUR** with the amounts in `lib/billing/plans.ts`: three one-time prices (10, 30 and 100 cars) and the Pro and Business monthly prices. Set their IDs in the `STRIPE_PRICE_*` variables. Checkout charges the Stripe price, so a different amount there wins over the page.
    - A pack checkout also asks Stripe to create an invoice, which business buyers usually need. Turn on Stripe Tax if VAT should be added.
-   - Add a webhook to `https://YOUR_DOMAIN/api/stripe/webhook` for `checkout.session.completed`, `customer.subscription.created|updated|deleted` and `invoice.paid`, and set `STRIPE_WEBHOOK_SECRET`.
+   - Add a webhook to `https://YOUR_DOMAIN/api/stripe/webhook` for `checkout.session.completed`, `checkout.session.async_payment_succeeded|failed`, `customer.subscription.created|updated|deleted`, `invoice.paid`, `invoice.payment_failed`, `charge.refunded` and `charge.dispute.created`, and set `STRIPE_WEBHOOK_SECRET`. Refunds and chargebacks take the credits back automatically; each event is applied once.
    - Enable the customer portal.
 6. **Resend**: verify your sending domain and set `RESEND_API_KEY` and `EMAIL_FROM`.
 7. **Admins**: put your email in `ADMIN_EMAILS` and sign in.
+8. **Company details, domain, email DNS, alerts, backups, spend caps, staging**: follow **`docs/LAUNCH-PLAN.md`** step by step. It lists every account to connect, in order, with the exact variables and what the app does until you do.
 
 If you run a public demo with `DEMO_MODE=true`, every visitor shares one demo account. In production builds that account is never an admin.
+
+---
+
+## Production readiness (what is built in)
+
+| Area                   | What you get                                                                                                                                 | Where                                                                                             |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Data privacy           | Row-level security on every table (deny by default); per-user ownership checks on every route, tested                                        | `prisma/migrations/*row_level_security*`, `tests/ownership.test.ts`, `tests/api-security.test.ts` |
+| Auth on every endpoint | Each route is registered with its protection; a test calls all of them signed out and as a normal user                                       | `tests/api-security.test.ts`                                                                      |
+| Abuse and cost         | Rate limits, CSRF origin check, AI and page-reader spend caps with alerts, model-outage circuit breaker                                      | `lib/security/*`, `lib/ai/*`, `proxy.ts`                                                          |
+| Money                  | Refunds, chargebacks, failed payments, retries handled once; full account deletion cancels billing                                           | `lib/billing/stripe.ts`, `lib/account/delete.ts`                                                  |
+| Legal                  | 18+ gate, cookie consent, Terms, Privacy, DMCA, unsubscribe + postal address in email, renewal terms by every buy button                     | `app/(auth)/welcome`, `components/consent-banner.tsx`, `app/(marketing)/*`, `lib/email/*`         |
+| Monitoring             | Structured logs, grouped error table, Sentry (optional), Slack/Discord/email alerts, Web Vitals, anonymous analytics, **Admin → Monitoring** | `lib/observability/*`, `instrumentation.ts`                                                       |
+| SEO and AI answers     | robots, sitemap, `llms.txt`, JSON-LD, OG image, canonical URLs                                                                               | `app/robots.ts`, `app/sitemap.ts`, `lib/seo/schema.ts`                                            |
+| Resilience             | Real 404/500/loading screens, offline banner, request timeouts, kill switch (`MAINTENANCE_MODE`)                                             | `app/error.tsx`, `lib/client/fetch-guard.ts`, `proxy.ts`                                          |
+| Operations             | CI/CD, post-deploy smoke test, uptime check, nightly encrypted backup, weekly restore test, Dependabot, CodeQL                               | `.github/workflows/*`                                                                             |
+
+Read next: `docs/LAUNCH-PLAN.md` (what to connect), `docs/RUNBOOK.md` (rollback and incidents), `docs/SECURITY-AUDIT.md` (what was found and fixed).
 
 ---
 

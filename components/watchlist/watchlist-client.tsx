@@ -1,5 +1,6 @@
 "use client";
 
+import { formatSaleDate } from "@/lib/time/zones";
 import { BellIcon, Trash2Icon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -26,6 +27,8 @@ export interface WatchItemView {
   lotNumber: string | null;
   sourceUrl: string | null;
   saleDate: string | null;
+  /** Two-letter state of the yard: the sale time is shown in its time zone. */
+  yardState: string | null;
   currentBid: number | null;
   maxBid: number | null;
   myMaxBid: number | null;
@@ -76,7 +79,9 @@ function Item({ item }: { item: WatchItemView }) {
           </div>
           <div className="text-muted-foreground text-xs">
             {item.source} {item.lotNumber ? t("watch.lot", { lot: item.lotNumber }) : ""} ·{" "}
-            {item.saleDate ? t("watch.sale", { when: countdownLabel(t, item.saleDate), date: formatDateTime(item.saleDate, intl) }) : t("watch.saleUnknown")}
+            {item.saleDate
+              ? t("watch.sale", { when: countdownLabel(t, item.saleDate), date: formatSaleDate(item.saleDate, intl, item.yardState) })
+              : t("watch.saleUnknown")}
           </div>
           <div className="text-muted-foreground text-xs">
             {t("watch.bids", { current: formatUsd(item.currentBid), max: formatUsd(item.maxBid) })}

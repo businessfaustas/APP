@@ -102,11 +102,11 @@
   --ambient-a: color-mix(in oklab, var(--primary) 8%, transparent);
   --ambient-b: color-mix(in oklab, var(--brand-2) 6%, transparent);
 
-  --go: oklch(0.52 0.14 158);
+  --go: oklch(0.47 0.13 158);
   --go-soft: oklch(0.95 0.045 158);
   --caution: oklch(0.47 0.12 62);
   --caution-soft: oklch(0.96 0.055 85);
-  --stop: oklch(0.55 0.2 20);
+  --stop: oklch(0.52 0.2 20);
   --stop-soft: oklch(0.955 0.035 15);
 
   --chart-1: oklch(0.52 0.2 275);

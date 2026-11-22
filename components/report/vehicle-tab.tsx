@@ -1,5 +1,6 @@
 "use client";
 
+import { formatSaleDate } from "@/lib/time/zones";
 import { ExternalLinkIcon } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +11,7 @@ import { useLocale, useT } from "@/lib/i18n/client";
 import { trText } from "@/lib/i18n/generated";
 import { damageLabel, keysLabel, runLabel, titleLabel } from "@/lib/i18n/labels";
 import { INTL_LOCALE } from "@/lib/i18n/locales";
-import { formatDate, formatDateTime, formatNumber, formatUsd } from "@/lib/utils";
+import { formatDate, formatNumber, formatUsd } from "@/lib/utils";
 
 import { useReport } from "./report-context";
 
@@ -67,7 +68,7 @@ export function VehicleTab() {
             <Row k={t("report.secondaryDamage")} v={l.secondaryDamage ? damageLabel(t, l.secondaryDamage) : null} />
             <Row k={t("report.condition")} v={runLabel(t, l.runCondition)} />
             <Row k={t("report.keys")} v={keysLabel(t, l.hasKeys)} />
-            <Row k={t("report.saleDate")} v={formatDateTime(l.saleDate, intl)} />
+            <Row k={t("report.saleDate")} v={formatSaleDate(l.saleDate, intl, l.location.state)} />
             <Row k={t("report.saleStatus")} v={t(`report.saleStatusValue.${l.saleStatus}`)} />
             <Row k={t("report.auctionRetail")} v={l.listedRetailValue ? t("report.lowTrust", { amount: formatUsd(l.listedRetailValue) }) : "—"} />
             <Row k={t("report.seller")} v={l.sellerType} />

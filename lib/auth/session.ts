@@ -113,8 +113,10 @@ async function loadSessionUser(): Promise<SessionUser | null> {
     email: user.email,
     name: user.name,
     // The shared demo account is an admin only in development: on a public deployment
-    // every visitor shares it, so it must never reach the admin pages there.
-    role: identity.isDemo && process.env.NODE_ENV === "production" ? "USER" : user.role,
+    // every visitor shares it, so it must never reach the admin pages there. The one exception is
+    // CI testing a production build (E2E_DEMO_ADMIN=1), which can never apply on Vercel because
+    // Vercel always sets VERCEL_ENV.
+    role: identity.isDemo && process.env.NODE_ENV === "production" && !(process.env.E2E_DEMO_ADMIN === "1" && !process.env.VERCEL_ENV) ? "USER" : user.role,
     plan: user.plan,
     creditsRemaining: user.creditsRemaining,
     isDemo: identity.isDemo,

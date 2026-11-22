@@ -6,7 +6,7 @@ import { prisma } from "@/lib/db/prisma";
 import { sendEmail } from "@/lib/email/send";
 import { captureError } from "@/lib/observability/errors";
 import { removePrefix } from "@/lib/storage/photos";
-import { formatDateTime } from "@/lib/utils";
+import { formatSaleDate } from "@/lib/time/zones";
 
 /**
  * Sends watchlist reminders that are due (email via Resend when configured). Each reminder is
@@ -38,7 +38,7 @@ export async function sendDueReminders(now: Date = new Date()): Promise<{ sent: 
         kind: "optional",
         subject: `Sale reminder: ${title}`,
         text: [
-          `${title} (${l.source} lot ${l.lotNumber ?? "—"}) sells ${l.saleDate ? `on ${formatDateTime(l.saleDate)}` : "soon"}.`,
+          `${title} (${l.source} lot ${l.lotNumber ?? "—"}) sells ${l.saleDate ? `on ${formatSaleDate(l.saleDate, "en-US", l.yardState)}` : "soon"}.`,
           item.myMaxBid ? `Your max bid: $${item.myMaxBid.toLocaleString("en-US")}` : "",
           `Report: ${link}`,
         ]

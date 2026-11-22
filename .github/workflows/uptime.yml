@@ -1,0 +1,61 @@
+name: Uptime check
+
+# Every 10 minutes: is the live site up and is its database reachable? A failure opens an issue
+# and pings your alert webhook; recovery closes the issue. Set the repository variable
+# PRODUCTION_URL (Settings → Secrets and variables → Actions → Variables) to turn it on.
+# GitHub may delay scheduled runs by a few minutes, so also add a dedicated monitor
+# (UptimeRobot, Better Stack) pointed at <your domain>/api/health; see docs/RUNBOOK.md.
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: vars.PRODUCTION_URL != ''
+    env:
+      URL: ${{ vars.PRODUCTION_URL }}
+      GH_TOKEN: ${{ github.token }}
+      ALERT_WEBHOOK_URL: ${{ secrets.ALERT_WEBHOOK_URL }}
+    steps:
+      - name: Probe the site and its database
+        id: probe
+        run: |
+          ok=false
+          for attempt in 1 2 3; do
+            health=$(curl -fsS --max-time 20 "$URL/api/health" || true)
+            home=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 "$URL/" || true)
+            if echo "$health" | grep -q '"databaseReachable":true' && [ "$home" = "200" ]; then ok=true; break; fi
+            sleep 20
+          done
+          echo "ok=$ok" >> "$GITHUB_OUTPUT"
+          echo "detail=health=${health:0:200} home=${home}" >> "$GITHUB_OUTPUT"
+
+      - name: Open an incident
+        if: steps.probe.outputs.ok != 'true'
+        run: |
+          existing=$(gh issue list --state open --search "Site down in:title" --json number --jq '.[0].number' || true)
+          if [ -z "$existing" ]; then
+            gh issue create --title "Site down: ${URL}" --body "The uptime check failed three times in a row at $(date -u +%FT%TZ).
+
+          ${{ steps.probe.outputs.detail }}
+
+          Next steps: docs/RUNBOOK.md → *The site is down*."
+            if [ -n "$ALERT_WEBHOOK_URL" ]; then
+              curl -fsS -X POST -H 'content-type: application/json' --data "{\"text\":\"🚨 ${URL} is DOWN (health check failed 3 times).\"}" "$ALERT_WEBHOOK_URL" || true
+            fi
+          fi
+          exit 1
+
+      - name: Close the incident when the site is back
+        if: steps.probe.outputs.ok == 'true'
+        run: |
+          for n in $(gh issue list --state open --search "Site down in:title" --json number --jq '.[].number'); do
+            gh issue close "$n" --comment "Recovered at $(date -u +%FT%TZ)."
+          done

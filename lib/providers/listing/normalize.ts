@@ -1,5 +1,6 @@
 import { NormalizedListingSchema, type AuctionSource, type NormalizedListing } from "@/lib/domain/schemas";
 import { normalizeOdometerBrand, normalizeRunCondition, normalizeSaleStatus, normalizeTitle } from "@/lib/domain/titles";
+import { parseSaleDate } from "@/lib/time/zones";
 import { isVinFormat, normalizeVin } from "@/lib/input/vin";
 
 /** Loose, provider-produced listing fields (strings where sources give strings). */
@@ -74,13 +75,6 @@ function cleanStr(s: string | null | undefined): string | null {
   return t ? t : null;
 }
 
-function toIsoDate(raw: string | null | undefined): string | null {
-  if (!raw) return null;
-  const t = Date.parse(raw);
-  if (Number.isNaN(t)) return null;
-  return new Date(t).toISOString();
-}
-
 /** Produces a schema-valid NormalizedListing from loose fields. */
 export function finalizeListing(raw: RawListing, method: NormalizedListing["extractionMethod"], warnings: string[] = []): NormalizedListing {
   const vinRaw = raw.vin ? normalizeVin(raw.vin) : null;
@@ -114,7 +108,8 @@ export function finalizeListing(raw: RawListing, method: NormalizedListing["extr
     drive: cleanStr(raw.drive),
     fuel: cleanStr(raw.fuel),
     color: cleanStr(raw.color),
-    saleDate: toIsoDate(raw.saleDate),
+    // A time printed without a zone is the yard's local time (see lib/time/zones.ts).
+    saleDate: parseSaleDate(raw.saleDate, raw.location?.state),
     saleStatus: normalizeSaleStatus(raw.saleStatusRaw),
     currentBid: raw.currentBid ?? null,
     buyNowPrice: raw.buyNowPrice ?? null,

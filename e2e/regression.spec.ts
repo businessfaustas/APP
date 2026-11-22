@@ -1,11 +1,13 @@
 import { expect, test } from "@playwright/test";
 
 import { analyze, LOTS, open, signInAsDemo } from "./helpers";
+import { resetDemoRateLimit } from "./db";
 
 /**
  * Regression tests: one per bug or promise we have fixed, so it can't come back unnoticed.
  */
 test.describe("@regression", () => {
+  test.beforeAll(resetDemoRateLimit);
   test("a shared report link never shows the owner's home ZIP", async ({ page, browser }) => {
     await signInAsDemo(page);
     await analyze(page, LOTS.audi);
@@ -17,7 +19,7 @@ test.describe("@regression", () => {
 
     const anon = await browser.newContext({ storageState: { cookies: [], origins: [] } });
     const shared = await anon.newPage();
-    await shared.goto(link);
+    await shared.goto(new URL(link, "http://x").pathname); // the share URL uses the configured app address, so take just its path
     await expect(shared.getByTestId("deal-card")).toBeVisible();
     const html = await shared.content();
     expect(html).not.toContain("77002"); // the demo user's home ZIP

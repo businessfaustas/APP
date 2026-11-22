@@ -40,6 +40,7 @@ export default async function WatchlistPage() {
         lotNumber: l.lotNumber,
         sourceUrl: l.sourceUrl,
         saleDate: l.saleDate?.toISOString() ?? null,
+        yardState: l.yardState,
         currentBid: l.currentBid,
         maxBid: a?.maxBid ?? null,
         myMaxBid: r.myMaxBid,

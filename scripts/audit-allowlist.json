@@ -1,0 +1,14 @@
+[
+  {
+    "ghsa": "GHSA-ggr8-5vv4-36mx",
+    "package": "deepmerge-ts",
+    "reason": "Reached only through the Prisma CLI's config loader (prisma > @prisma/config). It runs at build time on our own prisma.config.ts, never on user input, and is not part of the deployed server bundle. The fix needs deepmerge-ts 8, which breaks Prisma 7's loader (tried and reverted); waiting for a Prisma release.",
+    "reviewBy": "2027-01-31"
+  },
+  {
+    "ghsa": "GHSA-7589-6fvf-x4pw",
+    "package": "effect",
+    "reason": "Reached only through the Prisma CLI's config loader (prisma > @prisma/config > effect). Build-time tooling on our own config; no untrusted regex input. Forcing effect 3.22 breaks the loader (tried and reverted); waiting for a Prisma release.",
+    "reviewBy": "2027-01-31"
+  }
+]

@@ -2,6 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 
 import { analyze, LOTS, open, signInAsDemo } from "./helpers";
+import { resetDemoRateLimit } from "./db";
 
 /**
  * Accessibility: axe-core (WCAG 2.1 A and AA rules) on the public pages and the signed-in app,
@@ -68,6 +69,7 @@ test.describe("@a11y public pages", () => {
 });
 
 test.describe("@a11y signed-in app", () => {
+  test.beforeAll(resetDemoRateLimit);
   for (const theme of ["light", "dark"] as const) {
     test(`dashboard and report (${theme})`, async ({ page }) => {
       await signInAsDemo(page);

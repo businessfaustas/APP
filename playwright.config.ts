@@ -39,6 +39,8 @@ export default defineConfig({
       ],
       origins: [],
     },
+    // Lets the post-deploy smoke test through Vercel's Deployment Protection on preview URLs.
+    extraHTTPHeaders: process.env.VERCEL_AUTOMATION_BYPASS_SECRET ? { "x-vercel-protection-bypass": process.env.VERCEL_AUTOMATION_BYPASS_SECRET } : {},
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
   },
@@ -75,6 +77,6 @@ export default defineConfig({
         url: `${baseURL}/login`,
         reuseExistingServer: !process.env.CI,
         timeout: 180_000,
-        env: { DEMO_MODE: "true" },
+        env: { DEMO_MODE: "true", E2E_DEMO_ADMIN: "1" },
       },
 });

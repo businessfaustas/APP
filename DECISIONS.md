@@ -74,6 +74,20 @@ Left on the old name on purpose, because they are identifiers rather than brandi
 - **Credits.** One credit is charged when an analysis is created and refunded automatically if it fails. Monthly allowances reset lazily (every 30 days, on the next request) to `max(balance, allowance)`, so purchased packs aren't wiped.
 - **Photos** are stored privately (Supabase Storage, or `.data/photos` locally) and served through an authenticated route. The maintenance job deletes stored auction photos after 90 days.
 
+## Hardening before launch
+
+- **Row-level security, deny by default.** Prisma connects as the table owner (bypasses RLS) and every query is scoped to the user in code, so no policies are needed; enabling RLS with none closes Supabase's public REST API. Do not add `USING (true)`; a CI script (`scripts/check-rls.mjs`) fails on open tables and wide-open policies.
+- **Every route is registered** in `tests/api-security.test.ts` with how it is protected. A new route without an entry fails the test.
+- **The proxy now also covers the API**: maintenance mode, a same-origin check on state-changing calls (webhook, Inngest, extension and cron are exempt), a per-IP burst limit, a request id. Accurate per-user limits live in the routes (`lib/security/rateLimit.ts`, database backed, fail-open).
+- **Consent.** Essential cookies need no consent. Analytics and web vitals are anonymous (no user id, IP or cookie), a fixed event list, and sent only after "Allow analytics". Crash reports are always sent (no personal data). A test fails if a third-party tracker, session replay or Google font is added.
+- **Age gate.** A tick before any email is collected, plus a `/welcome` fallback and an API refusal. The shared demo account is exempt (nothing personal is collected through it).
+- **AI gateway.** All model calls go through `lib/ai/client.ts`: spend cap, circuit breaker, timeout, size cap, one retry for overflow or truncation, untrusted-data notice. Failures are `AiUnavailableError`, which every caller already treats as "use the no-AI path". Bid numbers never come from the model.
+- **Sale times** are read in the yard's time zone (state → zone) and always displayed with the zone name (`lib/time/zones.ts`); a zone-less time with an unknown state is read as UTC so it never depends on where the server runs.
+- **Stripe events are applied once** (`StripeEvent` table, released on failure so Stripe's retry works). Refund clawback is proportional and never takes a balance below zero.
+- **Email.** Optional mail (reminders) carries a signed one-click unsubscribe and the postal address; essential mail (billing, security) carries the address and says why it can't be switched off. The signing key is `APP_SECRET`, or a key derived from the database URL if unset.
+- **Accepted risks** are written down with a reason and a review date in `scripts/audit-allowlist.json`; the audit job fails when the date passes.
+- **Error tracking** talks to Sentry's HTTP envelope endpoint directly (no SDK in the bundle). Session replay is never enabled.
+
 ## Defaults worth knowing
 
 | Setting                           | Default                                                                                                                          |
