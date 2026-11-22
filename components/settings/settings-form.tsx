@@ -297,7 +297,7 @@ export function SettingsForm({
           <div className="space-y-1.5">
             <Label>{t("settings.exportProfile")}</Label>
             <Select value={v.exportProfileId ?? "none"} onValueChange={(x) => set("exportProfileId", x === "none" ? null : x)}>
-              <SelectTrigger>
+              <SelectTrigger aria-label={t("settings.exportProfile")}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

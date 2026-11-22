@@ -1,7 +1,7 @@
 "use client";
 
 import { RotateCcwIcon, SaveIcon, SlidersHorizontalIcon } from "lucide-react";
-import { useState } from "react";
+import { useId, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -84,10 +84,14 @@ export function MoneyInput({
     const digits = text.replace(/[^\d]/g, "");
     onCommit(digits === "" ? null : Number(digits));
   };
+  const id = useId();
   return (
     <div className="space-y-1.5">
-      <Label className="text-muted-foreground text-xs font-normal">{label}</Label>
+      <Label htmlFor={id} className="text-muted-foreground text-xs font-normal">
+        {label}
+      </Label>
       <Input
+        id={id}
         inputMode="numeric"
         value={text}
         placeholder={placeholder}

@@ -49,7 +49,7 @@ export function SegmentedBar({
               title={`${p.label}: ${format(p.value)} (${Math.round(share * 100)}%)`}
               aria-label={`${p.label}: ${format(p.value)}, ${Math.round(share * 100)}%`}
               className="flex min-w-1 items-center overflow-hidden rounded-[4px] px-2 outline-none focus-visible:ring-2 focus-visible:ring-offset-1"
-              style={{ flexGrow: p.value, flexBasis: 0, background: p.color, color: p.ink ?? "#fff" }}
+              style={{ flexGrow: p.value, flexBasis: 0, background: p.color, color: p.ink ?? "#0b0b0f" }}
             >
               {share >= 0.12 && <span className="text-xs font-semibold whitespace-nowrap">{short(p.value)}</span>}
             </div>

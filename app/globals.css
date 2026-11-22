@@ -104,7 +104,7 @@
 
   --go: oklch(0.52 0.14 158);
   --go-soft: oklch(0.95 0.045 158);
-  --caution: oklch(0.6 0.15 65);
+  --caution: oklch(0.47 0.12 62);
   --caution-soft: oklch(0.96 0.055 85);
   --stop: oklch(0.55 0.2 20);
   --stop-soft: oklch(0.955 0.035 15);
@@ -116,7 +116,8 @@
   --chart-5: oklch(0.6 0.12 220);
 
   /* validated data-viz slots (light) */
-  --series-1: #2a78d6;
+  --series-1: #2872d0;
+  --series-1-ink: #ffffff;
   --series-2: #eb6834;
   --series-3: #1baf7a;
   --series-neutral: #b4b8c4;
@@ -138,7 +139,7 @@
   --popover-foreground: oklch(0.96 0.005 275);
   --primary: oklch(0.74 0.15 275);
   --primary-foreground: oklch(0.16 0.03 275);
-  --brand: oklch(0.6 0.2 275);
+  --brand: oklch(0.54 0.2 275);
   --brand-foreground: oklch(0.99 0 0);
   --brand-soft: oklch(0.3 0.08 275);
   --secondary: oklch(0.24 0.016 275);
@@ -176,6 +177,7 @@
 
   /* validated data-viz slots (dark) */
   --series-1: #3987e5;
+  --series-1-ink: #0b0b0f;
   --series-2: #d95926;
   --series-3: #199e70;
   --series-neutral: #9096a6;

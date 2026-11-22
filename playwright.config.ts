@@ -13,7 +13,8 @@ const localChromium = "/opt/pw-browsers/chromium";
 
 export default defineConfig({
   testDir: "./e2e",
-  globalSetup: "./e2e/global-setup.ts",
+  // The setup clears the demo user's rate-limit counter in the local database; against a deployed URL there is nothing to clear.
+  globalSetup: process.env.E2E_BASE_URL ? undefined : "./e2e/global-setup.ts",
   timeout: 60_000,
   expect: { timeout: 20_000 },
   fullyParallel: false,
@@ -44,12 +45,28 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
+      testIgnore: /visual\.spec/,
       use: {
         ...devices["Desktop Chrome"],
         viewport: { width: 1366, height: 900 },
         launchOptions: !process.env.CI && existsSync(localChromium) ? { executablePath: localChromium } : {},
       },
     },
+    // Screenshot comparison runs on its own (pnpm test:visual): baselines depend on the platform.
+    {
+      name: "visual",
+      testMatch: /visual\.spec/,
+      use: { ...devices["Desktop Chrome"], launchOptions: !process.env.CI && existsSync(localChromium) ? { executablePath: localChromium } : {} },
+    },
+    // Other browser engines for the smoke tests. Off by default (only Chromium is installed
+    // locally); CI sets E2E_ALL_BROWSERS=1 after `playwright install` for all three.
+    ...(process.env.E2E_ALL_BROWSERS
+      ? [
+          { name: "firefox", testMatch: /smoke\.spec/, use: { ...devices["Desktop Firefox"] } },
+          { name: "webkit", testMatch: /smoke\.spec/, use: { ...devices["Desktop Safari"] } },
+          { name: "mobile-safari", testMatch: /smoke\.spec/, use: { ...devices["iPhone 13"] } },
+        ]
+      : []),
   ],
   webServer: process.env.E2E_BASE_URL
     ? undefined

@@ -210,7 +210,7 @@ function MoneyCard() {
   const resale = calc.waterfall.find((r) => r.key === "resale")?.amount ?? 0;
   const profit = calc.waterfall.find((r) => r.key === "profit")?.amount ?? 0;
   const parts: Part[] = [
-    { key: "purchase", label: t("report.purchase"), value: sum(PURCHASE), color: "var(--series-1)" },
+    { key: "purchase", label: t("report.purchase"), value: sum(PURCHASE), color: "var(--series-1)", ink: "var(--series-1-ink)" },
     { key: "repairs", label: t("report.repair"), value: sum(REPAIRS), color: "var(--series-2)" },
     { key: "other", label: t("report.otherCosts"), value: sum(null), color: "var(--series-neutral)", ink: "#14161c" },
     ...(profit > 0 ? [{ key: "profit", label: t("report.profit"), value: profit, color: "var(--series-3)" }] : []),
