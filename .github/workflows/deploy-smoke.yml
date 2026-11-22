@@ -22,17 +22,35 @@ jobs:
       # Lets the test reach a preview protected by Vercel Authentication (Vercel → Settings → Deployment Protection).
       VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
     steps:
+      # /api/health is public, so a 401 from it means Vercel Deployment Protection (not our app) is answering. Say so
+      # plainly and stand down instead of reporting a broken deploy that nobody can actually see from here.
+      - name: Can the test reach the app?
+        id: reach
+        run: |
+          code=$(curl -s -o /dev/null -w '%{http_code}' -H "x-vercel-protection-bypass: ${VERCEL_AUTOMATION_BYPASS_SECRET}" "${E2E_BASE_URL%/}/api/health" || echo 000)
+          echo "GET ${E2E_BASE_URL%/}/api/health -> ${code}"
+          if [ "$code" = "401" ] || [ "$code" = "403" ]; then
+            echo "::warning title=Smoke test skipped::${E2E_BASE_URL} is behind Vercel Deployment Protection, so this check could not see the app. Set the repository variable PRODUCTION_URL to your public domain (and, for previews, the secret VERCEL_AUTOMATION_BYPASS_SECRET). See docs/LAUNCH-PLAN.md."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - uses: actions/checkout@v4
+        if: steps.reach.outputs.skip != 'true'
         with:
           ref: ${{ github.event.deployment.sha }}
       - uses: pnpm/action-setup@v4
+        if: steps.reach.outputs.skip != 'true'
       - uses: actions/setup-node@v4
+        if: steps.reach.outputs.skip != 'true'
         with:
           node-version: 22
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm exec playwright install --with-deps chromium
+      - if: steps.reach.outputs.skip != 'true'
+        run: pnpm install --frozen-lockfile
+      - if: steps.reach.outputs.skip != 'true'
+        run: pnpm exec playwright install --with-deps chromium
       - name: Smoke tests against ${{ github.event.deployment_status.environment_url }}
+        if: steps.reach.outputs.skip != 'true'
         run: pnpm test:smoke
 
       - name: Tell someone, with the way back

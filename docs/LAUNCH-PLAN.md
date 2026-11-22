@@ -141,6 +141,7 @@ Do all of it in **test mode** first, then repeat with live keys.
 1. **Alerts:** create a Slack or Discord *incoming webhook* → `ALERT_WEBHOOK_URL`. (Also set `ALERT_EMAIL` if you want email.) You will be told about: new errors, failed payments, chargebacks, spend caps, failed deploys.
 2. **Error tracking (optional):** create a free Sentry project → `SENTRY_DSN`. Session replay is never switched on.
 3. **Uptime:** GitHub repo → Settings → Secrets and variables → Actions → add variable `PRODUCTION_URL=https://yourdomain.com` (a check runs every 10 minutes and opens an issue if the site is down). Also add a free external monitor (UptimeRobot or Better Stack) on `https://yourdomain.com/api/health`, keyword `"ok":true`, alert by SMS or push.
+   The same `PRODUCTION_URL` variable makes the **post-deploy smoke test** check your real domain after every production deploy. Without it the test would look at Vercel's per-deployment address, which Vercel Deployment Protection puts behind a login wall; the workflow detects that (HTTP 401 from `/api/health`), prints a "Smoke test skipped" warning and stands down rather than raising a false alarm. To test previews too, create a *Protection Bypass for Automation* secret in Vercel (Settings → Deployment Protection) and save it as the repository secret `VERCEL_AUTOMATION_BYPASS_SECRET`.
 4. **Test the alerts end to end:** set `MAINTENANCE_MODE=true`, redeploy, see the uptime alert fire, then set it back. (Do this before launch, not after.)
 
 ---
