@@ -89,8 +89,11 @@ jobs:
       - name: End-to-end tests (smoke, regression, devices, slow network, offline, accessibility)
         run: pnpm e2e
 
-      - name: Backup and restore round trip
-        run: node scripts/db-restore-test.mjs
+      - name: Backup and restore round trip (pg_dump must match the server's major version)
+        run: |
+          bash scripts/ci/install-pg-client.sh 16
+          export PATH="/usr/lib/postgresql/16/bin:$PATH"
+          node scripts/db-restore-test.mjs
 
       - uses: actions/upload-artifact@v4
         if: failure()

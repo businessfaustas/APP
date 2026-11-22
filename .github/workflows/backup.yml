@@ -33,11 +33,13 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
         if: env.HAS_SECRETS == 'true'
-      - name: Install the matching PostgreSQL client
+      - name: Install the PostgreSQL client that matches the production server
         if: env.HAS_SECRETS == 'true'
+        env:
+          BACKUP_DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq postgresql-client-16
+          major=$(psql "$BACKUP_DATABASE_URL" -Atc "SHOW server_version_num" | cut -c1-2)
+          bash scripts/ci/install-pg-client.sh "$major"
       - name: Dump and encrypt
         if: env.HAS_SECRETS == 'true'
         env:
@@ -58,18 +60,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     needs: backup
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-        ports: ["5432:5432"]
-        options: >-
-          --health-cmd "pg_isready -U postgres"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
     env:
       HAS_SECRETS: ${{ secrets.BACKUP_DATABASE_URL != '' }}
     steps:
@@ -88,15 +78,21 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
         if: env.HAS_SECRETS == 'true' && env.SKIP != '1'
-      - name: Install the matching PostgreSQL client
+      - name: Start a scratch Postgres of the same major version as production
         if: env.HAS_SECRETS == 'true' && env.SKIP != '1'
+        env:
+          BACKUP_DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq postgresql-client-16
+          major=$(psql "$BACKUP_DATABASE_URL" -Atc "SHOW server_version_num" | cut -c1-2)
+          echo "MAJOR=$major" >> "$GITHUB_ENV"
+          bash scripts/ci/install-pg-client.sh "$major"
+          docker rm -f scratch-pg >/dev/null 2>&1 || true
+          docker run -d --name scratch-pg -e POSTGRES_PASSWORD=postgres -p 5433:5432 "postgres:${major}"
+          for i in $(seq 1 30); do pg_isready -h localhost -p 5433 -U postgres && break; sleep 2; done
       - name: Restore into a scratch database and compare every table
         if: env.HAS_SECRETS == 'true' && env.SKIP != '1'
         env:
           DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
           DIRECT_URL: ${{ secrets.BACKUP_DATABASE_URL }}
-          RESTORE_ADMIN_URL: postgresql://postgres:postgres@localhost:5432/postgres
+          RESTORE_ADMIN_URL: postgresql://postgres:postgres@localhost:5433/postgres
         run: node scripts/db-restore-test.mjs

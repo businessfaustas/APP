@@ -6,6 +6,14 @@ import { expect, test } from "@playwright/test";
  *   E2E_BASE_URL=https://your-domain pnpm test:smoke
  */
 test.describe("@smoke public site", () => {
+  test("the site is reachable and is our app (not a login wall in front of it)", async ({ request }) => {
+    const res = await request.get("/");
+    // A 401 here means the host (for example Vercel Deployment Protection) is answering instead of the app. Test the
+    // public domain, or give the test the bypass secret (VERCEL_AUTOMATION_BYPASS_SECRET); see docs/LAUNCH-PLAN.md.
+    expect(res.status(), "the app should answer, not a protection page in front of it").toBe(200);
+    expect(res.headers()["x-content-type-options"]).toBe("nosniff");
+  });
+
   test("home page renders with a title, one h1 and valid structured data", async ({ page }) => {
     const errors: string[] = [];
     page.on("pageerror", (e) => errors.push(e.message));
@@ -25,7 +33,7 @@ test.describe("@smoke public site", () => {
     test(`${path} loads`, async ({ page }) => {
       const res = await page.goto(path);
       expect(res?.status()).toBe(200);
-      await expect(page.locator("h1, h2").first()).toBeVisible();
+      await expect(page.locator("h1, h2, [data-slot=card-title]").filter({ visible: true }).first()).toBeVisible();
     });
   }
 
@@ -93,6 +101,7 @@ test.describe("@smoke access control", () => {
     ] as const) {
       const res = await request.fetch(path, { method, data: {} });
       expect([401, 403], `${method} ${path} returned ${res.status()}`).toContain(res.status());
+      expect(res.headers()["content-type"] ?? "", `${method} ${path} was refused by something other than the app`).toContain("application/json");
     }
   });
 
@@ -104,5 +113,6 @@ test.describe("@smoke access control", () => {
   test("a cross-site form post to the API is blocked", async ({ request }) => {
     const res = await request.post("/api/analyses", { data: {}, headers: { origin: "https://evil.example" } });
     expect(res.status()).toBe(403);
+    expect(res.headers()["content-type"] ?? "").toContain("application/json");
   });
 });

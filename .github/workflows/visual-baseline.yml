@@ -1,0 +1,54 @@
+name: Update visual baselines
+
+# Screenshot baselines depend on the machine that draws them. Run this once (Actions → Update
+# visual baselines → Run workflow) to redraw them on GitHub's own runner and commit the result
+# to the branch you ran it on; the informational visual job in CI then compares like with like.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: flagbid
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/flagbid
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/flagbid
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      DEMO_MODE: "true"
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm db:deploy && pnpm db:seed
+      - run: pnpm build
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:visual:update
+      - name: Commit the new baselines
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add e2e/visual.spec.ts-snapshots
+          git diff --cached --quiet && echo "Baselines already match." && exit 0
+          git commit -m "test: refresh visual baselines on the CI runner"
+          git push

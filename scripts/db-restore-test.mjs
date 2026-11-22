@@ -78,7 +78,15 @@ try {
   const r = spawnSync("pg_restore", ["--no-owner", "--no-privileges", "--exit-on-error", "--dbname", scratchUrl, dumpFile], {
     stdio: ["ignore", "inherit", "inherit"],
   });
-  if (r.status !== 0) throw new Error("pg_restore failed");
+  if (r.status !== 0) {
+    const clientMajor = /(\d+)(?:\.\d+)?/.exec(spawnSync("pg_restore", ["--version"], { encoding: "utf8" }).stdout ?? "")?.[1];
+    const serverMajor = (await admin.query("SHOW server_version_num")).rows[0].server_version_num.slice(0, 2);
+    const hint =
+      clientMajor && clientMajor !== serverMajor
+        ? ` The pg_restore client is version ${clientMajor} but the scratch server is ${serverMajor}: they must match, so use that version's client tools.`
+        : "";
+    throw new Error(`pg_restore failed.${hint}`);
+  }
 
   step("comparing the restored copy with the source");
   const after = await counts(scratchUrl);

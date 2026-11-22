@@ -16,7 +16,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      E2E_BASE_URL: ${{ github.event.deployment_status.environment_url }}
+      # Production is tested through its public domain (set the repository variable PRODUCTION_URL); previews and the
+      # per-deployment address are behind Vercel Deployment Protection unless the bypass secret below is set.
+      E2E_BASE_URL: ${{ (contains(github.event.deployment_status.environment, 'Production') && vars.PRODUCTION_URL) || github.event.deployment_status.environment_url }}
       # Lets the test reach a preview protected by Vercel Authentication (Vercel → Settings → Deployment Protection).
       VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
     steps:
@@ -42,6 +44,7 @@ jobs:
           ENVIRONMENT: ${{ github.event.deployment_status.environment }}
           SHA: ${{ github.event.deployment.sha }}
         run: |
+          gh label create deploy-failed --color B60205 --description "A deploy failed its smoke test" 2>/dev/null || true
           body="Smoke tests failed on **${ENVIRONMENT}** (${URL}) for commit ${SHA:0:7}.
 
           **Roll back now:** Vercel → your project → Deployments → find the last good deployment → ⋯ → *Promote to Production* (instant, no rebuild). Then see docs/RUNBOOK.md for database steps.
