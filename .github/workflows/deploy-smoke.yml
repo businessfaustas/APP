@@ -22,14 +22,17 @@ jobs:
       # Lets the test reach a preview protected by Vercel Authentication (Vercel → Settings → Deployment Protection).
       VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
     steps:
-      # /api/health is public, so a 401 from it means Vercel Deployment Protection (not our app) is answering. Say so
-      # plainly and stand down instead of reporting a broken deploy that nobody can actually see from here.
+      # /api/health is public JSON, so if Vercel's own login page (Deployment Protection) answers instead of the app, the
+      # check cannot see the deploy. Say so plainly and stand down rather than reporting a broken deploy nobody can see
+      # from here. Vercel answers with a 401, or with a 200 HTML "Login – Vercel" page, so look at both. A real outage
+      # (5xx, an error page from the app, no answer) is not skipped: it still fails and alerts.
       - name: Can the test reach the app?
         id: reach
         run: |
-          code=$(curl -s -o /dev/null -w '%{http_code}' -H "x-vercel-protection-bypass: ${VERCEL_AUTOMATION_BYPASS_SECRET}" "${E2E_BASE_URL%/}/api/health" || echo 000)
-          echo "GET ${E2E_BASE_URL%/}/api/health -> ${code}"
-          if [ "$code" = "401" ] || [ "$code" = "403" ]; then
+          out=$(curl -s -i --max-time 30 -H "x-vercel-protection-bypass: ${VERCEL_AUTOMATION_BYPASS_SECRET}" "${E2E_BASE_URL%/}/api/health" || true)
+          code=$(printf '%s' "$out" | head -n1 | awk '{print $2}')
+          echo "GET ${E2E_BASE_URL%/}/api/health -> ${code:-no answer}"
+          if [ "$code" = "401" ] || [ "$code" = "403" ] || printf '%s' "$out" | grep -qiE '_vercel_sso_nonce|<title>Login.{1,5}Vercel|vercel\.com/sso-api|Authentication Required'; then
             echo "::warning title=Smoke test skipped::${E2E_BASE_URL} is behind Vercel Deployment Protection, so this check could not see the app. Set the repository variable PRODUCTION_URL to your public domain (and, for previews, the secret VERCEL_AUTOMATION_BYPASS_SECRET). See docs/LAUNCH-PLAN.md."
             echo "skip=true" >> "$GITHUB_OUTPUT"
           fi
@@ -53,8 +56,9 @@ jobs:
         if: steps.reach.outputs.skip != 'true'
         run: pnpm test:smoke
 
+      # Only a failed production deploy is an emergency with a rollback; a failed preview just shows red in the Actions tab.
       - name: Tell someone, with the way back
-        if: failure()
+        if: failure() && contains(github.event.deployment_status.environment, 'Production')
         env:
           GH_TOKEN: ${{ github.token }}
           ALERT_WEBHOOK_URL: ${{ secrets.ALERT_WEBHOOK_URL }}
