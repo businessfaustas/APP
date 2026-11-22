@@ -6,5 +6,6 @@ import { domain } from "./domain";
 import { generated } from "./generated";
 import { marketing } from "./marketing";
 import { report } from "./report";
+import { states } from "./states";
 
-export const lt: Messages = { ...common, ...marketing, ...app, ...domain, ...report, ...generated };
+export const lt: Messages = { ...common, ...marketing, ...app, ...domain, ...report, ...generated, ...states };

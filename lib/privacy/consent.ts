@@ -6,6 +6,8 @@
  */
 export const CONSENT_COOKIE = "fb_consent";
 export const CONSENT_MAX_AGE_DAYS = 180;
+/** Short-lived cookie set by the sign-in form once the visitor ticked "I am 18 or older and accept the Terms". */
+export const AGE_COOKIE = "fb_age_ok";
 
 export type ConsentChoice = "analytics" | "essential";
 

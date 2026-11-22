@@ -65,6 +65,7 @@ export function BillingClient({ plan, stripeEnabled, hasCustomer }: { plan: Plan
                   >
                     {busy === id && <Loader2Icon className="animate-spin" />} {t("billing.buyPack", { n: p.reports })}
                   </Button>
+                  <p className="text-muted-foreground text-xs leading-relaxed">{t("renewal.pack", { price: formatEur(p.price, intl) })}</p>
                 </CardContent>
               </Card>
             );
@@ -105,6 +106,9 @@ export function BillingClient({ plan, stripeEnabled, hasCustomer }: { plan: Plan
                   >
                     {busy === id && <Loader2Icon className="animate-spin" />} {t("billing.upgradeTo", { plan: name })}
                   </Button>
+                )}
+                {id !== "FREE" && !current && (
+                  <p className="text-muted-foreground text-xs leading-relaxed">{t("renewal.monthly", { price: formatEur(p.priceMonthly, intl) })}</p>
                 )}
               </CardContent>
             </Card>

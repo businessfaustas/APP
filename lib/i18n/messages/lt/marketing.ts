@@ -167,7 +167,7 @@ export const marketing: Pick<Messages, "site" | "landing" | "pricing" | "legal" 
     continueDemo: "Tęsti kaip demo vartotojas",
     demoNote: "Pavyzdiniai lotai ir demonstraciniai duomenys — paskyros nereikia.",
     notConfigured: "Prisijungimas nesukonfigūruotas. Nustatykite Supabase prisijungimo raktus arba DEMO_MODE=true.",
-    agree: "Tęsdami sutinkate su {terms} ir {privacy}.",
+    agree: "FlagBid galima naudotis nuo 18 metų. Tęsdami sutinkate su {terms} ir {privacy}.",
     terms: "Naudojimo sąlygomis",
     privacy: "Privatumo politika",
     email: "El. paštas",
@@ -177,6 +177,7 @@ export const marketing: Pick<Messages, "site" | "landing" | "pricing" | "legal" 
     point2: "Remontas įkainotas detalė po detalės",
     point3: "Pelnas geriausiu, tikėtinu ir blogiausiu atveju",
     title: "Prisijungimas",
+    linkExpired: "Ši prisijungimo nuoroda nebegalioja arba jau panaudota. Įveskite el. paštą dar kartą ir atsiųsime naują.",
     google: "Tęsti su Google",
   },
 };

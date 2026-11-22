@@ -13,6 +13,15 @@ import { env, features } from "@/lib/config/env";
 import { legalConfig } from "@/lib/config/legal";
 import { prisma } from "@/lib/db/prisma";
 
+/**
+ * Confirmed 18+ and accepted the current Terms. The shared demo account is exempt: it collects
+ * nothing personal, and nobody signs up through it.
+ */
+export function hasConsented(user: { id: string; ageConfirmedAt: Date | null; termsAcceptedAt: Date | null; termsVersion: string | null }): boolean {
+  if (user.id === DEMO_USER.id) return true;
+  return Boolean(user.ageConfirmedAt && user.termsAcceptedAt && user.termsVersion === legalConfig().termsVersion);
+}
+
 export interface SessionUser {
   id: string;
   email: string;
@@ -109,7 +118,7 @@ async function loadSessionUser(): Promise<SessionUser | null> {
     plan: user.plan,
     creditsRemaining: user.creditsRemaining,
     isDemo: identity.isDemo,
-    consented: identity.isDemo || Boolean(user.ageConfirmedAt && user.termsAcceptedAt && user.termsVersion === legalConfig().termsVersion),
+    consented: hasConsented(user),
   };
 }
 
@@ -155,6 +164,6 @@ export async function userFromBearer(authorization: string | null): Promise<Sess
     plan: user.plan,
     creditsRemaining: user.creditsRemaining,
     isDemo: false,
-    consented: Boolean(user.ageConfirmedAt && user.termsAcceptedAt && user.termsVersion === legalConfig().termsVersion),
+    consented: hasConsented(user),
   };
 }

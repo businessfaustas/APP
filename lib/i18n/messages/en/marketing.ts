@@ -158,7 +158,7 @@ export const marketing = {
     continueDemo: "Continue as demo user",
     demoNote: "Sample lots and fixture data — no account needed.",
     notConfigured: "Sign-in isn't configured. Set Supabase login keys, or set DEMO_MODE=true.",
-    agree: "By continuing you agree to the {terms} and {privacy}.",
+    agree: "You must be 18 or older to use FlagBid. By continuing you agree to the {terms} and {privacy}.",
     terms: "Terms",
     privacy: "Privacy Policy",
     email: "Email",
@@ -168,6 +168,7 @@ export const marketing = {
     point2: "Repairs priced part by part",
     point3: "Best, expected and worst-case profit",
     title: "Sign in",
+    linkExpired: "That sign-in link has expired or was already used. Enter your email again and we'll send a fresh one.",
     google: "Continue with Google",
   },
 };

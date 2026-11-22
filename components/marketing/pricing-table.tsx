@@ -53,6 +53,7 @@ export async function PricingTable() {
                   <Button asChild variant={featured ? "default" : "outline"} className="w-full">
                     <Link href="/app/billing">{t("pricing.buyPack", { n: p.reports })}</Link>
                   </Button>
+                  <p className="text-muted-foreground text-xs leading-relaxed">{t("renewal.pack", { price: formatEur(p.price, intl) })}</p>
                 </CardContent>
               </Card>
             );
@@ -99,6 +100,9 @@ export async function PricingTable() {
                   <Button asChild variant="outline" className="w-full">
                     <Link href={id === "FREE" ? "/app" : "/app/billing"}>{id === "FREE" ? t("pricing.startFree") : t("pricing.choose", { plan: name })}</Link>
                   </Button>
+                  {id !== "FREE" && (
+                    <p className="text-muted-foreground text-xs leading-relaxed">{t("renewal.monthly", { price: formatEur(p.priceMonthly, intl) })}</p>
+                  )}
                 </CardContent>
               </Card>
             );

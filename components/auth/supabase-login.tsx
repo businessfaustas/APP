@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useT } from "@/lib/i18n/client";
+import { rich } from "@/lib/i18n/rich";
+import { AGE_COOKIE } from "@/lib/privacy/consent";
 
 export function SupabaseLogin({ supabaseUrl, anonKey, next }: { supabaseUrl: string; anonKey: string; next: string }) {
   const supabase = useMemo(() => createBrowserClient(supabaseUrl, anonKey), [supabaseUrl, anonKey]);
@@ -16,10 +18,19 @@ export function SupabaseLogin({ supabaseUrl, anonKey, next }: { supabaseUrl: str
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState(false);
+  // Age gate: no email is collected, and no sign-in starts, until this is ticked.
+  const [adult, setAdult] = useState(false);
   const redirectTo = typeof window !== "undefined" ? `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` : undefined;
+
+  function rememberAdult() {
+    const secure = window.location.protocol === "https:" ? "; Secure" : "";
+    document.cookie = `${AGE_COOKIE}=1; Max-Age=3600; Path=/; SameSite=Lax${secure}`;
+  }
 
   async function magicLink(e: React.FormEvent) {
     e.preventDefault();
+    if (!adult) return;
+    rememberAdult();
     setBusy(true);
     const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: redirectTo } });
     setBusy(false);
@@ -28,6 +39,8 @@ export function SupabaseLogin({ supabaseUrl, anonKey, next }: { supabaseUrl: str
   }
 
   async function google() {
+    if (!adult) return;
+    rememberAdult();
     const { error } = await supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo } });
     if (error) toast.error(error.message);
   }
@@ -38,7 +51,24 @@ export function SupabaseLogin({ supabaseUrl, anonKey, next }: { supabaseUrl: str
 
   return (
     <div className="space-y-3">
-      <Button variant="outline" className="w-full" onClick={google} type="button">
+      <label className="flex items-start gap-3 text-sm">
+        <input type="checkbox" className="accent-brand mt-0.5 size-4 shrink-0" checked={adult} onChange={(e) => setAdult(e.target.checked)} />
+        <span>
+          {rich(t("loginGate.confirm"), {
+            terms: (
+              <a className="underline" href="/terms" target="_blank" rel="noreferrer">
+                {t("auth.terms")}
+              </a>
+            ),
+            privacy: (
+              <a className="underline" href="/privacy" target="_blank" rel="noreferrer">
+                {t("auth.privacy")}
+              </a>
+            ),
+          })}
+        </span>
+      </label>
+      <Button variant="outline" className="w-full" onClick={google} type="button" disabled={!adult} aria-describedby={adult ? undefined : "age-required"}>
         <svg viewBox="0 0 24 24" className="size-4" aria-hidden="true">
           <path
             fill="#EA4335"
@@ -50,9 +80,14 @@ export function SupabaseLogin({ supabaseUrl, anonKey, next }: { supabaseUrl: str
       <form onSubmit={magicLink} className="space-y-2">
         <Label htmlFor="email">{t("auth.email")}</Label>
         <Input id="email" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
-        <Button type="submit" className="w-full" disabled={busy}>
+        <Button type="submit" className="w-full" disabled={busy || !adult} aria-describedby={adult ? undefined : "age-required"}>
           <MailIcon /> {busy ? t("common.sending") : t("auth.sendLink")}
         </Button>
+        {!adult && (
+          <p id="age-required" className="text-muted-foreground text-xs">
+            {t("loginGate.required")}
+          </p>
+        )}
       </form>
     </div>
   );

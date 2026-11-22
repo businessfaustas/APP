@@ -63,7 +63,11 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
             <CardDescription>{t("auth.tagline")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {sp.error && <p className="bg-stop-soft text-stop rounded-md px-3 py-2 text-sm">{t("auth.failed", { reason: sp.error })}</p>}
+            {sp.error && (
+              <p role="alert" className="bg-stop-soft text-stop rounded-md px-3 py-2 text-sm">
+                {sp.error === "expired" ? t("auth.linkExpired") : t("auth.failed", { reason: sp.error })}
+              </p>
+            )}
             {supa && <SupabaseLogin supabaseUrl={env().NEXT_PUBLIC_SUPABASE_URL!} anonKey={env().NEXT_PUBLIC_SUPABASE_ANON_KEY!} next={next} />}
             {supa && demo && (
               <div className="text-muted-foreground flex items-center gap-3 text-xs">

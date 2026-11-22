@@ -22,6 +22,22 @@ export default defineConfig({
   reporter: process.env.CI ? [["github"], ["html", { open: "never" }]] : [["list"]],
   use: {
     baseURL,
+    // The cookie banner is covered by its own test; everywhere else it would sit on top of the page.
+    storageState: {
+      cookies: [
+        {
+          name: "fb_consent",
+          value: "v1%3Aessential",
+          domain: new URL(baseURL).hostname,
+          path: "/",
+          expires: -1,
+          httpOnly: false,
+          secure: false,
+          sameSite: "Lax",
+        },
+      ],
+      origins: [],
+    },
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
   },

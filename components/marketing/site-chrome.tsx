@@ -4,6 +4,8 @@ import { Logo } from "@/components/brand";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
+import { CookieSettingsLink } from "@/components/marketing/cookie-settings-link";
+import { legalConfig } from "@/lib/config/legal";
 import { getT } from "@/lib/i18n/server";
 
 export async function SiteHeader() {
@@ -57,7 +59,9 @@ export async function SiteFooter() {
   const legal = [
     { href: "/terms", label: t("site.terms") },
     { href: "/privacy", label: t("site.privacy") },
+    { href: "/dmca", label: t("legalFooter.dmca") },
   ];
+  const operator = legalConfig();
   return (
     <footer className="border-t">
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:grid-cols-[1.5fr_1fr_1fr]">
@@ -79,11 +83,19 @@ export async function SiteFooter() {
                   </Link>
                 </li>
               ))}
+              {col.title === t("site.legal") && (
+                <li>
+                  <CookieSettingsLink />
+                </li>
+              )}
             </ul>
           </div>
         ))}
       </div>
-      <div className="text-muted-foreground border-t py-4 text-center text-xs">© {new Date().getFullYear()} FlagBid</div>
+      <div className="text-muted-foreground space-y-1 border-t px-4 py-4 text-center text-xs">
+        <p>© {new Date().getFullYear()} FlagBid</p>
+        <p>{t("legalFooter.operator", { entity: operator.entity, address: operator.address })}</p>
+      </div>
     </footer>
   );
 }

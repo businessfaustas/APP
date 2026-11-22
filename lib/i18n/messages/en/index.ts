@@ -4,5 +4,6 @@ import { domain } from "./domain";
 import { generated } from "./generated";
 import { marketing } from "./marketing";
 import { report } from "./report";
+import { states } from "./states";
 
-export const en = { ...common, ...marketing, ...app, ...domain, ...report, ...generated };
+export const en = { ...common, ...marketing, ...app, ...domain, ...report, ...generated, ...states };
