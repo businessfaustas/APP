@@ -64,6 +64,15 @@ const EnvSchema = z.object({
   STRIPE_PRICE_CREDITS_10: opt,
   RESEND_API_KEY: opt,
   EMAIL_FROM: z.string().default("FlagBid <alerts@example.com>"),
+  // Monitoring and alerting (all optional; without them errors still go to the log and the error table).
+  SENTRY_DSN: opt,
+  ALERT_WEBHOOK_URL: opt,
+  ALERT_EMAIL: opt,
+  // Spend caps: when a cap is reached the app falls back to the no-AI path instead of spending more.
+  AI_DAILY_BUDGET_USD: z.coerce.number().min(0).default(25),
+  AI_MONTHLY_BUDGET_USD: z.coerce.number().min(0).default(250),
+  // Paid page-reader calls per day across all users (ScrapingBee / Apify).
+  SCRAPE_DAILY_CAP: z.coerce.number().int().min(0).default(400),
 });
 
 export type Env = z.infer<typeof EnvSchema>;

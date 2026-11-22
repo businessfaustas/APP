@@ -95,6 +95,10 @@ model User {
   creditsRemaining Int                @default(3)
   creditsResetAt   DateTime?
   apiTokenHash     String?            @unique // sha256 of the browser-extension token
+  ageConfirmedAt   DateTime? // confirmed they are 18 or older (set once, at sign-up)
+  termsAcceptedAt  DateTime? // accepted the Terms and Privacy Policy
+  termsVersion     String? // which version of the legal pages they accepted
+  emailOptOut      Boolean            @default(false) // unsubscribed from non-essential email
   createdAt        DateTime           @default(now())
   settings         UserSettings?
   analyses         Analysis[]
@@ -425,4 +429,54 @@ model RateLimitHit {
   createdAt DateTime @default(now())
 
   @@index([key, createdAt])
+}
+
+/// Stripe webhook events already applied (Stripe retries, so every event is handled once).
+model StripeEvent {
+  id        String   @id // Stripe event id (evt_...)
+  type      String
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+/// First-party product analytics. Recorded only after the visitor opts in; holds no user id,
+/// IP address or cookie, only the event name, the page and a few coarse properties.
+model AnalyticsEvent {
+  id        String   @id @default(cuid())
+  name      String
+  path      String
+  props     Json?
+  createdAt DateTime @default(now())
+
+  @@index([name, createdAt])
+  @@index([createdAt])
+}
+
+/// Core Web Vitals samples (LCP, INP, CLS, FCP, TTFB), no identifiers.
+model WebVital {
+  id        String   @id @default(cuid())
+  name      String
+  value     Float
+  rating    String
+  path      String
+  device    String   @default("desktop")
+  createdAt DateTime @default(now())
+
+  @@index([name, createdAt])
+}
+
+/// Server and browser errors, grouped by fingerprint so a loop shows as one row with a count.
+model ErrorGroup {
+  fingerprint String   @id
+  source      String // server | client | job | webhook
+  message     String
+  stack       String?
+  path        String?
+  count       Int      @default(1)
+  firstSeen   DateTime @default(now())
+  lastSeen    DateTime @default(now())
+  resolved    Boolean  @default(false)
+
+  @@index([lastSeen])
 }

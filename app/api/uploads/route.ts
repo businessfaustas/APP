@@ -1,4 +1,4 @@
-import { errorResponse, handleApiError, json, unauthorized } from "@/lib/api";
+import { consentRequired, errorResponse, handleApiError, json, limited, unauthorized } from "@/lib/api";
 import { getSessionUser } from "@/lib/auth/session";
 import { storeUpload } from "@/lib/storage/photos";
 
@@ -9,6 +9,9 @@ const MAX_FILES = 24;
 export async function POST(req: Request) {
   const user = await getSessionUser();
   if (!user) return unauthorized();
+  const blocked = await limited(req, "uploads", 20, 3600, user.id);
+  if (blocked) return blocked;
+  if (!user.consented) return consentRequired();
   try {
     const form = await req.formData();
     const files = form.getAll("files").filter((f): f is File => f instanceof File);

@@ -2,7 +2,7 @@ import { randomBytes } from "node:crypto";
 
 import { z } from "zod";
 
-import { handleApiError, json, unauthorized } from "@/lib/api";
+import { handleApiError, json, limited, unauthorized } from "@/lib/api";
 import { getSessionUser, hashToken } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/prisma";
 import { BuyerTypeSchema, ExitStrategySchema, PartSourceSchema } from "@/lib/domain/schemas";
@@ -68,6 +68,8 @@ export async function PATCH(req: Request) {
 export async function POST(req: Request) {
   const user = await getSessionUser();
   if (!user) return unauthorized();
+  const blocked = await limited(req, "api-token", 10, 3600, user.id);
+  if (blocked) return blocked;
   const { action } = (await req.json().catch(() => ({}))) as { action?: string };
   if (action === "revoke-token") {
     await prisma.user.update({ where: { id: user.id }, data: { apiTokenHash: null } });

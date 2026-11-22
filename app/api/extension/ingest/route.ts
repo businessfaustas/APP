@@ -1,5 +1,5 @@
 import { createAnalysis } from "@/lib/analysis/create";
-import { handleApiError, json, unauthorized } from "@/lib/api";
+import { consentRequired, handleApiError, json, limited, unauthorized } from "@/lib/api";
 import { userFromBearer } from "@/lib/auth/session";
 import { env } from "@/lib/config/env";
 import { ExtensionCaptureSchema } from "@/lib/pipeline/types";
@@ -33,6 +33,9 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const user = await userFromBearer(req.headers.get("authorization"));
   if (!user) return withCors(unauthorized());
+  if (!user.consented) return withCors(consentRequired());
+  const blocked = await limited(req, "extension", 120, 3600, user.id);
+  if (blocked) return withCors(blocked);
   try {
     const capture = ExtensionCaptureSchema.parse(await req.json());
     const { id } = await createAnalysis(user, { input: capture.url, mode: "EXTENSION", extension: capture });

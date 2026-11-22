@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { createAnalysis } from "@/lib/analysis/create";
-import { handleApiError, json, unauthorized } from "@/lib/api";
+import { handleApiError, json, unauthorized, consentRequired } from "@/lib/api";
 import { getSessionUser } from "@/lib/auth/session";
 import { checkRateLimit } from "@/lib/billing/credits";
 import { RATE_LIMITS } from "@/lib/billing/plans";
@@ -15,6 +15,7 @@ const BatchSchema = z.object({
 export async function POST(req: Request) {
   const user = await getSessionUser();
   if (!user) return unauthorized();
+  if (!user.consented) return consentRequired();
   try {
     const body = BatchSchema.parse(await req.json());
     const inputs = [...new Set(body.inputs.map((s) => s.trim()).filter(Boolean))];

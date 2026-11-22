@@ -10,6 +10,7 @@ import { cache } from "react";
 import { ensureMonthlyCredits } from "@/lib/billing/credits";
 import { DEMO_COOKIE, DEMO_USER } from "@/lib/config/demo";
 import { env, features } from "@/lib/config/env";
+import { legalConfig } from "@/lib/config/legal";
 import { prisma } from "@/lib/db/prisma";
 
 export interface SessionUser {
@@ -20,6 +21,8 @@ export interface SessionUser {
   plan: "FREE" | "PRO" | "BUSINESS";
   creditsRemaining: number;
   isDemo: boolean;
+  /** Confirmed they are 18+ and accepted the current Terms and Privacy Policy (the demo account is exempt). */
+  consented: boolean;
 }
 
 export async function supabaseServer() {
@@ -53,19 +56,26 @@ export async function ensureUser(id: string, email: string, name: string | null,
     if (role === "ADMIN" && existing.role !== "ADMIN") await prisma.user.update({ where: { id }, data: { role } });
     return;
   }
-  await prisma.user.create({
-    data: {
-      id,
-      email,
-      name,
-      role: role ?? "USER",
-      creditsRemaining: id === DEMO_USER.id ? 500 : 3,
-      plan: id === DEMO_USER.id ? "PRO" : "FREE",
-      creditsResetAt: new Date(),
-      settings: { create: {} },
-      ledger: { create: { delta: id === DEMO_USER.id ? 500 : 3, reason: "SIGNUP" } },
-    },
-  });
+  try {
+    await prisma.user.create({
+      data: {
+        id,
+        email,
+        name,
+        role: role ?? "USER",
+        creditsRemaining: id === DEMO_USER.id ? 500 : 3,
+        plan: id === DEMO_USER.id ? "PRO" : "FREE",
+        creditsResetAt: new Date(),
+        settings: { create: {} },
+        ledger: { create: { delta: id === DEMO_USER.id ? 500 : 3, reason: "SIGNUP" } },
+      },
+    });
+  } catch (err) {
+    // Two requests can race to create the same new user (for example the page and an API call
+    // fired together after the magic link). The loser finds the row the winner made.
+    if ((err as { code?: string }).code === "P2002") return;
+    throw err;
+  }
 }
 
 async function loadSessionUser(): Promise<SessionUser | null> {
@@ -99,6 +109,7 @@ async function loadSessionUser(): Promise<SessionUser | null> {
     plan: user.plan,
     creditsRemaining: user.creditsRemaining,
     isDemo: identity.isDemo,
+    consented: identity.isDemo || Boolean(user.ageConfirmedAt && user.termsAcceptedAt && user.termsVersion === legalConfig().termsVersion),
   };
 }
 
@@ -111,6 +122,11 @@ export async function requireUser(): Promise<SessionUser> {
     const h = await headers();
     const path = h.get("x-pathname") ?? "/app";
     redirect(`/login?next=${encodeURIComponent(path)}`);
+  }
+  if (!user.consented) {
+    // Age gate: nobody reaches the app until they confirm they are 18+ and accept the Terms.
+    const h = await headers();
+    redirect(`/welcome?next=${encodeURIComponent(h.get("x-pathname") ?? "/app")}`);
   }
   return user;
 }
@@ -131,5 +147,14 @@ export async function userFromBearer(authorization: string | null): Promise<Sess
   if (!token || token.length < 20) return null;
   const user = await prisma.user.findUnique({ where: { apiTokenHash: hashToken(token) } });
   if (!user) return null;
-  return { id: user.id, email: user.email, name: user.name, role: user.role, plan: user.plan, creditsRemaining: user.creditsRemaining, isDemo: false };
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    role: user.role,
+    plan: user.plan,
+    creditsRemaining: user.creditsRemaining,
+    isDemo: false,
+    consented: Boolean(user.ageConfirmedAt && user.termsAcceptedAt && user.termsVersion === legalConfig().termsVersion),
+  };
 }

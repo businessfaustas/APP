@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { createAnalysis } from "@/lib/analysis/create";
-import { handleApiError, json, unauthorized } from "@/lib/api";
+import { handleApiError, json, unauthorized, consentRequired } from "@/lib/api";
 import { getSessionUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/prisma";
 import { ManualListingSchema } from "@/lib/pipeline/types";
@@ -17,6 +17,7 @@ const CreateSchema = z.object({
 export async function POST(req: Request) {
   const user = await getSessionUser();
   if (!user) return unauthorized();
+  if (!user.consented) return consentRequired();
   try {
     const body = CreateSchema.parse(await req.json());
     const { id } = await createAnalysis(user, {

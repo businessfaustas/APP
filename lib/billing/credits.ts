@@ -20,18 +20,23 @@ export class RateLimitError extends Error {
 
 const MONTH_MS = 30 * 24 * 60 * 60 * 1000;
 
-/** Lazily resets monthly credits to the plan allowance (never lowers purchased extras). */
+/**
+ * Lazily tops credits up to the plan allowance once a month (never lowers purchased extras).
+ * Compare-and-set on the reset date, so two requests arriving together can't both grant it.
+ */
 export async function ensureMonthlyCredits(userId: string): Promise<void> {
   const user = await prisma.user.findUnique({ where: { id: userId }, select: { plan: true, creditsRemaining: true, creditsResetAt: true } });
   if (!user) return;
   const due = !user.creditsResetAt || Date.now() - user.creditsResetAt.getTime() > MONTH_MS;
   if (!due) return;
   const allowance = PLANS[user.plan as PlanId].monthlyCredits;
-  const next = Math.max(user.creditsRemaining, allowance);
-  await prisma.$transaction([
-    prisma.user.update({ where: { id: userId }, data: { creditsRemaining: next, creditsResetAt: new Date() } }),
-    prisma.creditLedger.create({ data: { userId, delta: next - user.creditsRemaining, reason: "MONTHLY_RESET" } }),
-  ]);
+  const grant = Math.max(0, allowance - user.creditsRemaining);
+  const claimed = await prisma.user.updateMany({
+    where: { id: userId, creditsResetAt: user.creditsResetAt },
+    data: { creditsRemaining: { increment: grant }, creditsResetAt: new Date() },
+  });
+  if (claimed.count === 0) return; // another request already did the reset
+  await prisma.creditLedger.create({ data: { userId, delta: grant, reason: "MONTHLY_RESET" } });
 }
 
 /** Throws RateLimitError when the user exceeded the hourly analysis limit; records the hit otherwise. */

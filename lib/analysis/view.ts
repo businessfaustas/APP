@@ -72,6 +72,15 @@ export interface AnalysisView {
   readOnly: boolean;
 }
 
+/** The owner's home ZIP is a location; it never goes out on a shared link. */
+export function redactSettings(settings: SettingsSnapshot, shared: boolean): SettingsSnapshot {
+  return shared ? { ...settings, homeZip: "" } : settings;
+}
+
+export function redactLogistics(logistics: LogisticsInfo | null, shared: boolean): LogisticsInfo | null {
+  return logistics && shared ? { ...logistics, userZip: null } : logistics;
+}
+
 export async function getAnalysisView(id: string, access: { userId: string } | { shareToken: string }): Promise<AnalysisView | null> {
   const where = "userId" in access ? { id, userId: access.userId } : { shareToken: access.shareToken };
   const a = await prisma.analysis.findFirst({
@@ -99,12 +108,13 @@ export async function getAnalysisView(id: string, access: { userId: string } | {
     currentStep: a.currentStep,
     stepLabel: STEP_LABELS[step] ?? step,
     needsInput: a.currentStep === "NEEDS_INPUT",
-    inputPrefill: prefillFrom(a.inputPayload),
+    // A shared link shows the report, not the owner: no pasted text, home ZIP or cost data.
+    inputPrefill: shared ? null : prefillFrom(a.inputPayload),
     error: a.error,
     createdAt: a.createdAt.toISOString(),
     completedAt: a.completedAt?.toISOString() ?? null,
     inputType: a.inputType,
-    inputValue: a.inputValue,
+    inputValue: shared ? "" : a.inputValue,
     listing: (a.listingSnapshot as NormalizedListing | null) ?? null,
     vehicle: (a.vehicleInfo as VehicleInfo | null) ?? null,
     history: (a.history as HistoryReport | null) ?? null,
@@ -112,20 +122,20 @@ export async function getAnalysisView(id: string, access: { userId: string } | {
     damageFromPhotos: a.damageFromPhotos,
     repair: (a.repairEstimate as RepairEstimate | null) ?? null,
     market: (a.market as MarketValuation | null) ?? null,
-    logistics: (a.logistics as LogisticsInfo | null) ?? null,
+    logistics: redactLogistics((a.logistics as LogisticsInfo | null) ?? null, shared),
     base: (a.calcInput as AnalysisBase | null) ?? null,
     calc: (a.calc as CalculationResult | null) ?? null,
     flags: (a.flags as RiskFlag[] | null) ?? [],
     checklist: (a.checklist as string[] | null) ?? [],
     narrative: a.narrative,
-    settings: a.settingsSnapshot as unknown as SettingsSnapshot,
+    settings: redactSettings(a.settingsSnapshot as unknown as SettingsSnapshot, shared),
     overrides: overrides.success ? overrides.data : { assumptions: {}, lineItems: null },
     dataSources: sources,
     photos,
     shareToken: shared ? null : a.shareToken,
     watchlisted: Boolean(watch),
     isDemo: Object.values(sources).some((s) => s.isDemo),
-    aiCostUsd: a.aiCostUsd,
+    aiCostUsd: shared ? null : a.aiCostUsd,
     readOnly: shared,
   };
 }

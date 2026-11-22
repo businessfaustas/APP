@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { errorResponse, handleApiError, json, unauthorized } from "@/lib/api";
+import { consentRequired, errorResponse, handleApiError, json, limited, unauthorized } from "@/lib/api";
 import { getSessionUser } from "@/lib/auth/session";
 import { isPackId } from "@/lib/billing/plans";
 import { CHECKOUT_ITEMS, ensureCustomer, priceFor, stripe } from "@/lib/billing/stripe";
@@ -11,6 +11,9 @@ const Body = z.object({ item: z.enum(CHECKOUT_ITEMS) });
 export async function POST(req: Request) {
   const user = await getSessionUser();
   if (!user) return unauthorized();
+  const blocked = await limited(req, "checkout", 20, 3600, user.id);
+  if (blocked) return blocked;
+  if (!user.consented) return consentRequired();
   if (!features.stripe()) return errorResponse("Billing isn't configured on this server.", 503);
   if (user.isDemo) return errorResponse("The demo account can't buy plans — sign in with your own account.", 400);
   try {

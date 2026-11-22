@@ -3,10 +3,16 @@ import "server-only";
 import { refundAnalysis } from "@/lib/billing/credits";
 import { env, features } from "@/lib/config/env";
 import { prisma } from "@/lib/db/prisma";
+import { sendEmail } from "@/lib/email/send";
+import { captureError } from "@/lib/observability/errors";
 import { removePrefix } from "@/lib/storage/photos";
 import { formatDateTime } from "@/lib/utils";
 
-/** Sends watchlist reminders that are due (email via Resend when configured). */
+/**
+ * Sends watchlist reminders that are due (email via Resend when configured). Each reminder is
+ * claimed atomically before it is sent, so the Vercel cron and Inngest can both be on without a
+ * reminder ever going out twice. People who unsubscribed are skipped.
+ */
 export async function sendDueReminders(now: Date = new Date()): Promise<{ sent: number; skipped: number }> {
   const due = await prisma.watchlistItem.findMany({
     where: { remindAt: { lte: now }, remindedAt: null },
@@ -16,35 +22,36 @@ export async function sendDueReminders(now: Date = new Date()): Promise<{ sent: 
   let sent = 0;
   let skipped = 0;
   for (const item of due) {
+    const claim = await prisma.watchlistItem.updateMany({ where: { id: item.id, remindedAt: null }, data: { remindedAt: now } });
+    if (claim.count === 0) continue; // another run already took it
+    if (!features.email()) {
+      skipped++;
+      continue;
+    }
     const l = item.listing;
     const title = [l.year, l.make, l.model].filter(Boolean).join(" ") || "Your saved lot";
-    if (features.email()) {
-      try {
-        const { Resend } = await import("resend");
-        const resend = new Resend(env().RESEND_API_KEY);
-        const link = `${env().NEXT_PUBLIC_APP_URL}${item.analysisId ? `/app/analyses/${item.analysisId}` : "/app/watchlist"}`;
-        await resend.emails.send({
-          from: env().EMAIL_FROM,
-          to: item.user.email,
-          subject: `Sale reminder: ${title}`,
-          text: [
-            `${title} (${l.source} lot ${l.lotNumber ?? "—"}) sells ${l.saleDate ? `on ${formatDateTime(l.saleDate)}` : "soon"}.`,
-            item.myMaxBid ? `Your max bid: $${item.myMaxBid.toLocaleString("en-US")}` : "",
-            `Report: ${link}`,
-          ]
-            .filter(Boolean)
-            .join("\n"),
-        });
-        sent++;
-      } catch (err) {
-        console.error("Reminder email failed", err);
-        skipped++;
-        continue;
-      }
-    } else {
+    try {
+      const link = `${env().NEXT_PUBLIC_APP_URL}${item.analysisId ? `/app/analyses/${item.analysisId}` : "/app/watchlist"}`;
+      const delivered = await sendEmail({
+        userId: item.userId,
+        to: item.user.email,
+        kind: "optional",
+        subject: `Sale reminder: ${title}`,
+        text: [
+          `${title} (${l.source} lot ${l.lotNumber ?? "—"}) sells ${l.saleDate ? `on ${formatDateTime(l.saleDate)}` : "soon"}.`,
+          item.myMaxBid ? `Your max bid: $${item.myMaxBid.toLocaleString("en-US")}` : "",
+          `Report: ${link}`,
+        ]
+          .filter(Boolean)
+          .join("\n"),
+      });
+      if (delivered) sent++;
+      else skipped++;
+    } catch (err) {
+      await prisma.watchlistItem.update({ where: { id: item.id }, data: { remindedAt: null } }); // the next run retries
+      void captureError(err, { source: "job", path: "reminders" });
       skipped++;
     }
-    await prisma.watchlistItem.update({ where: { id: item.id }, data: { remindedAt: now } });
   }
   return { sent, skipped };
 }

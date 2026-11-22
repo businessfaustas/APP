@@ -4,6 +4,9 @@ import Stripe from "stripe";
 
 import { env } from "@/lib/config/env";
 import { prisma } from "@/lib/db/prisma";
+import { sendEmail } from "@/lib/email/send";
+import { log } from "@/lib/observability/log";
+import { sendAlert } from "@/lib/observability/alert";
 
 import { isPackId, PACKS, PLANS, type PackId, type PlanId } from "./plans";
 
@@ -75,50 +78,195 @@ async function userIdForCustomer(customerId: string | null | undefined): Promise
   return u?.id ?? null;
 }
 
-/** Applies a verified Stripe webhook event. Idempotent enough for retries (credit packs keyed by session). */
-export async function handleStripeEvent(event: Stripe.Event): Promise<void> {
+/** The few Stripe lookups the handler needs, injectable so tests don't call Stripe. */
+export interface StripeDeps {
+  sessionIdForPaymentIntent(paymentIntentId: string): Promise<string | null>;
+  cancelCustomerSubscriptions(customerId: string): Promise<void>;
+}
+
+const liveDeps: StripeDeps = {
+  sessionIdForPaymentIntent: async (pi) => (await stripe().checkout.sessions.list({ payment_intent: pi, limit: 1 })).data[0]?.id ?? null,
+  cancelCustomerSubscriptions: async (customerId) => {
+    const subs = await stripe().subscriptions.list({ customer: customerId, status: "all", limit: 20 });
+    for (const sub of subs.data) if (sub.status !== "canceled") await stripe().subscriptions.cancel(sub.id);
+  },
+};
+
+const idOf = (v: string | { id: string } | null | undefined): string | null => (typeof v === "string" ? v : (v?.id ?? null));
+
+/** Adds the reports for a paid credit pack, once per checkout session. */
+async function grantPackCredits(s: Stripe.Checkout.Session, userId: string): Promise<void> {
+  const credits = s.mode === "payment" && s.payment_status === "paid" ? creditsForSession(s.metadata) : null;
+  if (credits === null) return;
+  const reason = `PURCHASE:${s.id}`;
+  if (await prisma.creditLedger.findFirst({ where: { reason } })) return;
+  await prisma.$transaction([
+    prisma.user.update({ where: { id: userId }, data: { creditsRemaining: { increment: credits } } }),
+    prisma.creditLedger.create({ data: { userId, delta: credits, reason } }),
+  ]);
+}
+
+/**
+ * Takes back the credits of a refunded or disputed pack, in proportion to the amount refunded.
+ * Credits the buyer has already spent can't be recovered, so the balance never goes below zero.
+ * Safe to run twice for the same refund (it only takes what is still owed).
+ */
+export async function clawBackPack(sessionId: string, userId: string, fraction: number, tag: string): Promise<number> {
+  const purchase = await prisma.creditLedger.findFirst({ where: { userId, reason: `PURCHASE:${sessionId}` } });
+  if (!purchase) return 0;
+  const target = Math.round(purchase.delta * Math.min(1, Math.max(0, fraction)));
+  const taken = await prisma.creditLedger.aggregate({ where: { userId, reason: { startsWith: `CLAWBACK:${sessionId}` } }, _sum: { delta: true } });
+  const owed = target + (taken._sum.delta ?? 0); // ledger deltas are negative
+  if (owed <= 0) return 0;
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { creditsRemaining: true } });
+  const take = Math.min(owed, Math.max(0, user?.creditsRemaining ?? 0));
+  if (take > 0) {
+    await prisma.$transaction([
+      prisma.user.update({ where: { id: userId }, data: { creditsRemaining: { decrement: take } } }),
+      prisma.creditLedger.create({ data: { userId, delta: -take, reason: `CLAWBACK:${sessionId}:${tag}` } }),
+    ]);
+  }
+  if (take < owed) log.warn("stripe.clawback_shortfall", { userId, sessionId, owed, recovered: take });
+  return take;
+}
+
+async function dropToFree(userId: string): Promise<void> {
+  await prisma.user.update({ where: { id: userId }, data: { plan: "FREE" } });
+}
+
+/** A refund or dispute on a charge: take back pack credits, or end the plan for a subscription payment. */
+async function reverseCharge(
+  opts: { customerId: string | null; paymentIntentId: string | null; fraction: number; tag: string; endPlanIfSubscription: boolean },
+  deps: StripeDeps,
+) {
+  const userId = await userIdForCustomer(opts.customerId);
+  if (!userId) return;
+  const sessionId = opts.paymentIntentId ? await deps.sessionIdForPaymentIntent(opts.paymentIntentId) : null;
+  if (sessionId && (await prisma.creditLedger.findFirst({ where: { userId, reason: `PURCHASE:${sessionId}` } }))) {
+    await clawBackPack(sessionId, userId, opts.fraction, opts.tag);
+    return;
+  }
+  // Not a credit pack, so it paid for a plan: a full refund or any dispute ends the plan.
+  if (opts.endPlanIfSubscription && opts.customerId) {
+    await deps.cancelCustomerSubscriptions(opts.customerId).catch((err: unknown) => log.error("stripe.cancel_subscription_failed", { err }));
+    await dropToFree(userId);
+  }
+}
+
+/**
+ * Applies a verified Stripe webhook event (the webhook route makes sure each event id is handled
+ * once). Covers purchases, plan changes, renewals, refunds, chargebacks and failed payments.
+ */
+export async function handleStripeEvent(event: Stripe.Event, deps: StripeDeps = liveDeps): Promise<void> {
   switch (event.type) {
-    case "checkout.session.completed": {
+    case "checkout.session.completed":
+    case "checkout.session.async_payment_succeeded": {
       const s = event.data.object;
-      const userId = s.client_reference_id ?? s.metadata?.userId ?? (await userIdForCustomer(typeof s.customer === "string" ? s.customer : s.customer?.id));
+      const userId = s.client_reference_id ?? s.metadata?.userId ?? (await userIdForCustomer(idOf(s.customer)));
       if (!userId) return;
-      const credits = s.mode === "payment" && s.payment_status === "paid" ? creditsForSession(s.metadata) : null;
-      if (credits !== null) {
-        const reason = `PURCHASE:${s.id}`;
-        const already = await prisma.creditLedger.findFirst({ where: { reason } });
-        if (already) return;
-        await prisma.$transaction([
-          prisma.user.update({ where: { id: userId }, data: { creditsRemaining: { increment: credits } } }),
-          prisma.creditLedger.create({ data: { userId, delta: credits, reason } }),
-        ]);
-      } else if (s.mode === "subscription" && s.metadata?.plan) {
+      if (s.mode === "payment") await grantPackCredits(s, userId);
+      else if (s.mode === "subscription" && s.metadata?.plan) {
         const plan = s.metadata.plan as PlanId;
         if (plan in PLANS) await setPlan(userId, plan);
       }
       return;
     }
+    case "checkout.session.async_payment_failed": {
+      const s = event.data.object;
+      await sendAlert({
+        key: `stripe:async-failed:${s.id}`,
+        severity: "warning",
+        title: "A delayed payment failed",
+        body: `Checkout session ${s.id}. No credits were granted.`,
+      });
+      return;
+    }
     case "customer.subscription.updated":
     case "customer.subscription.created": {
       const sub = event.data.object;
-      const userId = await userIdForCustomer(typeof sub.customer === "string" ? sub.customer : sub.customer.id);
+      const userId = await userIdForCustomer(idOf(sub.customer));
       if (!userId) return;
       const plan = planForPrice(sub.items.data[0]?.price.id);
       if (plan && (sub.status === "active" || sub.status === "trialing")) await setPlan(userId, plan);
-      if (sub.status === "canceled" || sub.status === "unpaid") await prisma.user.update({ where: { id: userId }, data: { plan: "FREE" } });
+      // past_due keeps the plan while Stripe retries the card; these end it.
+      if (["canceled", "unpaid", "incomplete_expired", "paused"].includes(sub.status)) await dropToFree(userId);
       return;
     }
     case "customer.subscription.deleted": {
       const sub = event.data.object;
-      const userId = await userIdForCustomer(typeof sub.customer === "string" ? sub.customer : sub.customer.id);
-      if (userId) await prisma.user.update({ where: { id: userId }, data: { plan: "FREE" } });
+      const userId = await userIdForCustomer(idOf(sub.customer));
+      if (userId) await dropToFree(userId);
       return;
     }
     case "invoice.paid": {
       const inv = event.data.object;
-      const userId = await userIdForCustomer(typeof inv.customer === "string" ? inv.customer : inv.customer?.id);
+      const userId = await userIdForCustomer(idOf(inv.customer));
       if (!userId) return;
       const user = await prisma.user.findUnique({ where: { id: userId } });
       if (user && user.plan !== "FREE") await setPlan(userId, user.plan);
+      return;
+    }
+    case "invoice.payment_failed": {
+      const inv = event.data.object;
+      const userId = await userIdForCustomer(idOf(inv.customer));
+      if (!userId) return;
+      const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true } });
+      await sendAlert({
+        key: `stripe:payment-failed:${inv.id}`,
+        severity: "warning",
+        title: "A subscription payment failed",
+        body: `Invoice ${inv.id}. Stripe will retry; the plan ends if it stays unpaid.`,
+      });
+      if (user) {
+        await sendEmail({
+          userId,
+          to: user.email,
+          kind: "essential",
+          subject: "Your FlagBid payment didn't go through",
+          text: `We couldn't charge your card for your FlagBid subscription. Stripe will try again in the next few days. To avoid losing your plan, update your payment method: ${env().NEXT_PUBLIC_APP_URL}/app/billing`,
+        }).catch(() => undefined);
+      }
+      return;
+    }
+    case "charge.refunded": {
+      const ch = event.data.object;
+      const fraction = ch.amount > 0 ? ch.amount_refunded / ch.amount : 1;
+      await reverseCharge(
+        {
+          customerId: idOf(ch.customer),
+          paymentIntentId: idOf(ch.payment_intent),
+          fraction,
+          tag: `r${ch.amount_refunded}`,
+          endPlanIfSubscription: fraction >= 1,
+        },
+        deps,
+      );
+      return;
+    }
+    case "charge.dispute.created": {
+      const d = event.data.object;
+      await sendAlert({
+        key: `stripe:dispute:${d.id}`,
+        severity: "critical",
+        title: "A customer opened a payment dispute (chargeback)",
+        body: `Dispute ${d.id}, ${(d.amount / 100).toFixed(2)} ${d.currency.toUpperCase()}. Submit evidence in the Stripe dashboard before the deadline.`,
+      });
+      const chargeId = idOf(d.charge);
+      const charge = chargeId
+        ? await stripe()
+            .charges.retrieve(chargeId)
+            .catch(() => null)
+        : null;
+      await reverseCharge(
+        {
+          customerId: idOf(charge?.customer),
+          paymentIntentId: idOf(d.payment_intent) ?? idOf(charge?.payment_intent),
+          fraction: 1,
+          tag: `d${d.id}`,
+          endPlanIfSubscription: true,
+        },
+        deps,
+      );
       return;
     }
     default:
