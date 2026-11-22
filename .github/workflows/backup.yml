@@ -24,7 +24,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         if: env.HAS_SECRETS == 'true'
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         if: env.HAS_SECRETS == 'true'
       - uses: actions/setup-node@v4
         if: env.HAS_SECRETS == 'true'
@@ -69,7 +69,7 @@ jobs:
           if [ "${{ github.event_name }}" != "workflow_dispatch" ] && [ "$(date -u +%u)" != "7" ]; then echo "SKIP=1" >> "$GITHUB_ENV"; fi
       - uses: actions/checkout@v4
         if: env.HAS_SECRETS == 'true' && env.SKIP != '1'
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         if: env.HAS_SECRETS == 'true' && env.SKIP != '1'
       - uses: actions/setup-node@v4
         if: env.HAS_SECRETS == 'true' && env.SKIP != '1'
