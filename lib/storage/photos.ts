@@ -9,6 +9,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import sharp from "sharp";
 
 import { env, features } from "@/lib/config/env";
+import { assertScrapeBudget } from "@/lib/security/spend";
 import { prisma } from "@/lib/db/prisma";
 import { assertPublicUrl, fetchWithTimeout } from "@/lib/providers/http";
 
@@ -135,7 +136,15 @@ async function downloadImage(url: string, budget: PaidBudget): Promise<Uint8Arra
     timeoutMs: 20000,
     headers: { "user-agent": "Mozilla/5.0 (compatible; FlagBidBot/1.0)", accept: "image/*" },
   });
-  if (!res.ok && env().SCRAPINGBEE_API_KEY && budget.left > 0) {
+  if (
+    !res.ok &&
+    env().SCRAPINGBEE_API_KEY &&
+    budget.left > 0 &&
+    (await assertScrapeBudget().then(
+      () => true,
+      () => false,
+    ))
+  ) {
     budget.left--;
     const api = new URL("https://app.scrapingbee.com/api/v1/");
     api.searchParams.set("api_key", env().SCRAPINGBEE_API_KEY!);

@@ -3,6 +3,7 @@ import "server-only";
 import { fetchWithTimeout } from "@/lib/providers/http";
 
 import { env, features } from "./env";
+import { legalConfig } from "./legal";
 
 export type Priority = "required" | "recommended" | "optional";
 
@@ -204,6 +205,77 @@ export function integrations(): Integration[] {
       without: "Scheduled reminders and clean-up only run when Inngest is connected.",
       vars: [{ name: "CRON_SECRET", set: isSet(e.CRON_SECRET) }],
       docs: "https://vercel.com/docs/cron-jobs/manage-cron-jobs#securing-cron-jobs",
+      checkable: false,
+    },
+    {
+      key: "domain",
+      name: "Your own domain (HTTPS)",
+      priority: "required",
+      enabled: /^https:\/\//.test(e.NEXT_PUBLIC_APP_URL) && !/\.vercel\.app/.test(e.NEXT_PUBLIC_APP_URL),
+      unlocks: "Your brand's address with an automatic SSL certificate, and a sender domain for email that lands in the inbox.",
+      without: "The app runs on the temporary vercel.app address, and email from a shared domain is more likely to go to spam.",
+      vars: [{ name: "NEXT_PUBLIC_APP_URL", set: isSet(process.env.NEXT_PUBLIC_APP_URL) }],
+      docs: "https://vercel.com/docs/domains/working-with-domains/add-a-domain",
+      checkable: false,
+    },
+    {
+      key: "legal",
+      name: "Company details (legal pages, emails, DMCA)",
+      priority: "required",
+      enabled: !legalConfig().isPlaceholder,
+      unlocks:
+        "Names the operator and the postal address on the Terms, Privacy Policy, DMCA page and in the footer of every email (required by CAN-SPAM, GDPR and similar laws).",
+      without: "Those pages and emails show a placeholder. Fill it in before taking real customers.",
+      vars: [
+        { name: "LEGAL_ENTITY", set: isSet(process.env.LEGAL_ENTITY) },
+        { name: "LEGAL_ADDRESS", set: isSet(process.env.LEGAL_ADDRESS) },
+        { name: "SUPPORT_EMAIL", set: isSet(process.env.SUPPORT_EMAIL) },
+        { name: "DMCA_AGENT_NAME", set: isSet(process.env.DMCA_AGENT_NAME), optional: true },
+        { name: "DMCA_AGENT_EMAIL", set: isSet(process.env.DMCA_AGENT_EMAIL), optional: true },
+        { name: "DMCA_REGISTRATION_NUMBER", set: isSet(process.env.DMCA_REGISTRATION_NUMBER), optional: true },
+      ],
+      docs: "https://www.copyright.gov/dmca-directory/",
+      checkable: false,
+    },
+    {
+      key: "monitoring",
+      name: "Error tracking and alerts",
+      priority: "recommended",
+      enabled: isSet(e.SENTRY_DSN) || isSet(e.ALERT_WEBHOOK_URL) || (isSet(e.ALERT_EMAIL) && features.email()),
+      unlocks: "Tells you the moment something breaks: new errors, failed payments, chargebacks, spend caps and outages go to Slack/Discord, email and Sentry.",
+      without: "Errors are still logged and listed under Admin › Monitoring, but nobody is notified, so a problem can sit unseen.",
+      vars: [
+        { name: "ALERT_WEBHOOK_URL", set: isSet(e.ALERT_WEBHOOK_URL) },
+        { name: "ALERT_EMAIL", set: isSet(e.ALERT_EMAIL), optional: true },
+        { name: "SENTRY_DSN", set: isSet(e.SENTRY_DSN), optional: true },
+      ],
+      docs: "https://api.slack.com/messaging/webhooks",
+      checkable: false,
+    },
+    {
+      key: "secret",
+      name: "App secret (signed email links)",
+      priority: "recommended",
+      enabled: isSet(process.env.APP_SECRET),
+      unlocks: "Signs one-click unsubscribe links with a key of your own, so they keep working if the database password is ever rotated.",
+      without: "Links are signed with a key derived from the database URL: secure, but they stop working if that URL changes.",
+      vars: [{ name: "APP_SECRET", set: isSet(process.env.APP_SECRET) }],
+      docs: "https://vercel.com/docs/environment-variables",
+      checkable: false,
+    },
+    {
+      key: "spend",
+      name: "Spend caps (built in)",
+      priority: "optional",
+      enabled: e.AI_DAILY_BUDGET_USD > 0 || e.AI_MONTHLY_BUDGET_USD > 0 || e.SCRAPE_DAILY_CAP > 0,
+      unlocks: `Stops AI and paid page-reader calls at a limit (now $${e.AI_DAILY_BUDGET_USD}/day, $${e.AI_MONTHLY_BUDGET_USD}/month, ${e.SCRAPE_DAILY_CAP} page reads/day) and warns you at 80%. Also set caps in each provider's own dashboard.`,
+      without: "No limit: a bug or abuse could run up the AI bill.",
+      vars: [
+        { name: "AI_DAILY_BUDGET_USD", set: isSet(process.env.AI_DAILY_BUDGET_USD), optional: true },
+        { name: "AI_MONTHLY_BUDGET_USD", set: isSet(process.env.AI_MONTHLY_BUDGET_USD), optional: true },
+        { name: "SCRAPE_DAILY_CAP", set: isSet(process.env.SCRAPE_DAILY_CAP), optional: true },
+      ],
+      docs: "https://console.anthropic.com/settings/limits",
       checkable: false,
     },
   ];

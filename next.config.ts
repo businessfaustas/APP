@@ -28,7 +28,20 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   serverExternalPackages: ["sharp", "@react-pdf/renderer", "zipcodes", "pg"],
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    const noindex = { key: "X-Robots-Tag", value: "noindex, nofollow, noarchive" };
+    const longCache = { key: "Cache-Control", value: "public, max-age=604800, stale-while-revalidate=86400" };
+    // Staging and preview deployments must never be indexed (and neither should the vercel.app address once a real domain is live).
+    const staging = process.env.VERCEL_ENV === "preview" || process.env.APP_ENV === "staging";
+    return [
+      { source: "/:path*", headers: staging ? [...securityHeaders, noindex] : securityHeaders },
+      // Private pages and one-off links: never in search results, never cached by a shared proxy.
+      ...["/app/:path*", "/admin/:path*", "/r/:path*", "/welcome", "/login", "/unsubscribe", "/api/:path*"].map((source) => ({
+        source,
+        headers: [noindex, { key: "Cache-Control", value: "private, no-store" }],
+      })),
+      // Static pictures never change under the same name: let browsers and the CDN keep them.
+      ...["/cars/:path*", "/demo-photos/:path*", "/icons/:path*"].map((source) => ({ source, headers: [longCache] })),
+    ];
   },
 };
 

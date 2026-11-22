@@ -3,6 +3,7 @@ import "server-only";
 import { z } from "zod";
 
 import { generateStructured, generateWebResearch } from "../client";
+import { oneLine } from "../guard";
 
 const RangeSchema = z.object({ low: z.number().int().min(0), high: z.number().int().min(0) }).nullable();
 
@@ -44,7 +45,7 @@ Ranges should reflect normal market spread, not extremes.`,
     messages: [
       {
         role: "user",
-        content: `Vehicle: ${args.vehicle}\nParts:\n${args.parts.map((p) => `${p.index}. ${p.name}${p.kind === "SUBLET" ? " (service)" : ""}`).join("\n")}`,
+        content: `Vehicle: ${oneLine(args.vehicle)}\nParts:\n${args.parts.map((p) => `${p.index}. ${oneLine(p.name, 80)}${p.kind === "SUBLET" ? " (service)" : ""}`).join("\n")}`,
       },
     ],
     analysisId: args.analysisId,

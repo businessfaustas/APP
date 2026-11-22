@@ -14,9 +14,16 @@ import {
   ShieldAlertIcon,
   WrenchIcon,
 } from "lucide-react";
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { PricingTable } from "@/components/marketing/pricing-table";
+import { JsonLd } from "@/components/seo/json-ld";
+import { PACK_ORDER, PACKS, PLANS } from "@/lib/billing/plans";
+import { BRAND_NAME } from "@/lib/brand";
+import { appUrl } from "@/lib/config/deployment";
+import { legalConfig } from "@/lib/config/legal";
+import { faqSchema, organizationSchema, softwareApplicationSchema, websiteSchema } from "@/lib/seo/schema";
 import { Showcase } from "@/components/marketing/showcase";
 import { BidLadder, ScoreMeter } from "@/components/report/deal-card";
 import { ChecklistItems, RiskFlagsList } from "@/components/report/overview-tab";
@@ -199,12 +206,40 @@ function SampleReport({ sample, t }: { sample: Sample; t: Translator }) {
   );
 }
 
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: { absolute: t("site.metaTitle") }, description: t("site.metaDescription"), alternates: { canonical: "/" } };
+}
+
 export default async function LandingPage() {
   const t = await getT();
   const now = new Date();
   const sample = runDemoFixtureOffline("audi-a3", now);
+  const base = appUrl();
+  const structured = [
+    organizationSchema({
+      name: BRAND_NAME,
+      url: base,
+      logo: `${base}/icons/icon-512.png`,
+      email: legalConfig().isPlaceholder ? undefined : legalConfig().supportEmail,
+    }),
+    websiteSchema({ name: BRAND_NAME, url: base, description: t("site.metaDescription") }),
+    softwareApplicationSchema({
+      name: BRAND_NAME,
+      url: base,
+      description: t("site.metaDescription"),
+      offers: [
+        { name: "Free", price: 0, description: `${PLANS.FREE.monthlyCredits} free reports` },
+        ...PACK_ORDER.map((id) => ({ name: `${PACKS[id].reports} reports`, price: PACKS[id].price, description: "Prepaid credits that never expire" })),
+        { name: "Pro (monthly)", price: PLANS.PRO.priceMonthly },
+        { name: "Business (monthly)", price: PLANS.BUSINESS.priceMonthly },
+      ],
+    }),
+    faqSchema(FAQ.map((n) => ({ q: t(`landing.q${n}`), a: t(`landing.a${n}`) }))),
+  ];
   return (
     <>
+      <JsonLd data={structured} />
       <section className="relative overflow-hidden border-b">
         <div
           aria-hidden="true"

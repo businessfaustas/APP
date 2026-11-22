@@ -6,17 +6,15 @@ import { generateText, Output, type ModelMessage } from "ai";
 import type { z } from "zod";
 
 import { env, features } from "@/lib/config/env";
+import { log } from "@/lib/observability/log";
 
+import { assertAiBudget } from "./budget";
+import { AiUnavailableError } from "./errors";
+import { capMessages, CircuitBreaker, isContextOverflow, isOutputTruncated, isTransientAiError, shrinkMessages, UNTRUSTED_NOTICE } from "./guard";
 import { recordAiUsage, WEB_SEARCH_USD, type AiPurpose } from "./usage";
 
+export { AiUnavailableError } from "./errors";
 export type ModelKind = "vision" | "text";
-
-export class AiUnavailableError extends Error {
-  constructor() {
-    super("No AI provider key is configured (set ANTHROPIC_API_KEY or OPENAI_API_KEY).");
-    this.name = "AiUnavailableError";
-  }
-}
 
 export function modelId(kind: ModelKind): string {
   return kind === "vision" ? env().AI_MODEL_VISION : env().AI_MODEL_TEXT;
@@ -33,6 +31,33 @@ function languageModel(kind: ModelKind) {
   return createAnthropic({ apiKey: e.ANTHROPIC_API_KEY })(id);
 }
 
+/** Per-call time limits: a hung provider must not hold an analysis open for minutes. */
+const TIMEOUT_MS: Record<ModelKind, number> = { vision: 120_000, text: 60_000 };
+
+/**
+ * One breaker per server instance. Four transient failures within a minute open it for two
+ * minutes; analyses keep running on the no-AI paths (heuristic parsing, reference prices,
+ * template narrative) instead of each waiting on a provider that is down.
+ */
+export const aiBreaker = new CircuitBreaker({ failureThreshold: 4, windowMs: 60_000, openMs: 120_000 });
+
+/** Every model call goes through here: spend cap, outage breaker, timeout. */
+async function guarded<T>(kind: ModelKind, run: (signal: AbortSignal) => Promise<T>): Promise<T> {
+  await assertAiBudget();
+  if (!aiBreaker.allow()) throw new AiUnavailableError("The AI provider is temporarily unavailable; continuing without it.");
+  try {
+    const out = await run(AbortSignal.timeout(TIMEOUT_MS[kind]));
+    aiBreaker.success();
+    return out;
+  } catch (err) {
+    if (isTransientAiError(err)) {
+      aiBreaker.failure();
+      log.warn("ai.transient_failure", { kind, open: aiBreaker.isOpen, err });
+    }
+    throw err;
+  }
+}
+
 export interface StructuredCall<S extends z.ZodType> {
   purpose: AiPurpose;
   kind: ModelKind;
@@ -45,25 +70,33 @@ export interface StructuredCall<S extends z.ZodType> {
 }
 
 /**
- * Structured-output call with one validation retry: if the model's JSON fails the Zod
- * schema, the validation errors are sent back and it tries once more.
+ * Structured-output call with recovery:
+ *  - a reply that fails the Zod schema is sent back with the errors for one correction,
+ *  - an answer cut off at the output limit is retried with a larger limit,
+ *  - a "prompt too long" error is retried with the text halved,
+ *  - and the caller always gets an error it can fall back from (AiUnavailableError when the
+ *    key is missing, the spend cap is hit or the provider is down).
  */
 export async function generateStructured<S extends z.ZodType>(call: StructuredCall<S>): Promise<z.infer<S>> {
   if (!features.ai()) throw new AiUnavailableError();
   const model = languageModel(call.kind);
-  let messages = call.messages;
+  let messages = capMessages(call.messages as never) as ModelMessage[];
+  let maxOutputTokens = call.maxOutputTokens ?? 8000;
   let lastError: unknown = null;
-  for (let attempt = 0; attempt < 2; attempt++) {
+  for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      const result = await generateText({
-        model,
-        instructions: call.instructions,
-        messages,
-        output: Output.object({ schema: call.schema, name: call.schemaName }),
-        maxOutputTokens: call.maxOutputTokens ?? 8000,
-        temperature: 0.1,
-        maxRetries: 2,
-      });
+      const result = await guarded(call.kind, (abortSignal) =>
+        generateText({
+          model,
+          instructions: `${call.instructions}\n${UNTRUSTED_NOTICE}`,
+          messages,
+          output: Output.object({ schema: call.schema, name: call.schemaName }),
+          maxOutputTokens,
+          temperature: 0.1,
+          maxRetries: 2,
+          abortSignal,
+        }),
+      );
       await recordAiUsage({
         analysisId: call.analysisId ?? null,
         purpose: call.purpose,
@@ -76,9 +109,18 @@ export async function generateStructured<S extends z.ZodType>(call: StructuredCa
     } catch (err) {
       lastError = err;
       if (err instanceof AiUnavailableError) throw err;
+      if (isContextOverflow(err)) {
+        messages = shrinkMessages(messages as never) as ModelMessage[];
+        continue;
+      }
+      if (isOutputTruncated(err)) {
+        maxOutputTokens = Math.min(16_000, maxOutputTokens * 2);
+        continue;
+      }
+      if (isTransientAiError(err)) throw err; // retrying a provider that is failing only slows the analysis down
       const detail = err instanceof Error ? err.message.slice(0, 1500) : String(err);
       messages = [
-        ...call.messages,
+        ...messages,
         {
           role: "user",
           content: `Your previous answer did not match the required JSON schema. Error:\n${detail}\nReturn a corrected answer that matches the schema exactly.`,
@@ -98,14 +140,19 @@ export async function generatePlainText(args: {
   analysisId?: string | null;
 }): Promise<string> {
   if (!features.ai()) throw new AiUnavailableError();
-  const result = await generateText({
-    model: languageModel(args.kind),
-    instructions: args.instructions,
-    prompt: args.prompt,
-    maxOutputTokens: 1200,
-    temperature: 0.2,
-    maxRetries: 2,
-  });
+  const model = languageModel(args.kind);
+  const prompt = capMessages([{ role: "user", content: args.prompt }])[0]!.content as string;
+  const result = await guarded(args.kind, (abortSignal) =>
+    generateText({
+      model,
+      instructions: `${args.instructions}\n${UNTRUSTED_NOTICE}`,
+      prompt,
+      maxOutputTokens: 1200,
+      temperature: 0.2,
+      maxRetries: 2,
+      abortSignal,
+    }),
+  );
   await recordAiUsage({
     analysisId: args.analysisId ?? null,
     purpose: args.purpose,
@@ -139,15 +186,19 @@ export async function generateWebResearch(args: {
   const e = env();
   if (!features.ai() || e.AI_PROVIDER !== "anthropic" || !e.ANTHROPIC_API_KEY) throw new AiUnavailableError();
   const anthropic = createAnthropic({ apiKey: e.ANTHROPIC_API_KEY });
-  const result = await generateText({
-    model: anthropic(modelId("text")),
-    instructions: args.instructions,
-    prompt: args.prompt,
-    tools: { web_search: anthropic.tools.webSearch_20260318({ maxUses: args.maxSearches ?? 4, userLocation: { type: "approximate", country: "US" } }) },
-    maxOutputTokens: 2500,
-    temperature: 0.1,
-    maxRetries: 1,
-  });
+  const prompt = capMessages([{ role: "user", content: args.prompt }])[0]!.content as string;
+  const result = await guarded("text", (abortSignal) =>
+    generateText({
+      model: anthropic(modelId("text")),
+      instructions: `${args.instructions}\n${UNTRUSTED_NOTICE}`,
+      prompt,
+      tools: { web_search: anthropic.tools.webSearch_20260318({ maxUses: args.maxSearches ?? 4, userLocation: { type: "approximate", country: "US" } }) },
+      maxOutputTokens: 2500,
+      temperature: 0.1,
+      maxRetries: 1,
+      abortSignal,
+    }),
+  );
   const searches = result.steps.reduce((n, s) => n + s.toolCalls.filter((c) => c.toolName === "web_search").length, 0);
   await recordAiUsage({
     analysisId: args.analysisId ?? null,

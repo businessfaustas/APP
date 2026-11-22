@@ -5,6 +5,7 @@ import type { ModelMessage } from "ai";
 import { DamageAssessmentSchema, type DamageAssessment, type NormalizedListing } from "@/lib/domain/schemas";
 
 import { generateStructured } from "../client";
+import { oneLine } from "../guard";
 
 export const VISION_SYSTEM_PROMPT = `You are a senior collision damage appraiser and salvage-auction buyer with 20 years of experience.
 You are reviewing auction photos for a professional car flipper deciding how much to bid.
@@ -44,15 +45,16 @@ RULES
     → red flag level "high".
 13. Be concise. No marketing language.`;
 
+/** Listing metadata for the vision prompt. Every value came from a web page, so each is flattened to one clean line. */
 export function listingContext(l: NormalizedListing): string {
   return [
-    `Vehicle: ${[l.year, l.make, l.model, l.trim].filter(Boolean).join(" ") || "unknown"}`,
-    `VIN: ${l.vin ?? "unknown"}`,
-    `Odometer: ${l.odometer ?? "unknown"} ${l.odometerUnit} (${l.odometerBrand})`,
-    `Title: ${l.titleRaw ?? l.titleCategory}`,
-    `Primary damage (listing): ${l.primaryDamage ?? "unknown"}; secondary: ${l.secondaryDamage ?? "none"}`,
+    `Vehicle: ${oneLine([l.year, l.make, l.model, l.trim].filter(Boolean).join(" ")) || "unknown"}`,
+    `VIN: ${oneLine(l.vin, 17) || "unknown"}`,
+    `Odometer: ${l.odometer ?? "unknown"} ${l.odometerUnit} (${oneLine(l.odometerBrand, 40)})`,
+    `Title: ${oneLine(l.titleRaw ?? l.titleCategory)}`,
+    `Primary damage (listing): ${oneLine(l.primaryDamage) || "unknown"}; secondary: ${oneLine(l.secondaryDamage) || "none"}`,
     `Run condition: ${l.runCondition}; keys: ${l.hasKeys === null ? "unknown" : l.hasKeys ? "yes" : "no"}`,
-    `Fuel: ${l.fuel ?? "unknown"}; engine: ${l.engine ?? "unknown"}`,
+    `Fuel: ${oneLine(l.fuel, 40) || "unknown"}; engine: ${oneLine(l.engine, 60) || "unknown"}`,
   ].join("\n");
 }
 

@@ -1,19 +1,33 @@
 import type { Metadata } from "next";
 
 import { PricingTable } from "@/components/marketing/pricing-table";
+import { JsonLd } from "@/components/seo/json-ld";
+import { BRAND_NAME } from "@/lib/brand";
+import { appUrl } from "@/lib/config/deployment";
 import { getT } from "@/lib/i18n/server";
+import { breadcrumbSchema, faqSchema } from "@/lib/seo/schema";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getT();
-  return { title: t("pricing.title"), description: t("pricing.subtitle") };
+  return { title: t("pricing.title"), description: t("pricing.subtitle"), alternates: { canonical: "/pricing" } };
 }
 
 const NOTES = ["n1", "n2", "n3", "n4"] as const;
 
 export default async function PricingPage() {
   const t = await getT();
+  const base = appUrl();
   return (
     <div className="mx-auto max-w-6xl space-y-14 px-4 py-16">
+      <JsonLd
+        data={[
+          breadcrumbSchema([
+            { name: BRAND_NAME, url: base },
+            { name: t("pricing.title"), url: `${base}/pricing` },
+          ]),
+          faqSchema(NOTES.map((n) => ({ q: t(`pricing.${n}q`), a: t(`pricing.${n}a`) }))),
+        ]}
+      />
       <div className="mx-auto max-w-2xl space-y-3 text-center">
         <h1 className="text-4xl font-semibold tracking-tight">{t("pricing.title")}</h1>
         <p className="text-muted-foreground text-lg">{t("pricing.subtitle")}</p>

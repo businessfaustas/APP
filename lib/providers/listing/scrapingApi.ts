@@ -2,6 +2,7 @@ import "server-only";
 
 import { env } from "@/lib/config/env";
 import { detectAuctionUrl, KNOWN_AUCTION_HOSTS } from "@/lib/input/urls";
+import { assertScrapeBudget } from "@/lib/security/spend";
 
 import { assertPublicUrl, fetchWithTimeout } from "../http";
 
@@ -63,6 +64,7 @@ export async function fetchListingPage(url: string): Promise<{ html: string; pro
   const detected = detectAuctionUrl(url);
   await politeDelay(target.hostname);
   const e = env();
+  if (e.SCRAPINGBEE_API_KEY || (e.APIFY_TOKEN && e.APIFY_ACTOR_ID)) await assertScrapeBudget();
 
   if (e.SCRAPINGBEE_API_KEY) {
     const api = new URL("https://app.scrapingbee.com/api/v1/");
