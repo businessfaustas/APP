@@ -125,7 +125,7 @@
   --status-critical: #d03b3b;
   --status-warning: #fab219;
   --brand-bar: oklch(0.56 0.2 275);
-  --logo: #0a8f5a;
+  --logo: #545ce1;
   --chart-grid: #e4e4ec;
   --chart-axis: #c5c5d2;
 }
@@ -185,7 +185,7 @@
   --status-critical: #d03b3b;
   --status-warning: #fab219;
   --brand-bar: oklch(0.7 0.17 275);
-  --logo: #7fedbd;
+  --logo: #7a84f2;
   --chart-grid: #2a2a35;
   --chart-axis: #3a3a48;
 }

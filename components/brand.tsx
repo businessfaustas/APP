@@ -6,8 +6,8 @@ import { cn } from "@/lib/utils";
 
 /**
  * The logo artwork. It is sized by its height (1.4 × the surrounding font size unless a
- * `h-*` class says otherwise). The letters are drawn in `--logo` (mint on dark, a deeper green on
- * light), so the wordmark reads on both themes.
+ * `h-*` class says otherwise). The letters are drawn in `--logo` (the brand blue, a touch lighter on
+ * dark), so the wordmark reads on both themes.
  */
 export function LogoArt({ className }: { className?: string }) {
   return (

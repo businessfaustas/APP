@@ -119,6 +119,7 @@ Copy `.env.example` to `.env`. Only `DATABASE_URL` is required. On Vercel, the n
 | `pnpm db:backup` / `pnpm db:restore-test`                | Encrypted `pg_dump` / restore into a scratch database and compare every table                                                                                                    |
 | `pnpm secrets:scan` / `pnpm audit:deps`                  | Secrets in files and git history / dependency vulnerabilities (with an expiring allowlist)                                                                                       |
 | `pnpm email:check-dns <domain>`                          | Checks SPF, DKIM and DMARC                                                                                                                                                       |
+| `node scripts/make-launch-plan-pdf.mjs`                  | Rebuilds `docs/FlagBid-Launch-Plan.pdf` (the printable launch plan) from `docs/LAUNCH-PLAN.md`                                                                                   |
 | `pnpm db:migrate` / `db:deploy` / `db:seed` / `db:reset` | Prisma migrate (dev) / apply migrations (prod) / seed / reset                                                                                                                    |
 | `pnpm inngest:dev`                                       | Local Inngest dev server                                                                                                                                                         |
 | `pnpm extension:build`                                   | Build the Chrome extension into `extension/dist`                                                                                                                                 |
@@ -198,7 +199,7 @@ The repo deploys to Vercel as-is. `vercel.json` runs `scripts/vercel-build.mjs`,
    - Enable the customer portal.
 6. **Resend**: verify your sending domain and set `RESEND_API_KEY` and `EMAIL_FROM`.
 7. **Admins**: put your email in `ADMIN_EMAILS` and sign in.
-8. **Company details, domain, email DNS, alerts, backups, spend caps, staging**: follow **`docs/LAUNCH-PLAN.md`** step by step. It lists every account to connect, in order, with the exact variables and what the app does until you do.
+8. **Company details, domain, email DNS, alerts, backups, spend caps, staging**: follow **`docs/LAUNCH-PLAN.md`** step by step (a printable copy is `docs/FlagBid-Launch-Plan.pdf`). It lists every account to connect, in order, with the exact variables and what the app does until you do.
 
 If you run a public demo with `DEMO_MODE=true`, every visitor shares one demo account. In production builds that account is never an admin.
 
