@@ -62,6 +62,8 @@ const EnvSchema = z.object({
   STRIPE_PRICE_PACK_100: opt,
   // Old name of the 10-report pack price; still read when STRIPE_PRICE_PACK_10 is not set.
   STRIPE_PRICE_CREDITS_10: opt,
+  // Ask Stripe Tax to calculate and collect VAT / sales tax at checkout. Leave off until Stripe Tax is set up (see docs/LAUNCH-PLAN.md).
+  STRIPE_AUTOMATIC_TAX: bool,
   RESEND_API_KEY: opt,
   EMAIL_FROM: z.string().default("FlagBid <alerts@example.com>"),
   // Monitoring and alerting (all optional; without them errors still go to the log and the error table).

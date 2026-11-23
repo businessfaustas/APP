@@ -97,13 +97,18 @@ Do all of it in **test mode** first, then repeat with live keys.
 3. Developers → Webhooks → add endpoint `https://yourdomain.com/api/stripe/webhook` with these events, then copy its signing secret into `STRIPE_WEBHOOK_SECRET`:
    `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.paid`, `invoice.payment_failed`, `charge.refunded`, `charge.dispute.created`.
 4. Settings → Billing → Customer portal → enable cancel subscription, update payment method, invoice history.
-5. Settings → Tax: turn on Stripe Tax if you sell to EU consumers (VAT) and register where required. Ask your accountant.
+5. **Tax:** Stripe → Settings → Tax (it asks for a product category). Choose **Software as a service (SaaS), business use**: FlagBid runs in the browser and is not downloaded, so the pre-filled "Downloadable software" is wrong. (Pick the personal-use SaaS category only if most buyers are private consumers; the difference matters for US sales only.) Stripe calculates and collects tax; it does not register you or file returns, so ask your accountant which countries apply to you. Then:
+   - Enter your head-office address.
+   - On each of the five prices set **Tax behaviour = Inclusive**, so a €29 pack stays €29 for the customer and Stripe works out the VAT inside it.
+   - Add a tax registration for every country where you must collect (for the EU usually your home country, or the EU One-Stop Shop). Stripe watches your thresholds for free.
+   - Set `STRIPE_AUTOMATIC_TAX=true` in Vercel and redeploy. Checkout then asks for a billing address and an optional VAT number (EU business buyers are not charged VAT), and invoices show the tax. Leave it off until the steps above are done, because Stripe refuses tax calculation before then.
 6. **Prove the money paths work (15 minutes, test mode):**
    - Buy a pack with card `4242 4242 4242 4242` → credits arrive.
    - In the Stripe dashboard **refund** that payment → the credits are taken back.
    - Subscribe, then cancel in the portal → plan drops to Free.
    - Use card `4000 0000 0000 0341` (attaches, then fails on charge) → you get a *payment failed* email and an alert.
    - Use `4000 0000 0000 0259` to create a **dispute** → you get a critical alert and the credits are taken back.
+   - With `STRIPE_AUTOMATIC_TAX=true`: checkout asks for a billing address and the invoice shows a tax line.
    Every one of these is covered by an automated test; this is the real-world check.
 7. Stripe → Settings → Business → set your *statement descriptor*, and turn on email alerts for disputes and failed payouts.
 

@@ -4,6 +4,7 @@ import { consentRequired, errorResponse, handleApiError, json, limited, unauthor
 import { getSessionUser } from "@/lib/auth/session";
 import { isPackId } from "@/lib/billing/plans";
 import { CHECKOUT_ITEMS, ensureCustomer, priceFor, stripe } from "@/lib/billing/stripe";
+import { taxSessionOptions } from "@/lib/billing/tax";
 import { env, features } from "@/lib/config/env";
 
 const Body = z.object({ item: z.enum(CHECKOUT_ITEMS) });
@@ -29,6 +30,7 @@ export async function POST(req: Request) {
       client_reference_id: user.id,
       line_items: [{ price, quantity: 1 }],
       allow_promotion_codes: true,
+      ...taxSessionOptions(env().STRIPE_AUTOMATIC_TAX),
       success_url: `${base}/app/billing?status=success`,
       cancel_url: `${base}/app/billing?status=cancelled`,
       // A pack is a one-time payment; ask Stripe for an invoice too, since business buyers need one.

@@ -163,6 +163,7 @@ export function integrations(): Integration[] {
         { name: "STRIPE_PRICE_PACK_100", set: isSet(e.STRIPE_PRICE_PACK_100), optional: true },
         { name: "STRIPE_PRICE_PRO", set: isSet(e.STRIPE_PRICE_PRO), optional: true },
         { name: "STRIPE_PRICE_BUSINESS", set: isSet(e.STRIPE_PRICE_BUSINESS), optional: true },
+        { name: "STRIPE_AUTOMATIC_TAX", set: e.STRIPE_AUTOMATIC_TAX, optional: true },
       ],
       docs: "https://dashboard.stripe.com/apikeys",
       checkable: true,
