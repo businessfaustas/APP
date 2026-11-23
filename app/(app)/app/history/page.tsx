@@ -100,6 +100,7 @@ export default async function HistoryPage({ searchParams }: { searchParams: Prom
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <CarVisual
+                            fallback="placeholder"
                             {...lotVisual({
                               listing: l,
                               vehicle: a.vehicleInfo as VehicleInfo | null,

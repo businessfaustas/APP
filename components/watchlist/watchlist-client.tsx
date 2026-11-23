@@ -65,7 +65,7 @@ function Item({ item }: { item: WatchItemView }) {
   return (
     <Card className={cn(ended && "opacity-70")}>
       <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-center">
-        <CarVisual {...item.visual} label={item.title} className="aspect-[16/9] w-full shrink-0 rounded-xl border sm:w-36" />
+        <CarVisual {...item.visual} fallback="placeholder" label={item.title} className="aspect-[16/9] w-full shrink-0 rounded-xl border sm:w-36" />
         <div className="min-w-0 flex-1 space-y-1">
           <div className="flex flex-wrap items-center gap-2">
             {item.analysisId ? (

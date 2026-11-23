@@ -106,4 +106,29 @@ test.describe("@regression", () => {
     await expect(page.getByText(/cancel any time in billing/i).first()).toBeVisible();
     await expect(page.getByText(/one-time payment of/i).first()).toBeVisible();
   });
+  test("a lot with no photo shows a 'no preview' tile with the logo, not a car drawing", async ({ page }) => {
+    await signInAsDemo(page);
+    await open(page, "/app/history");
+    const tile = page.getByTestId("no-preview").first();
+    await expect(tile).toBeVisible();
+    await expect(tile).toHaveAccessibleName(/no preview available/i);
+    await expect(tile.locator("svg").first()).toBeAttached(); // the logo behind the text
+  });
+
+  test("ticking every 'Before you bid' step stamps the checklist 'Ready to bid'", async ({ page }) => {
+    await signInAsDemo(page);
+    await open(page, "/app/history");
+    await page.locator('a[href^="/app/analyses/"]').first().click();
+    await page.waitForURL(/\/app\/analyses\/[^/]+$/);
+    const list = page.getByTestId("checklist");
+    await expect(list).toBeVisible({ timeout: 30_000 });
+    const steps = list.locator("label");
+    const n = await steps.count();
+    expect(n).toBeGreaterThan(2);
+    await steps.first().click();
+    await expect(list.getByRole("checkbox").first()).toBeChecked();
+    await expect(page.locator(".stamp:visible")).toHaveCount(0); // not ready yet
+    for (let i = 1; i < n; i++) await steps.nth(i).click();
+    await expect(page.locator(".stamp:visible")).toContainText(/ready to bid/i);
+  });
 });

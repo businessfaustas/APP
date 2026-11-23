@@ -90,6 +90,7 @@ export function CompareTable({ batchId, initial }: { batchId: string; initial: C
               <Link href={`/app/analyses/${r.id}`} className="flex items-center gap-3">
                 <CarVisual
                   {...r.visual}
+                  fallback="placeholder"
                   label={r.title}
                   scanning={r.status === "RUNNING" || r.status === "QUEUED"}
                   className="aspect-[16/10] w-20 shrink-0 rounded-lg border"

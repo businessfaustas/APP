@@ -7,6 +7,8 @@ import { cn } from "@/lib/utils";
 import { damageSpot, type BodyType } from "@/lib/vehicle/art";
 import { pickCarLook, type CarLook } from "@/lib/vehicle/looks";
 
+import { NoPreview } from "./no-preview";
+
 export type { BodyType };
 export type Tone = "go" | "caution" | "stop" | "neutral";
 
@@ -144,6 +146,7 @@ export function CarVisual({
   tone = "neutral",
   paint,
   seed,
+  fallback = "art",
   className,
   label,
   scanning,
@@ -154,6 +157,8 @@ export function CarVisual({
   tone?: Tone;
   paint?: string;
   seed?: string;
+  /** With no photo: the car illustration (default, marks damage) or a "no preview" tile with our logo (for lists and cards). */
+  fallback?: "art" | "placeholder";
   className?: string;
   label?: string;
   scanning?: boolean;
@@ -181,6 +186,8 @@ export function CarVisual({
             </div>
           )}
         </>
+      ) : fallback === "placeholder" && !scanning ? (
+        <NoPreview tone={tone} label={label} />
       ) : (
         <>
           <div

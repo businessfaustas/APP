@@ -63,6 +63,9 @@ export const states = {
     requestFailed: "Couldn't reach the server. Check your connection and try again.",
     timeout: "That took too long. Check your connection and try again.",
   },
+  visual: {
+    noPreview: "No preview available",
+  },
   legalFooter: {
     dmca: "Copyright (DMCA)",
     operator: "Operated by {entity}, {address}",

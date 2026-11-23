@@ -135,9 +135,17 @@ A modern dashboard look: soft rounded panels, one indigo-blue accent, pill contr
 
 Where a lot has no real photo, the app shows a car on a studio floor. These are seven photos cut out of their studio backgrounds (`public/cars/*.webp`, transparent, all facing right): coupes (yellow, orange McLaren), sedans/hatchbacks (grey, blue) and SUVs (orange, white Volvo, white Tesla). `lib/vehicle/looks.ts` (`pickCarLook`) chooses among a body type's photos: one made for the lot's make and model if there is one (the demo Audi A3 gets the blue hatchback), otherwise the closest to the listing's paint colour, and for equally close ones a stable pick from the make and model text, so server and browser always agree. `bodyOf` (server) and `bodyTypeOf` (client) pick one from the make and model; a pickup uses the SUV photo until a pickup photo is added. `CarArt` adds a ground shadow and a glow in the verdict colour, marks damaged zones (positions come from `damageSpot` in `lib/vehicle/art.ts`, so they match the old drawing's zones) and can run a scan sweep. The drawn side views in `lib/vehicle/art.ts` remain only for the demo lots' fake "photos" (`lib/demo/photoSvg.ts`).
 
+**No photo:** in lists and cards (dashboard, history, watchlist, compare) a lot with no auction photo shows a "No preview available" tile with the faint logo behind it (`components/vehicle/no-preview.tsx`, `CarVisual fallback="placeholder"`), not a generic car drawing that could be mistaken for the real car. The report header, the scan animation and the hero keep the illustration because they mark damage on it.
+
 **Licences:** the photos were supplied by the owner and their licences are not recorded here. Before launch, confirm each one is licensed for commercial use or replace it (`public/cars/sedan-wrecked.webp`, the landing-page and sign-in showcase car, still carries a Vecteezy watermark: swap in the paid, watermark-free download under the same file name before launch). To add a photo: put it in `public/cars/`, add a line to `CAR_LOOKS`, and the test in `lib/vehicle/__tests__/looks.test.ts` checks the file.
 
 To change the cars: cut the new photo out (flood the studio background in from the border, remove the floor shadow below the sill line, keep the tyres, feather the edge), flip it to face right, and save it as a WebP with alpha in `public/cars/`. The BMW source photo was small (246 px wide), so the coupe is softer than the others; swap in a larger photo for a crisper one. `/cars/` is excluded from the auth proxy so the landing page and login can show it.
+
+## Landing icons and the pre-bid checklist
+
+The nine feature cards and three "how it works" steps use FlagBid's own two-tone icons (`components/marketing/feature-icons.tsx`) instead of generic outline glyphs: each one is a small picture of its subject (a receipt with a wrench, a ship carrying containers, a shield against rising water) with one amber detail, on a lit plate that tilts on hover.
+
+"Before you bid" (`components/report/prebid-checklist.tsx`) is laid out as a boarding pass: a stub with a progress ring and a stamp that lands when every step is ticked, a perforated edge, and the steps on a timeline, each tagged Inspect, Paperwork, Money or Logistics (`lib/flags/checklistKinds.ts` sorts the English source line, so it works in every language). Steps are real checkboxes, so keyboard and screen readers work as before; ticks are not saved.
 
 ## VIN input
 

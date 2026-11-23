@@ -1,19 +1,19 @@
 "use client";
 
 import { ArrowRightIcon, ChevronDownIcon, CircleAlertIcon, InfoIcon, OctagonXIcon, TriangleAlertIcon } from "lucide-react";
-import { useState } from "react";
 
 import { CountTo } from "@/components/motion/count-to";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox, Disclosure } from "@/components/ui/misc";
+import { Disclosure } from "@/components/ui/misc";
 import type { DamageZone, RiskFlag } from "@/lib/domain/schemas";
 import { useT } from "@/lib/i18n/client";
 import { trFlag, trText } from "@/lib/i18n/generated";
 import { cn, formatUsd, shortUsd } from "@/lib/utils";
 
 import { DamageZoneMap, zoneSeverities } from "./damage-zone-map";
+import { PreBidChecklist } from "./prebid-checklist";
 import { useReport } from "./report-context";
 import { SegmentedBar, SignedBars, type Part, type SignedRow } from "./viz";
 
@@ -113,54 +113,6 @@ export function ChecklistItems({ items }: { items: string[] }) {
         <li key={item}>{trText(t, item)}</li>
       ))}
     </>
-  );
-}
-
-function Checklist({ items }: { items: string[] }) {
-  const t = useT();
-  const [checked, setChecked] = useState<Set<number>>(new Set());
-  const pct = items.length ? Math.round((checked.size / items.length) * 100) : 0;
-  if (items.length === 0) return null;
-  return (
-    <div className="surface bg-card rounded-2xl border px-6 py-2">
-      <Disclosure
-        title={
-          <span className="flex items-center gap-3">
-            {t("report.beforeYouBid")}
-            <span className="bg-muted hidden h-1.5 w-24 overflow-hidden rounded-full sm:block" aria-hidden="true">
-              <span className="bg-go block h-full rounded-full transition-[width] duration-300" style={{ width: `${pct}%` }} />
-            </span>
-          </span>
-        }
-        meta={checked.size ? t("report.doneOf", { done: checked.size, total: items.length }) : t("report.stepsN", { n: items.length })}
-      >
-        <ul className="grid gap-x-6 gap-y-0.5 pb-3 md:grid-cols-2" data-testid="checklist">
-          {items.map((item, i) => (
-            <li key={item}>
-              <label
-                htmlFor={`chk-${i}`}
-                className="hover:bg-muted/70 -mx-2.5 flex cursor-pointer items-start gap-3 rounded-lg px-2.5 py-2 text-sm leading-snug"
-              >
-                <Checkbox
-                  id={`chk-${i}`}
-                  className="mt-0.5"
-                  checked={checked.has(i)}
-                  onCheckedChange={(c) =>
-                    setChecked((s) => {
-                      const n = new Set(s);
-                      if (c) n.add(i);
-                      else n.delete(i);
-                      return n;
-                    })
-                  }
-                />
-                <span className={cn(checked.has(i) && "text-muted-foreground line-through")}>{trText(t, item)}</span>
-              </label>
-            </li>
-          ))}
-        </ul>
-      </Disclosure>
-    </div>
   );
 }
 
@@ -364,7 +316,7 @@ export function OverviewTab({ onOpenTab }: { onOpenTab?: (tab: string) => void }
           </CardContent>
         </Card>
       </div>
-      <Checklist items={view.checklist} />
+      <PreBidChecklist items={view.checklist} />
       {bullets.length > 0 && (
         <div className="surface bg-card rounded-2xl border px-6 py-2">
           <Disclosure title={t("report.aiSummary")}>

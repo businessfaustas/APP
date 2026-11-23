@@ -1,22 +1,8 @@
-import {
-  ArrowRightIcon,
-  BellIcon,
-  CalculatorIcon,
-  ChartScatterIcon,
-  ClipboardCheckIcon,
-  FileTextIcon,
-  GaugeIcon,
-  GlobeIcon,
-  LayersIcon,
-  LinkIcon,
-  PuzzleIcon,
-  ScanSearchIcon,
-  ShieldAlertIcon,
-  WrenchIcon,
-} from "lucide-react";
+import { ArrowRightIcon, ClipboardCheckIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { FEATURE_ICONS, IconPlate, STEP_ICONS } from "@/components/marketing/feature-icons";
 import { PricingTable } from "@/components/marketing/pricing-table";
 import { JsonLd } from "@/components/seo/json-ld";
 import { PACK_ORDER, PACKS, PLANS } from "@/lib/billing/plans";
@@ -40,23 +26,8 @@ import { getT } from "@/lib/i18n/server";
 import type { Translator } from "@/lib/i18n/translate";
 import { cn, formatNumber, formatUsd } from "@/lib/utils";
 
-const STEPS = [
-  { Icon: LinkIcon, n: 1 },
-  { Icon: ScanSearchIcon, n: 2 },
-  { Icon: GaugeIcon, n: 3 },
-] as const;
-
-const FEATURES = [
-  { Icon: WrenchIcon, n: 1 },
-  { Icon: ChartScatterIcon, n: 2 },
-  { Icon: ShieldAlertIcon, n: 3 },
-  { Icon: CalculatorIcon, n: 4 },
-  { Icon: LayersIcon, n: 5 },
-  { Icon: BellIcon, n: 6 },
-  { Icon: GlobeIcon, n: 7 },
-  { Icon: FileTextIcon, n: 8 },
-  { Icon: PuzzleIcon, n: 9 },
-] as const;
+const STEPS = [1, 2, 3] as const;
+const FEATURES = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const;
 
 const FAQ = [1, 2, 3, 4, 5, 6] as const;
 
@@ -290,21 +261,24 @@ export default async function LandingPage() {
             <p className="text-muted-foreground text-lg">{t("landing.howBody")}</p>
           </div>
           <ol className="grid gap-5 md:grid-cols-3">
-            {STEPS.map((s) => (
-              <li key={s.n} className="surface bg-card relative overflow-hidden rounded-2xl border p-6">
-                <span className="display text-foreground/6 pointer-events-none absolute -top-3 right-3 text-8xl select-none" aria-hidden="true">
-                  {s.n}
-                </span>
-                <div className="mb-5 flex items-center gap-3">
-                  <span className="bg-primary/12 text-primary flex size-10 items-center justify-center rounded-xl">
-                    <s.Icon className="size-5" aria-hidden="true" />
+            {STEPS.map((n) => {
+              const Icon = STEP_ICONS[n];
+              return (
+                <li key={n} className="surface bg-card group relative overflow-hidden rounded-2xl border p-6">
+                  <span className="display text-foreground/6 pointer-events-none absolute -top-3 right-3 text-8xl select-none" aria-hidden="true">
+                    {n}
                   </span>
-                  <span className="eyebrow">{t("landing.step", { n: s.n })}</span>
-                </div>
-                <h3 className="text-lg font-semibold tracking-tight">{t(`landing.step${s.n}Title`)}</h3>
-                <p className="text-muted-foreground mt-2 text-sm leading-relaxed">{t(`landing.step${s.n}Body`)}</p>
-              </li>
-            ))}
+                  <div className="mb-5 flex items-center gap-4">
+                    <IconPlate>
+                      <Icon />
+                    </IconPlate>
+                    <span className="eyebrow">{t("landing.step", { n })}</span>
+                  </div>
+                  <h3 className="text-lg font-semibold tracking-tight">{t(`landing.step${n}Title`)}</h3>
+                  <p className="text-muted-foreground mt-2 text-sm leading-relaxed">{t(`landing.step${n}Body`)}</p>
+                </li>
+              );
+            })}
           </ol>
         </div>
       </section>
@@ -333,15 +307,23 @@ export default async function LandingPage() {
             <p className="text-muted-foreground text-lg">{t("landing.featuresBody")}</p>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {FEATURES.map((f) => (
-              <div key={f.n} className="surface surface-link bg-card rounded-2xl border p-5">
-                <span className="bg-primary/12 text-primary mb-4 flex size-10 items-center justify-center rounded-xl">
-                  <f.Icon className="size-5" aria-hidden="true" />
-                </span>
-                <h3 className="font-semibold tracking-tight">{t(`landing.f${f.n}Title`)}</h3>
-                <p className="text-muted-foreground mt-1.5 text-sm leading-relaxed">{t(`landing.f${f.n}Body`)}</p>
-              </div>
-            ))}
+            {FEATURES.map((n) => {
+              const Icon = FEATURE_ICONS[n];
+              return (
+                <div key={n} className="surface surface-link bg-card group relative overflow-hidden rounded-2xl border p-5">
+                  <div className="mb-4 flex items-start justify-between">
+                    <IconPlate>
+                      <Icon />
+                    </IconPlate>
+                    <span className="text-muted-foreground/45 font-mono text-xs tracking-widest" aria-hidden="true">
+                      {String(n).padStart(2, "0")}
+                    </span>
+                  </div>
+                  <h3 className="font-semibold tracking-tight">{t(`landing.f${n}Title`)}</h3>
+                  <p className="text-muted-foreground mt-1.5 text-sm leading-relaxed">{t(`landing.f${n}Body`)}</p>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>

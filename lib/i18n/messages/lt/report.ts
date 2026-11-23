@@ -114,6 +114,13 @@ export const report: Pick<Messages, "report"> = {
     aiSummary: "DI santrauka",
     stepsN: "{n} {n:žingsnis|žingsniai|žingsnių}",
     beforeYouBid: "Prieš statydami",
+    readyToBid: "Galima statyti",
+    stepsLeft: "Liko {n}",
+    tickHint: "Pažymėkite kiekvieną žingsnį, kai jį atliksite.",
+    kindInspect: "Apžiūra",
+    kindPaperwork: "Dokumentai",
+    kindMoney: "Pinigai",
+    kindLogistics: "Logistika",
     dataSources: "Duomenų šaltiniai",
     fallback: "atsarginis",
     method: {

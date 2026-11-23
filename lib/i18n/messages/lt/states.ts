@@ -1,7 +1,10 @@
 import type { Messages } from "..";
 
 /** Compliance prompts and the in-between states (errors, 404, offline). */
-export const states: Pick<Messages, "welcome" | "consent" | "loginGate" | "renewal" | "unsubscribe" | "errors" | "notFound" | "offline" | "legalFooter"> = {
+export const states: Pick<
+  Messages,
+  "welcome" | "consent" | "loginGate" | "renewal" | "unsubscribe" | "errors" | "notFound" | "offline" | "visual" | "legalFooter"
+> = {
   welcome: {
     title: "Prieš pradedant",
     body: "FlagBid padeda žmonėms, kurie profesionaliai perka ir parduoda automobilius. Patvirtinkite du dalykus, kad galėtumėte tęsti.",
@@ -64,6 +67,9 @@ export const states: Pick<Messages, "welcome" | "consent" | "loginGate" | "renew
     banner: "Esate neprisijungę. Pakeitimų išsaugoti negalėsime, kol vėl prisijungsite.",
     requestFailed: "Nepavyko susisiekti su serveriu. Patikrinkite ryšį ir bandykite dar kartą.",
     timeout: "Tai užtruko per ilgai. Patikrinkite ryšį ir bandykite dar kartą.",
+  },
+  visual: {
+    noPreview: "Peržiūra nepasiekiama",
   },
   legalFooter: {
     dmca: "Autorių teisės (DMCA)",

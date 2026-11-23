@@ -303,6 +303,20 @@
     opacity: 0;
   }
 }
+@keyframes ap-stamp {
+  0% {
+    opacity: 0;
+    transform: rotate(-16deg) scale(1.7);
+  }
+  60% {
+    opacity: 1;
+    transform: rotate(-7deg) scale(0.94);
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(-7deg) scale(1);
+  }
+}
 @keyframes ap-float {
   0%,
   100% {
@@ -331,6 +345,10 @@
   }
   .sweep {
     animation: ap-sweep 1100ms cubic-bezier(0.2, 0.8, 0.2, 1) both 150ms;
+  }
+  .stamp {
+    transform: rotate(-7deg);
+    animation: ap-stamp 520ms cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
   }
   .glow-pulse {
     transform-box: fill-box;
@@ -397,6 +415,7 @@
   .grow-y,
   .sweep,
   .glow-pulse,
+  .stamp,
   .ping,
   .scan,
   .float {

@@ -132,6 +132,7 @@ export function LotCard({ lot, index = 0 }: { lot: LotCardData; index?: number }
       <div className="relative">
         <CarVisual
           {...lot.visual}
+          fallback="placeholder"
           label={lot.title}
           scanning={lot.status === "RUNNING" || lot.status === "QUEUED"}
           className="aspect-[16/9] w-full transition-transform duration-500 group-hover:scale-[1.03]"
