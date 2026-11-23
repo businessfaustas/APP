@@ -69,7 +69,7 @@ export function Showcase({ data, className }: { data: ShowcaseData; className?: 
       </div>
 
       <div className="absolute inset-x-[7%] top-[20%] sm:top-[17%]">
-        <CarArt body={data.body} zones={data.zones} tone={TONE[data.verdict]} paint={data.paint} scanning label={data.title} />
+        <CarArt body={data.body} zones={data.zones} tone={TONE[data.verdict]} paint={data.paint} seed={data.title} scanning label={data.title} />
       </div>
 
       <div className="rise absolute bottom-4 left-4 sm:bottom-5 sm:left-5" style={{ ["--i" as string]: 3 }}>

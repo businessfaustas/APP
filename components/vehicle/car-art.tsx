@@ -5,6 +5,7 @@ import { useId, useState } from "react";
 import type { DamageZone } from "@/lib/domain/schemas";
 import { cn } from "@/lib/utils";
 import { damageSpot, type BodyType } from "@/lib/vehicle/art";
+import { pickCarLook } from "@/lib/vehicle/looks";
 
 export type { BodyType };
 export type Tone = "go" | "caution" | "stop" | "neutral";
@@ -32,14 +33,6 @@ const TONE_GLOW: Record<Tone, string> = {
   neutral: "var(--primary)",
 };
 
-/** The car photos, cut out of their studio backgrounds and all facing right (front on the right). */
-const CARS: Record<BodyType, { src: string; ratio: number }> = {
-  sedan: { src: "/cars/sedan.webp", ratio: 900 / 336 },
-  coupe: { src: "/cars/coupe.webp", ratio: 760 / 250 },
-  suv: { src: "/cars/suv.webp", ratio: 900 / 343 },
-  pickup: { src: "/cars/suv.webp", ratio: 900 / 343 }, // no pickup photo yet: the SUV stands in
-};
-
 /**
  * A car on a studio floor: the cut-out photo, a soft ground shadow and glow in the verdict's
  * colour, and (when asked) the damaged zones marked and a scan sweeping over it.
@@ -49,6 +42,8 @@ export function CarArt({
   body = "sedan",
   zones = [],
   tone = "neutral",
+  paint,
+  seed,
   scanning = false,
   showDamage = true,
   className,
@@ -57,15 +52,17 @@ export function CarArt({
   body?: BodyType;
   zones?: { zone: DamageZone; severity: number }[];
   tone?: Tone;
-  /** Kept for callers that still pass the listing's paint colour: the photos have their own. */
+  /** The listing's paint colour (#rrggbb): the photo closest to it is shown. */
   paint?: string;
+  /** The lot's make and model text: a photo made for that model is preferred, and ties are broken by it. */
+  seed?: string;
   scanning?: boolean;
   showDamage?: boolean;
   className?: string;
   label?: string;
 }) {
   const id = useId();
-  const car = CARS[body];
+  const car = pickCarLook(body, paint, seed);
   const hits = showDamage ? zones.filter((z) => z.severity > 0) : [];
   const glow = TONE_GLOW[tone];
   return (
@@ -143,6 +140,7 @@ export function CarVisual({
   zones,
   tone = "neutral",
   paint,
+  seed,
   className,
   label,
   scanning,
@@ -152,6 +150,7 @@ export function CarVisual({
   zones?: { zone: DamageZone; severity: number }[];
   tone?: Tone;
   paint?: string;
+  seed?: string;
   className?: string;
   label?: string;
   scanning?: boolean;
@@ -197,7 +196,7 @@ export function CarVisual({
             aria-hidden="true"
           />
           <div className="absolute inset-0 grid place-items-center px-[5%] pt-[2%]">
-            <CarArt body={body} zones={zones} tone={tone} paint={paint} label={label} scanning={scanning} />
+            <CarArt body={body} zones={zones} tone={tone} paint={paint} seed={seed} label={label} scanning={scanning} />
           </div>
         </>
       )}

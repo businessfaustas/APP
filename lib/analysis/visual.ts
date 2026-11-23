@@ -9,6 +9,8 @@ export interface LotVisual {
   tone: "go" | "caution" | "stop" | "neutral";
   /** Paint colour (#rrggbb) from the listing's colour. */
   paint: string;
+  /** Make and model text, so the picture can be a photo of that kind of car. */
+  seed: string;
 }
 
 const PICKUP = /pickup|truck|f-?150|f-?250|silverado|sierra|\bram\b|tacoma|tundra|ranger|frontier|colorado|titan|gladiator|cybertruck/;
@@ -43,6 +45,7 @@ export function lotVisual(args: {
     zones: [...zones].map(([zone, severity]) => ({ zone, severity })),
     tone: toneOf(args.verdict),
     paint: paintOf(args.listing?.color),
+    seed: `${args.listing?.make ?? ""} ${args.listing?.model ?? ""}`.trim(),
   };
 }
 
