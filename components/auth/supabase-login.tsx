@@ -89,6 +89,7 @@ export function SupabaseLogin({ supabaseUrl, anonKey, next }: { supabaseUrl: str
           </p>
         )}
       </form>
+      <p className="text-muted-foreground border-t pt-3 text-xs leading-relaxed">{t("auth.newHere")}</p>
     </div>
   );
 }
