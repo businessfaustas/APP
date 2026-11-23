@@ -195,7 +195,7 @@ The app caps itself, but each provider can also cut you off. Set every one:
 - [ ] A real card payment of the smallest pack, then refunded; credits arrive and are taken back.
 - [ ] Rollback rehearsed once (`docs/RUNBOOK.md`): promote the previous deployment, then promote the new one again.
 - [ ] A lawyer has read the Terms and Privacy Policy; DMCA agent registered.
-- [ ] The car pictures in `public/cars/` are ones you may use commercially (your own, licensed, or open licence). Replace any you cannot show a licence for.
+- [ ] The car pictures in `public/cars/` are ones you may use commercially (your own, licensed, or open licence). Replace any you cannot show a licence for. The wrecked white sedan in the landing-page picture (`public/cars/sedan-wrecked.webp`) still has a Vecteezy watermark: buy the clean download and save it under the same name.
 - [ ] Email test lands in Gmail and Outlook inboxes; SPF, DKIM and DMARC pass.
 - [ ] You can restore a backup and know where the passphrase is.
 - [ ] Alerts fire to your phone.

@@ -5,6 +5,7 @@ import { ScanLineIcon } from "lucide-react";
 import { ScoreRing } from "@/components/report/deal-card";
 import { VerdictBadge } from "@/components/report/verdict-badge";
 import { CarArt, type BodyType } from "@/components/vehicle/car-art";
+import { HERO_LOOK } from "@/lib/vehicle/looks";
 import type { VerdictValue } from "@/lib/calc/types";
 import type { DamageZone } from "@/lib/domain/schemas";
 import { useT } from "@/lib/i18n/client";
@@ -69,7 +70,16 @@ export function Showcase({ data, className }: { data: ShowcaseData; className?: 
       </div>
 
       <div className="absolute inset-x-[7%] top-[20%] sm:top-[17%]">
-        <CarArt body={data.body} zones={data.zones} tone={TONE[data.verdict]} paint={data.paint} seed={data.title} scanning label={data.title} />
+        <CarArt
+          body={data.body}
+          zones={data.zones}
+          tone={TONE[data.verdict]}
+          paint={data.paint}
+          seed={data.title}
+          look={HERO_LOOK}
+          scanning
+          label={data.title}
+        />
       </div>
 
       <div className="rise absolute bottom-4 left-4 sm:bottom-5 sm:left-5" style={{ ["--i" as string]: 3 }}>

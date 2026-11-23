@@ -29,6 +29,12 @@ const SUVS: CarLook[] = [
   { src: "/cars/suv-tesla.webp", ratio: 900 / 315, paint: "#eceff3", match: /tesla|\bmodel [3sxy]\b/ },
 ];
 
+/**
+ * The landing-page and sign-in showcase car: a wrecked sedan, so the AI scan has something to find. It is never picked
+ * automatically (a real lot's picture should not show damage the report did not find); pass it as `look` to CarArt.
+ */
+export const HERO_LOOK: CarLook = { src: "/cars/sedan-wrecked.webp", ratio: 900 / 287, paint: "#eef0f3" };
+
 /** There is no pickup photo yet: the SUVs stand in. */
 export const CAR_LOOKS: Record<BodyType, CarLook[]> = { sedan: SEDANS, coupe: COUPES, suv: SUVS, pickup: SUVS };
 

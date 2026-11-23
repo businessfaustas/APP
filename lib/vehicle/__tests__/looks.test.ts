@@ -4,7 +4,7 @@ import { join } from "node:path";
 import sharp from "sharp";
 import { describe, expect, it } from "vitest";
 
-import { CAR_LOOKS, pickCarLook } from "../looks";
+import { CAR_LOOKS, HERO_LOOK, pickCarLook } from "../looks";
 
 describe("pickCarLook", () => {
   it("shows the photo closest to the listing's paint colour", () => {
@@ -34,13 +34,19 @@ describe("pickCarLook", () => {
     expect(used.size).toBeGreaterThan(1);
   });
 
+  it("never picks the wrecked showcase car for a real lot", () => {
+    for (const body of ["sedan", "suv", "coupe", "pickup"] as const) {
+      expect(CAR_LOOKS[body].map((l) => l.src)).not.toContain(HERO_LOOK.src);
+    }
+  });
+
   it("falls back to the first photo when the colour is unknown or malformed", () => {
     expect(pickCarLook("sedan").src).toBe("/cars/sedan.webp");
     expect(pickCarLook("sedan", "not-a-colour").src).toBe("/cars/sedan.webp");
   });
 
   it("every photo exists, is a WebP with transparency, and has the proportions the page assumes", async () => {
-    for (const looks of Object.values(CAR_LOOKS)) {
+    for (const looks of [...Object.values(CAR_LOOKS), [HERO_LOOK]]) {
       for (const look of looks) {
         const file = join(process.cwd(), "public", look.src);
         expect(existsSync(file), look.src).toBe(true);

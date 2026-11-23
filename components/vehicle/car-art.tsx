@@ -5,7 +5,7 @@ import { useId, useState } from "react";
 import type { DamageZone } from "@/lib/domain/schemas";
 import { cn } from "@/lib/utils";
 import { damageSpot, type BodyType } from "@/lib/vehicle/art";
-import { pickCarLook } from "@/lib/vehicle/looks";
+import { pickCarLook, type CarLook } from "@/lib/vehicle/looks";
 
 export type { BodyType };
 export type Tone = "go" | "caution" | "stop" | "neutral";
@@ -44,6 +44,7 @@ export function CarArt({
   tone = "neutral",
   paint,
   seed,
+  look,
   scanning = false,
   showDamage = true,
   className,
@@ -56,13 +57,15 @@ export function CarArt({
   paint?: string;
   /** The lot's make and model text: a photo made for that model is preferred, and ties are broken by it. */
   seed?: string;
+  /** Show this photo instead of choosing one (the showcase uses a wrecked sedan). */
+  look?: CarLook;
   scanning?: boolean;
   showDamage?: boolean;
   className?: string;
   label?: string;
 }) {
   const id = useId();
-  const car = pickCarLook(body, paint, seed);
+  const car = look ?? pickCarLook(body, paint, seed);
   const hits = showDamage ? zones.filter((z) => z.severity > 0) : [];
   const glow = TONE_GLOW[tone];
   return (
