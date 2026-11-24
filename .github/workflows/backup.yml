@@ -95,4 +95,4 @@ jobs:
           DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
           DIRECT_URL: ${{ secrets.BACKUP_DATABASE_URL }}
           RESTORE_ADMIN_URL: postgresql://postgres:postgres@localhost:5433/postgres
-        run: node scripts/db-restore-test.mjs
+        run: pnpm exec tsx scripts/db-restore-test.mjs

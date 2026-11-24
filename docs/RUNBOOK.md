@@ -60,7 +60,7 @@ gpg --batch --pinentry-mode loopback --passphrase "$BACKUP_PASSPHRASE" -d -o res
 pg_restore --no-owner --no-privileges --dbname "postgresql://…/new_db" restore.dump
 
 # 3. Check it matches expectations, then point DATABASE_URL and DIRECT_URL at it and redeploy
-node scripts/check-rls.mjs
+pnpm db:check-rls
 ```
 
 **Prove it works (monthly):** `pnpm db:restore-test` dumps the live database, restores it into a throwaway one, compares every table's row count and row-level-security flag, and deletes the scratch database. Last run here: *23 tables, 1,924 rows, identical, RLS preserved*.

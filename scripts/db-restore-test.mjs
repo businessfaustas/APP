@@ -4,8 +4,8 @@
  * complete: every table has the same row count, row-level security is still on, and the
  * migration history matches. Then it deletes the scratch database.
  *
- *   node scripts/db-restore-test.mjs               dump the live database, restore, compare
- *   node scripts/db-restore-test.mjs backup.dump   restore an existing (unencrypted) dump instead
+ *   pnpm db:restore-test               dump the live database, restore, compare
+ *   pnpm db:restore-test backup.dump   restore an existing (unencrypted) dump instead
  *
  * Needs a role that may CREATE DATABASE. Set RESTORE_ADMIN_URL to a scratch Postgres (any server)
  * to keep production's server out of it; by default the scratch database is created beside the source.
@@ -17,13 +17,13 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import pg from "pg";
+import { nodePgConfig } from "../lib/config/deployment.ts";
 
 const source = process.env.DIRECT_URL || process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL;
 if (!source) {
   console.error("db-restore-test: set DATABASE_URL.");
   process.exit(2);
 }
-const ssl = (u) => (/sslmode=require|supabase\.co|neon\.tech/.test(u) ? { rejectUnauthorized: false } : undefined);
 const withDb = (u, name) => {
   const x = new URL(u);
   x.pathname = `/${name}`;
@@ -40,7 +40,7 @@ const t0 = Date.now();
 const step = (msg) => console.log(`[${((Date.now() - t0) / 1000).toFixed(1)}s] ${msg}`);
 
 async function counts(url) {
-  const c = new pg.Client({ connectionString: url, ssl: ssl(url) });
+  const c = new pg.Client(nodePgConfig(url));
   await c.connect();
   try {
     const tables = (
@@ -69,7 +69,7 @@ try {
   }
   const before = await counts(source);
 
-  admin = new pg.Client({ connectionString: adminUrl, ssl: ssl(adminUrl) });
+  admin = new pg.Client(nodePgConfig(adminUrl));
   await admin.connect();
   step(`creating scratch database ${scratchName}`);
   await admin.query(`CREATE DATABASE "${scratchName}"`);

@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+
 import { describe, expect, it } from "vitest";
 
 import {
@@ -79,6 +81,12 @@ describe("deployment defaults", () => {
       expect(databaseCa(neon, { DATABASE_SSL_CA: "PEM" })).toBe("PEM");
       expect(databaseCa(pooler, { DATABASE_SSL_CA: "line1\\nline2" })).toBe("line1\nline2");
       expect(nodePgConfig(neon, { DATABASE_SSL_CA: "PEM" }).ssl).toEqual({ ca: "PEM", rejectUnauthorized: true });
+    });
+
+    it("every place that opens its own database connection goes through nodePgConfig (the seed script once did not, and a deploy failed)", () => {
+      for (const file of ["lib/db/prisma.ts", "prisma/seed.ts", "scripts/check-rls.mjs", "scripts/db-restore-test.mjs"]) {
+        expect(readFileSync(file, "utf8"), file).toContain("nodePgConfig(");
+      }
     });
 
     it("points Prisma's migration engine at the certificate file", () => {

@@ -2,17 +2,18 @@
  * Fails when any table in the public schema has row-level security switched off, or when the
  * Supabase API roles (anon, authenticated) can read a table. Run after migrations (CI does).
  *
- *   node scripts/check-rls.mjs            # uses DATABASE_URL
+ *   pnpm db:check-rls                   # uses DATABASE_URL
  */
 import "dotenv/config";
 import pg from "pg";
+import { nodePgConfig } from "../lib/config/deployment.ts";
 
 const url = process.env.DIRECT_URL || process.env.DATABASE_URL || process.env.POSTGRES_URL_NON_POOLING || process.env.POSTGRES_URL;
 if (!url) {
   console.error("check-rls: set DATABASE_URL");
   process.exit(2);
 }
-const client = new pg.Client({ connectionString: url, ssl: /sslmode=require|supabase\.co|neon\.tech/.test(url) ? { rejectUnauthorized: false } : undefined });
+const client = new pg.Client(nodePgConfig(url));
 await client.connect();
 try {
   const tables = (

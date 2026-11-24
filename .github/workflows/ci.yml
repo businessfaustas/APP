@@ -93,7 +93,7 @@ jobs:
         run: |
           bash scripts/ci/install-pg-client.sh 16
           export PATH="/usr/lib/postgresql/16/bin:$PATH"
-          node scripts/db-restore-test.mjs
+          pnpm exec tsx scripts/db-restore-test.mjs
 
       - uses: actions/upload-artifact@v4
         if: failure()
