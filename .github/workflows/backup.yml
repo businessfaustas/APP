@@ -26,7 +26,7 @@ jobs:
         if: env.HAS_SECRETS == 'true'
       - uses: pnpm/action-setup@v4
         if: env.HAS_SECRETS == 'true'
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         if: env.HAS_SECRETS == 'true'
         with:
           node-version: 22
@@ -71,7 +71,7 @@ jobs:
         if: env.HAS_SECRETS == 'true' && env.SKIP != '1'
       - uses: pnpm/action-setup@v4
         if: env.HAS_SECRETS == 'true' && env.SKIP != '1'
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         if: env.HAS_SECRETS == 'true' && env.SKIP != '1'
         with:
           node-version: 22
