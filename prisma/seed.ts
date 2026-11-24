@@ -7,29 +7,63 @@ import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 
 import { PrismaClient } from "../lib/generated/prisma/client";
+import { copartCrashedToysLicensedFees, sameFeeTables } from "../lib/calc/copartFees";
 import { placeholderFeeSchedule } from "../lib/calc/placeholderFees";
+import type { FeeSchedule } from "../lib/calc/types";
 import { VEHICLE_CLASSES, PART_SOURCES } from "../lib/domain/schemas";
 import { LABOR_REFERENCE, placeholderPrice } from "../lib/estimate/referenceData";
 import { DEMO_USER } from "../lib/config/demo";
-import { databaseUrl, nodePgConfig } from "../lib/config/deployment";
+import { databaseUrl, demoModeEnabled, nodePgConfig } from "../lib/config/deployment";
 
 const connectionString = databaseUrl() ?? "postgresql://postgres:postgres@localhost:5432/auctionpulse";
 const prisma = new PrismaClient({ adapter: new PrismaPg(nodePgConfig(connectionString)) });
+
+/**
+ * The fee table we have real figures for: Copart, licensed buyer. Only outside demo mode, so the demo account, CI and
+ * the tests keep the placeholder schedule that the Audi A3 reference case is built on.
+ */
+function referenceFees(source: string, buyerType: string) {
+  if (demoModeEnabled() || source !== "COPART" || buyerType !== "LICENSED_DEALER") return null;
+  return copartCrashedToysLicensedFees();
+}
 
 async function seedFeeSchedules() {
   for (const source of ["COPART", "IAAI"] as const) {
     for (const buyerType of ["LICENSED_DEALER", "PUBLIC_VIA_BROKER"] as const) {
       const s = placeholderFeeSchedule(source, buyerType);
+      const real = referenceFees(source, buyerType);
       const existing = await prisma.feeSchedule.findFirst({ where: { source, buyerType } });
-      if (existing) continue; // never overwrite an admin-edited schedule
+      if (existing) {
+        // Replace a schedule that still holds exactly the seeded placeholder; never one an admin has edited.
+        const untouched = existing.isPlaceholder && sameFeeTables(existing as unknown as FeeSchedule, s);
+        if (real && untouched) {
+          await prisma.feeSchedule.update({
+            where: { id: existing.id },
+            data: {
+              name: real.name,
+              buyerFeeTiers: real.buyerFeeTiers as object[],
+              onlineBidFeeTiers: real.onlineBidFeeTiers as object[],
+              fixedFees: real.fixedFees,
+              sourceUrl: real.sourceUrl,
+              verifiedAt: new Date(real.verifiedAt),
+              // Still flagged: the table comes from the CrashedToys page, so an admin confirms it is the one
+              // that applies to their purchases and then switches "Placeholder" off.
+              isPlaceholder: true,
+            },
+          });
+        }
+        continue; // never overwrite an admin-edited schedule
+      }
       await prisma.feeSchedule.create({
         data: {
           source,
           buyerType,
-          name: s.name,
-          buyerFeeTiers: s.buyerFeeTiers as object[],
-          onlineBidFeeTiers: s.onlineBidFeeTiers as object[],
-          fixedFees: s.fixedFees,
+          name: real?.name ?? s.name,
+          buyerFeeTiers: (real?.buyerFeeTiers ?? s.buyerFeeTiers) as object[],
+          onlineBidFeeTiers: (real?.onlineBidFeeTiers ?? s.onlineBidFeeTiers) as object[],
+          fixedFees: real?.fixedFees ?? s.fixedFees,
+          sourceUrl: real?.sourceUrl ?? null,
+          verifiedAt: real ? new Date(real.verifiedAt) : null,
           isPlaceholder: true,
           active: true,
         },

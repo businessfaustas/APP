@@ -162,6 +162,7 @@ The engine is pure TypeScript in `lib/calc`. It is shared by the server and the 
 Auction fees change often and differ by buyer type and payment method, so treat every number here as unverified until checked.
 
 - The seed loads **placeholder** schedules for Copart and IAAI × licensed dealer / public via broker (`lib/calc/placeholderFees.ts`), marked `isPlaceholder`. While a placeholder is in use, every report shows a _"Approximate fee table"_ flag.
+- **Copart licensed buyer:** outside demo mode, `pnpm db:seed` (which every Vercel build runs) replaces the untouched Copart licensed-dealer placeholder with Copart's published _CrashedToys Licensed Fees, Preferred Pricing_ table (secured payment, Live Bid fees; `lib/calc/copartFees.ts`). It stays flagged as a placeholder until you have checked it against the Member Fees page in your signed-in Copart account and switched **Placeholder** off. A card you have edited is never overwritten, and demo mode keeps the placeholders.
 - To update: sign in as an admin, open **Admin → Fee tables**, and edit:
   - the buyer-fee and virtual/online-bid-fee tiers (bid range → flat fee, or % of bid with a minimum);
   - the fixed fees (gate, environmental, title/doc, …).
