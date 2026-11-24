@@ -141,6 +141,10 @@ Where a lot has no real photo, the app shows a car on a studio floor. These are 
 
 To change the cars: cut the new photo out (flood the studio background in from the border, remove the floor shadow below the sill line, keep the tyres, feather the edge), flip it to face right, and save it as a WebP with alpha in `public/cars/`. The BMW source photo was small (246 px wide), so the coupe is softer than the others; swap in a larger photo for a crisper one. `/cars/` is excluded from the auth proxy so the landing page and login can show it.
 
+## Database TLS (Supabase)
+
+Supabase's database certificates are signed by Supabase's own authority, which Node does not trust. node-postgres treats `sslmode=require` as \"verify the chain\", so without help every connection fails with \"self-signed certificate in certificate chain\" (the build's migrate/seed step and the running app alike). Skipping verification would make the connection easy to impersonate, so instead the app checks the server against Supabase's published root certificate (`lib/config/supabaseCa.ts`, valid until 2031): `nodePgConfig` gives node-postgres that certificate with verification on (and drops `sslmode`, which would override it), and `prisma.config.ts` writes it to a file for Prisma's migration engine (`sslcert`). Other providers are untouched. `DATABASE_SSL_CA` (a PEM) overrides the certificate for any provider, for example if Supabase rotates its root.
+
 ## Landing icons and the pre-bid checklist
 
 The nine feature cards and three "how it works" steps use FlagBid's own two-tone icons (`components/marketing/feature-icons.tsx`) instead of generic outline glyphs: each one is a small picture of its subject (a receipt with a wrench, a ship carrying containers, a shield against rising water) with one amber detail, on a lit plate that tilts on hover.

@@ -2,6 +2,8 @@
  * Deployment-dependent settings with zero-config defaults for Vercel. Pure (no server-only),
  * so prisma.config.ts and the seed script can use it too.
  */
+import { SUPABASE_ROOT_CA } from "./supabaseCa";
+
 type EnvLike = Record<string, string | undefined>;
 
 const POSTGRES = /^postgres(ql)?:\/\//i;
@@ -31,6 +33,50 @@ export function directDatabaseUrl(e: EnvLike = process.env): string | undefined 
   const named = e.DIRECT_URL?.trim() || e.DATABASE_URL_UNPOOLED?.trim() || e.POSTGRES_URL_NON_POOLING?.trim();
   if (named) return named;
   return postgresVars(e).find((v) => DIRECT_KEY.test(v.key))?.value ?? databaseUrl(e);
+}
+
+const SUPABASE_HOST = /(^|\.)supabase\.(co|com)$/i;
+
+/** True for Supabase's direct and pooler hosts, whose certificates are signed by Supabase's own authority. */
+export function isSupabaseUrl(url: string): boolean {
+  try {
+    return SUPABASE_HOST.test(new URL(url).hostname);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * The certificate authority to check the database's certificate against: DATABASE_SSL_CA when set (any provider),
+ * else Supabase's own root for Supabase hosts, else none (the system's trusted authorities, as for Neon).
+ */
+export function databaseCa(url: string, e: EnvLike = process.env): string | undefined {
+  const custom = e.DATABASE_SSL_CA?.trim();
+  if (custom) return custom.replace(/\\n/g, "\n");
+  return isSupabaseUrl(url) ? SUPABASE_ROOT_CA : undefined;
+}
+
+/**
+ * Pool settings for node-postgres (the app and the seed script). node-postgres lets a `sslmode` in the connection
+ * string override explicit TLS settings, so when a CA applies the `sslmode` is removed and the settings are given
+ * explicitly: always encrypted, certificate and host name always checked.
+ */
+export function nodePgConfig(url: string, e: EnvLike = process.env): { connectionString: string; ssl?: { ca: string; rejectUnauthorized: true } } {
+  const ca = databaseCa(url, e);
+  if (!ca) return { connectionString: url };
+  const u = new URL(url);
+  u.searchParams.delete("sslmode");
+  u.searchParams.delete("sslrootcert");
+  return { connectionString: u.toString(), ssl: { ca, rejectUnauthorized: true } };
+}
+
+/** Connection string for Prisma's migration engine: points it at a file holding the CA to check the server against. */
+export function prismaMigrateUrl(url: string, caFile: string | undefined): string {
+  if (!caFile) return url;
+  const u = new URL(url);
+  u.searchParams.set("sslcert", caFile);
+  if (!u.searchParams.has("sslmode")) u.searchParams.set("sslmode", "require");
+  return u.toString();
 }
 
 /** Supabase project URL: the app's own name first, then the plain name Vercel's Supabase integration sets. */

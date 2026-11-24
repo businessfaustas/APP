@@ -1,6 +1,18 @@
 import { describe, expect, it } from "vitest";
 
-import { appUrl, databaseUrl, demoModeEnabled, directDatabaseUrl, supabaseAnonKey, supabaseUrl } from "@/lib/config/deployment";
+import {
+  appUrl,
+  databaseCa,
+  databaseUrl,
+  demoModeEnabled,
+  directDatabaseUrl,
+  isSupabaseUrl,
+  nodePgConfig,
+  prismaMigrateUrl,
+  supabaseAnonKey,
+  supabaseUrl,
+} from "@/lib/config/deployment";
+import { SUPABASE_ROOT_CA } from "@/lib/config/supabaseCa";
 
 describe("deployment defaults", () => {
   it("accepts the database variable names Vercel integrations set", () => {
@@ -39,6 +51,40 @@ describe("deployment defaults", () => {
     expect(demoModeEnabled({})).toBe(true);
     expect(demoModeEnabled({ SUPABASE_URL: "https://x.supabase.co", SUPABASE_ANON_KEY: "k" })).toBe(false);
     expect(demoModeEnabled({ SUPABASE_URL: "https://x.supabase.co", SUPABASE_ANON_KEY: "k", DEMO_MODE: "true" })).toBe(true);
+  });
+
+  describe("database TLS", () => {
+    const pooler = "postgres://postgres.abc:pw@aws-0-eu-central-1.pooler.supabase.com:6543/postgres?sslmode=require&pgbouncer=true";
+    const neon = "postgres://u:p@ep-cool-123.eu-central-1.aws.neon.tech/neondb?sslmode=require";
+
+    it("recognises Supabase hosts, and only those", () => {
+      expect(isSupabaseUrl(pooler)).toBe(true);
+      expect(isSupabaseUrl("postgres://u:p@db.abc.supabase.co:5432/postgres")).toBe(true);
+      expect(isSupabaseUrl(neon)).toBe(false);
+      expect(isSupabaseUrl("postgres://u:p@localhost:5432/x")).toBe(false);
+      expect(isSupabaseUrl("not a url")).toBe(false);
+      expect(isSupabaseUrl("postgres://u:p@evilsupabase.co:5432/x")).toBe(false);
+    });
+
+    it("checks Supabase connections against Supabase's certificate authority, never switching verification off", () => {
+      const c = nodePgConfig(pooler, {});
+      expect(c.ssl).toEqual({ ca: SUPABASE_ROOT_CA, rejectUnauthorized: true });
+      expect(c.connectionString).not.toMatch(/sslmode/); // node-postgres would let it override the settings above
+      expect(c.connectionString).toContain("pgbouncer=true");
+      expect(SUPABASE_ROOT_CA).toMatch(/^-----BEGIN CERTIFICATE-----[\s\S]+-----END CERTIFICATE-----\s*$/);
+    });
+
+    it("leaves other providers alone, and lets DATABASE_SSL_CA name the authority for any of them", () => {
+      expect(nodePgConfig(neon, {})).toEqual({ connectionString: neon });
+      expect(databaseCa(neon, { DATABASE_SSL_CA: "PEM" })).toBe("PEM");
+      expect(databaseCa(pooler, { DATABASE_SSL_CA: "line1\\nline2" })).toBe("line1\nline2");
+      expect(nodePgConfig(neon, { DATABASE_SSL_CA: "PEM" }).ssl).toEqual({ ca: "PEM", rejectUnauthorized: true });
+    });
+
+    it("points Prisma's migration engine at the certificate file", () => {
+      expect(prismaMigrateUrl(pooler, "/tmp/ca.crt")).toContain("sslcert=%2Ftmp%2Fca.crt");
+      expect(prismaMigrateUrl(neon, undefined)).toBe(neon);
+    });
   });
 
   it("uses the explicit app URL, else the Vercel domain, else localhost", () => {
