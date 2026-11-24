@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { appUrl, databaseUrl, directDatabaseUrl } from "@/lib/config/deployment";
+import { appUrl, databaseUrl, demoModeEnabled, directDatabaseUrl, supabaseAnonKey, supabaseUrl } from "@/lib/config/deployment";
 
 describe("deployment defaults", () => {
   it("accepts the database variable names Vercel integrations set", () => {
@@ -23,6 +23,22 @@ describe("deployment defaults", () => {
     expect(databaseUrl(e)).toBe("postgresql://pooled.neon.tech/db");
     expect(directDatabaseUrl(e)).toBe("postgresql://direct.neon.tech/db");
     expect(databaseUrl({ OTHER_URL: "https://example.com" })).toBeUndefined();
+  });
+
+  it("accepts Supabase's own variable names as well as the NEXT_PUBLIC_ ones", () => {
+    expect(supabaseUrl({ SUPABASE_URL: "https://x.supabase.co" })).toBe("https://x.supabase.co");
+    expect(supabaseUrl({ NEXT_PUBLIC_SUPABASE_URL: "https://a.supabase.co", SUPABASE_URL: "https://b.supabase.co" })).toBe("https://a.supabase.co");
+    expect(supabaseAnonKey({ SUPABASE_ANON_KEY: "anon" })).toBe("anon");
+    expect(supabaseAnonKey({ SUPABASE_PUBLISHABLE_KEY: "sb_publishable_1" })).toBe("sb_publishable_1");
+    expect(supabaseAnonKey({ NEXT_PUBLIC_SUPABASE_ANON_KEY: "mine", SUPABASE_ANON_KEY: "theirs" })).toBe("mine");
+    expect(supabaseUrl({})).toBeUndefined();
+    expect(supabaseAnonKey({ SUPABASE_ANON_KEY: "  " })).toBeUndefined();
+  });
+
+  it("turns demo sign-in off by default once Supabase is configured under any of those names", () => {
+    expect(demoModeEnabled({})).toBe(true);
+    expect(demoModeEnabled({ SUPABASE_URL: "https://x.supabase.co", SUPABASE_ANON_KEY: "k" })).toBe(false);
+    expect(demoModeEnabled({ SUPABASE_URL: "https://x.supabase.co", SUPABASE_ANON_KEY: "k", DEMO_MODE: "true" })).toBe(true);
   });
 
   it("uses the explicit app URL, else the Vercel domain, else localhost", () => {

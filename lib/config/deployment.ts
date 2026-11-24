@@ -33,6 +33,21 @@ export function directDatabaseUrl(e: EnvLike = process.env): string | undefined 
   return postgresVars(e).find((v) => DIRECT_KEY.test(v.key))?.value ?? databaseUrl(e);
 }
 
+/** Supabase project URL: the app's own name first, then the plain name Vercel's Supabase integration sets. */
+export function supabaseUrl(e: EnvLike = process.env): string | undefined {
+  return e.NEXT_PUBLIC_SUPABASE_URL?.trim() || e.SUPABASE_URL?.trim() || undefined;
+}
+
+/** The public (anon / publishable) key, under any of the names Supabase and its Vercel integration use. */
+export function supabaseAnonKey(e: EnvLike = process.env): string | undefined {
+  const names = ["NEXT_PUBLIC_SUPABASE_ANON_KEY", "SUPABASE_ANON_KEY", "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", "SUPABASE_PUBLISHABLE_KEY"];
+  for (const n of names) {
+    const v = e[n]?.trim();
+    if (v) return v;
+  }
+  return undefined;
+}
+
 /**
  * Demo sign-in ("Continue as demo user"). DEMO_MODE wins when set (true/1/yes/on, any case).
  * When it isn't set, demo sign-in stays on until a real login (Supabase) is configured, so a
@@ -41,7 +56,7 @@ export function directDatabaseUrl(e: EnvLike = process.env): string | undefined 
 export function demoModeEnabled(e: EnvLike = process.env): boolean {
   const raw = e.DEMO_MODE?.trim().toLowerCase();
   if (raw) return ["true", "1", "yes", "on"].includes(raw);
-  return !(e.NEXT_PUBLIC_SUPABASE_URL?.trim() && e.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim());
+  return !(supabaseUrl(e) && supabaseAnonKey(e));
 }
 
 /** Public base URL for links in emails and share links: explicit setting, else the Vercel domain. */

@@ -2,7 +2,7 @@ import "server-only";
 
 import { z } from "zod";
 
-import { appUrl, databaseUrl, demoModeEnabled } from "./deployment";
+import { appUrl, databaseUrl, demoModeEnabled, supabaseAnonKey, supabaseUrl } from "./deployment";
 
 const bool = z
   .string()
@@ -87,6 +87,8 @@ export function env(): Env {
   const parsed = EnvSchema.safeParse({
     ...process.env,
     DATABASE_URL: databaseUrl(),
+    NEXT_PUBLIC_SUPABASE_URL: supabaseUrl(),
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: supabaseAnonKey(),
     NEXT_PUBLIC_APP_URL: appUrl(),
     DEMO_MODE: demoModeEnabled() ? "true" : "false",
   });
