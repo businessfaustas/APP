@@ -36,7 +36,7 @@ Anything pasted into a chat, a screenshot or a document should be treated as lea
    `DATABASE_URL` (pooled), `DIRECT_URL` (direct), `ADMIN_EMAILS` (your email, so you become admin),
    `DEMO_MODE=false` (a real site should not share one demo account).
 5. **Authentication → URL Configuration:** *Site URL* = your final address (step 3 below); add `https://<your-domain>/auth/callback` to *Redirect URLs*.
-6. **Authentication → Providers → Google:** create OAuth credentials in Google Cloud Console and paste the client id and secret. *(Skip it if you only want email links.)*
+6. **Authentication → Providers → Google (optional):** create OAuth credentials in Google Cloud Console, paste the client id and secret into Supabase, then set `AUTH_GOOGLE=true` in Vercel and redeploy to show the "Continue with Google" button. Until then the button is hidden and customers sign in with the emailed link.
 7. **Authentication → Providers → Email:** keep *Confirm email* on, set *OTP expiry* to 3600 seconds or less.
 8. Redeploy. The build applies every database migration automatically, including **row-level security on every table** (so the public Supabase API can't read your data even though the anon key is public).
 9. Verify: `DATABASE_URL=<direct string> pnpm db:check-rls` prints `ok`. Then, in the Supabase dashboard → Table Editor, every table shows *RLS enabled* and no policies.

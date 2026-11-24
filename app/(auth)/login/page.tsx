@@ -68,7 +68,14 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
                 {sp.error === "expired" ? t("auth.linkExpired") : t("auth.failed", { reason: sp.error })}
               </p>
             )}
-            {supa && <SupabaseLogin supabaseUrl={env().NEXT_PUBLIC_SUPABASE_URL!} anonKey={env().NEXT_PUBLIC_SUPABASE_ANON_KEY!} next={next} />}
+            {supa && (
+              <SupabaseLogin
+                supabaseUrl={env().NEXT_PUBLIC_SUPABASE_URL!}
+                anonKey={env().NEXT_PUBLIC_SUPABASE_ANON_KEY!}
+                next={next}
+                google={features.googleAuth()}
+              />
+            )}
             {supa && demo && (
               <div className="text-muted-foreground flex items-center gap-3 text-xs">
                 <div className="bg-border h-px flex-1" />

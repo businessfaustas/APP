@@ -23,6 +23,8 @@ const EnvSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: opt,
   NEXT_PUBLIC_SUPABASE_ANON_KEY: opt,
   SUPABASE_SERVICE_ROLE_KEY: opt,
+  // Show "Continue with Google" on the sign-in card. Turn it on only after Google is enabled in Supabase (Authentication → Providers).
+  AUTH_GOOGLE: bool,
   SUPABASE_PHOTOS_BUCKET: z.string().default("listing-photos"),
   ADMIN_EMAILS: opt,
   AI_PROVIDER: z.enum(["anthropic", "openai"]).default("anthropic"),
@@ -103,6 +105,7 @@ export function env(): Env {
 export const features = {
   demoMode: () => env().DEMO_MODE,
   supabaseAuth: () => Boolean(env().NEXT_PUBLIC_SUPABASE_URL && env().NEXT_PUBLIC_SUPABASE_ANON_KEY),
+  googleAuth: () => env().AUTH_GOOGLE,
   supabaseStorage: () => Boolean(env().NEXT_PUBLIC_SUPABASE_URL && env().SUPABASE_SERVICE_ROLE_KEY),
   ai: () => (env().AI_PROVIDER === "openai" ? Boolean(env().OPENAI_API_KEY) : Boolean(env().ANTHROPIC_API_KEY)),
   scraping: () => Boolean(env().SCRAPINGBEE_API_KEY || (env().APIFY_TOKEN && env().APIFY_ACTOR_ID)),
@@ -119,7 +122,7 @@ export const features = {
 export function integrationStatus(): { key: string; label: string; enabled: boolean; note: string }[] {
   return [
     { key: "demo", label: "Demo mode", enabled: features.demoMode(), note: "Sample lots and fixture data" },
-    { key: "auth", label: "Supabase Auth", enabled: features.supabaseAuth(), note: "Email magic link + Google sign-in" },
+    { key: "auth", label: "Supabase Auth", enabled: features.supabaseAuth(), note: "Email sign-in link; Google when AUTH_GOOGLE=true" },
     {
       key: "storage",
       label: "Supabase Storage",
