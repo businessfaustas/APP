@@ -4,8 +4,8 @@ import { ScanLineIcon } from "lucide-react";
 
 import { ScoreRing } from "@/components/report/deal-card";
 import { VerdictBadge } from "@/components/report/verdict-badge";
-import { CarArt, type BodyType } from "@/components/vehicle/car-art";
-import { HERO_LOOK } from "@/lib/vehicle/looks";
+import type { BodyType } from "@/components/vehicle/car-art";
+import { CarLobby } from "@/components/vehicle/car-lobby";
 import type { VerdictValue } from "@/lib/calc/types";
 import type { DamageZone } from "@/lib/domain/schemas";
 import { useT } from "@/lib/i18n/client";
@@ -26,8 +26,8 @@ export interface ShowcaseData {
 const TONE = { GO: "go", BE_CAUTIOUS: "caution", WALK_AWAY: "stop" } as const;
 
 /**
- * The product in one picture: a lot being scanned, with the three things a report gives you
- * floating around it. Always rendered as a dark studio shot, in either theme.
+ * The product in one picture: cars taking turns on the studio floor to be scanned (the wrecked one shows what the
+ * scan finds), with the three things a report gives you floating around it. Always rendered as a dark studio shot, in either theme.
  * Numbers come from the real calculation of the demo lot, so they match the sample report.
  */
 export function Showcase({ data, className }: { data: ShowcaseData; className?: string }) {
@@ -70,16 +70,7 @@ export function Showcase({ data, className }: { data: ShowcaseData; className?: 
       </div>
 
       <div className="absolute inset-x-[7%] top-[20%] sm:top-[17%]">
-        <CarArt
-          body={data.body}
-          zones={data.zones}
-          tone={TONE[data.verdict]}
-          paint={data.paint}
-          seed={data.title}
-          look={HERO_LOOK}
-          scanning
-          label={data.title}
-        />
+        <CarLobby body={data.body} zones={data.zones} tone={TONE[data.verdict]} scanning label={data.title} />
       </div>
 
       <div className="rise absolute bottom-4 left-4 sm:bottom-5 sm:left-5" style={{ ["--i" as string]: 3 }}>

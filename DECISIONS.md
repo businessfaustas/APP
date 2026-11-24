@@ -155,6 +155,13 @@ To change the cars: cut the new photo out (flood the studio background in from t
 
 Supabase's database certificates are signed by Supabase's own authority, which Node does not trust. node-postgres treats `sslmode=require` as \"verify the chain\", so without help every connection fails with \"self-signed certificate in certificate chain\" (the build's migrate/seed step and the running app alike). Skipping verification would make the connection easy to impersonate, so instead the app checks the server against Supabase's published root certificate (`lib/config/supabaseCa.ts`, valid until 2031): `nodePgConfig` gives node-postgres that certificate with verification on (and drops `sslmode`, which would override it), and `prisma.config.ts` writes it to a file for Prisma's migration engine (`sslcert`). Other providers are untouched. `DATABASE_SSL_CA` (a PEM) overrides the certificate for any provider, for example if Supabase rotates its root.
 
+## The car lobby
+
+- The landing page, the sign-in page, the dashboard hero and the waiting screen of an analysis (when the lot has no photo of its own) show **a lobby of cars that take turns** instead of one car (`components/vehicle/car-lobby.tsx`). It cycles through every cut-out photo in `public/cars` (`LOBBY_LOOKS`, wrecked showcase sedan first), sliding each in as the last rolls out, every 3.8 seconds.
+- **Clean cars are never marked.** Damage markers only appear on the wrecked sedan, or, on the waiting screen, on the lot's own kind of car once the scan has found real damage: the cars take turns while it looks, then the show stops on that car and marks it (`lock`).
+- It starts on the lot's own kind of car (the blue sedan for an Audi A3), and never replaces a real auction photo.
+- **Motion rules:** it does not move at all for people who asked for reduced motion; it pauses while the mouse or keyboard is on it; there is a pause button and a dot per car (24px targets, labelled), so the moving picture can be stopped (WCAG 2.2.2). Only the first car loads with the page; the other seven load about 0.7 seconds later so they never compete with the first paint.
+
 ## Landing icons and the pre-bid checklist
 
 The nine feature cards and three "how it works" steps use FlagBid's own two-tone icons (`components/marketing/feature-icons.tsx`) instead of generic outline glyphs: each one is a small picture of its subject (a receipt with a wrench, a ship carrying containers, a shield against rising water) with one amber detail, on a lit plate that tilts on hover.

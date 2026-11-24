@@ -2,7 +2,8 @@
 
 import { CircleDollarSignIcon, ScanSearchIcon, WrenchIcon } from "lucide-react";
 
-import { CarArt, CarVisual } from "@/components/vehicle/car-art";
+import { CarVisual } from "@/components/vehicle/car-art";
+import { CarLobby } from "@/components/vehicle/car-lobby";
 import { useT } from "@/lib/i18n/client";
 
 const CHIPS = [
@@ -13,20 +14,20 @@ const CHIPS = [
 
 /**
  * The dashboard hero's motion piece: a car being scanned, with what the analysis produces.
- * Shows the latest analyzed lot's own auction photo when there is one, else the illustration.
+ * Shows the latest analyzed lot's own auction photo when there is one, else the cars taking turns to be scanned.
  */
 export function HeroScan({ photo, label }: { photo?: string | null; label?: string }) {
   const t = useT();
   return (
-    <div className="relative hidden aspect-[16/9] w-full lg:block" aria-hidden={photo ? undefined : "true"}>
+    <div className="relative hidden aspect-[16/9] w-full lg:block">
       {photo ? (
         <CarVisual photo={photo} label={label} scanning className="absolute inset-0 rounded-2xl border" />
       ) : (
-        <div className="absolute inset-0 grid place-items-center" aria-hidden="true">
-          <CarArt
+        <div className="absolute inset-0 grid place-items-center">
+          <CarLobby
+            controls="end"
             body="sedan"
             tone="neutral"
-            scanning
             zones={[
               { zone: "front_left", severity: 7 },
               { zone: "front", severity: 5 },

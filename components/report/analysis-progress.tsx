@@ -12,7 +12,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/input";
 import { CarVisual } from "@/components/vehicle/car-art";
+import { CarLobby } from "@/components/vehicle/car-lobby";
 import { auctionPhotoUrl, lotVisual } from "@/lib/analysis/visual";
+import { pickCarLook } from "@/lib/vehicle/looks";
 import { Progress, SegmentedControl } from "@/components/ui/misc";
 import type { AnalysisView } from "@/lib/analysis/view";
 import { useT } from "@/lib/i18n/client";
@@ -33,11 +35,30 @@ export function AnalysisProgress({ view }: { view: AnalysisView }) {
     verdict: null,
     photo: view.photos.find((p) => !p.url.startsWith("/demo-photos/"))?.url ?? (view.readOnly ? null : auctionPhotoUrl(view.listing?.photoUrls)),
   });
+  const lotLook = pickCarLook(visual.body, visual.paint, visual.seed);
   return (
     <Card className="rise mx-auto max-w-4xl gap-0 overflow-hidden py-0" data-testid="analysis-progress">
       <div className="grid md:grid-cols-[1.15fr_1fr]">
         <div className="relative min-h-56">
-          <CarVisual {...visual} scanning label={name || undefined} className="absolute inset-0" />
+          <CarVisual
+            {...visual}
+            scanning
+            label={name || undefined}
+            className="absolute inset-0"
+            art={
+              <CarLobby
+                // Starts on the kind of car this lot is. Cars take turns while the scan looks; once it has found damage,
+                // the show stops on that car and marks it.
+                first={lotLook}
+                lock={visual.zones.length > 0 ? lotLook : undefined}
+                body={visual.body}
+                zones={visual.zones}
+                tone={visual.tone}
+                scanning
+                label={name || undefined}
+              />
+            }
+          />
           <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-5">
             <div className="bg-background/80 rounded-xl border px-3 py-2 backdrop-blur">
               <div className="eyebrow">{t("report.progressAria")}</div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId, useState, type ReactNode } from "react";
 
 import type { DamageZone } from "@/lib/domain/schemas";
 import { cn } from "@/lib/utils";
@@ -147,6 +147,7 @@ export function CarVisual({
   paint,
   seed,
   fallback = "art",
+  art,
   className,
   label,
   scanning,
@@ -159,6 +160,8 @@ export function CarVisual({
   seed?: string;
   /** With no photo: the car illustration (default, marks damage) or a "no preview" tile with our logo (for lists and cards). */
   fallback?: "art" | "placeholder";
+  /** What to draw on the stage when there is no photo, instead of the one car illustration (the waiting screen passes the lobby). */
+  art?: ReactNode;
   className?: string;
   label?: string;
   scanning?: boolean;
@@ -206,7 +209,7 @@ export function CarVisual({
             aria-hidden="true"
           />
           <div className="absolute inset-0 grid place-items-center px-[5%] pt-[2%]">
-            <CarArt body={body} zones={zones} tone={tone} paint={paint} seed={seed} label={label} scanning={scanning} />
+            {art ?? <CarArt body={body} zones={zones} tone={tone} paint={paint} seed={seed} label={label} scanning={scanning} />}
           </div>
         </>
       )}

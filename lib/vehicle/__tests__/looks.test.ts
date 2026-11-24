@@ -4,7 +4,7 @@ import { join } from "node:path";
 import sharp from "sharp";
 import { describe, expect, it } from "vitest";
 
-import { CAR_LOOKS, HERO_LOOK, pickCarLook } from "../looks";
+import { CAR_LOOKS, HERO_LOOK, LOBBY_LOOKS, lobbyOrder, pickCarLook } from "../looks";
 
 describe("pickCarLook", () => {
   it("shows the photo closest to the listing's paint colour", () => {
@@ -38,6 +38,29 @@ describe("pickCarLook", () => {
     for (const body of ["sedan", "suv", "coupe", "pickup"] as const) {
       expect(CAR_LOOKS[body].map((l) => l.src)).not.toContain(HERO_LOOK.src);
     }
+  });
+
+  it("the lobby shows every car photo exactly once, wrecked showcase sedan first", () => {
+    const every = [HERO_LOOK, ...Object.values(CAR_LOOKS).flat()].map((l) => l.src);
+    // the SUVs stand in for pickups, so the same list appears twice in CAR_LOOKS
+    const unique = [...new Set(every)];
+    expect(LOBBY_LOOKS.map((l) => l.src).sort()).toEqual(unique.sort());
+    expect(new Set(LOBBY_LOOKS.map((l) => l.src)).size).toBe(LOBBY_LOOKS.length);
+    expect(LOBBY_LOOKS[0]).toBe(HERO_LOOK);
+  });
+
+  it("only the wrecked showcase car is marked as damaged", () => {
+    expect(LOBBY_LOOKS.filter((l) => l.damaged).map((l) => l.src)).toEqual([HERO_LOOK.src]);
+  });
+
+  it("lobbyOrder puts a given car first without repeating it", () => {
+    const blue = pickCarLook("sedan", undefined, "2019 Audi A3");
+    const order = lobbyOrder(blue);
+    expect(order[0]).toBe(blue);
+    expect(order).toHaveLength(LOBBY_LOOKS.length);
+    expect(order.filter((l) => l.src === blue.src)).toHaveLength(1);
+    expect(lobbyOrder()).toBe(LOBBY_LOOKS);
+    expect(lobbyOrder(null)).toBe(LOBBY_LOOKS);
   });
 
   it("falls back to the first photo when the colour is unknown or malformed", () => {
