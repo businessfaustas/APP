@@ -7,8 +7,9 @@ import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 
 import { PrismaClient } from "../lib/generated/prisma/client";
-import { copartCrashedToysLicensedFees, sameFeeTables } from "../lib/calc/copartFees";
+import { sameFeeTables } from "../lib/calc/feeTables";
 import { placeholderFeeSchedule } from "../lib/calc/placeholderFees";
+import { referenceFees } from "../lib/calc/referenceFees";
 import type { FeeSchedule } from "../lib/calc/types";
 import { VEHICLE_CLASSES, PART_SOURCES } from "../lib/domain/schemas";
 import { LABOR_REFERENCE, placeholderPrice } from "../lib/estimate/referenceData";
@@ -19,19 +20,18 @@ const connectionString = databaseUrl() ?? "postgresql://postgres:postgres@localh
 const prisma = new PrismaClient({ adapter: new PrismaPg(nodePgConfig(connectionString)) });
 
 /**
- * The fee table we have real figures for: Copart, licensed buyer. Only outside demo mode, so the demo account, CI and
- * the tests keep the placeholder schedule that the Audi A3 reference case is built on.
+ * The published fee tables we have figures for. Only outside demo mode, so the demo account, CI and the tests keep
+ * the placeholder schedule that the Audi A3 reference case is built on.
  */
-function referenceFees(source: string, buyerType: string) {
-  if (demoModeEnabled() || source !== "COPART" || buyerType !== "LICENSED_DEALER") return null;
-  return copartCrashedToysLicensedFees();
+function realFees(source: string, buyerType: string) {
+  return demoModeEnabled() ? null : referenceFees(source, buyerType);
 }
 
 async function seedFeeSchedules() {
   for (const source of ["COPART", "IAAI"] as const) {
     for (const buyerType of ["LICENSED_DEALER", "PUBLIC_VIA_BROKER"] as const) {
       const s = placeholderFeeSchedule(source, buyerType);
-      const real = referenceFees(source, buyerType);
+      const real = realFees(source, buyerType);
       const existing = await prisma.feeSchedule.findFirst({ where: { source, buyerType } });
       if (existing) {
         // Replace a schedule that still holds exactly the seeded placeholder; never one an admin has edited.
@@ -45,9 +45,9 @@ async function seedFeeSchedules() {
               onlineBidFeeTiers: real.onlineBidFeeTiers as object[],
               fixedFees: real.fixedFees,
               sourceUrl: real.sourceUrl,
-              verifiedAt: new Date(real.verifiedAt),
-              // Still flagged: the table comes from the CrashedToys page, so an admin confirms it is the one
-              // that applies to their purchases and then switches "Placeholder" off.
+              verifiedAt: real.verifiedAt ? new Date(real.verifiedAt) : null,
+              // Still flagged: an admin checks the table against the auction's own page, sets the Verified
+              // date and switches "Placeholder" off.
               isPlaceholder: true,
             },
           });
@@ -63,7 +63,7 @@ async function seedFeeSchedules() {
           onlineBidFeeTiers: (real?.onlineBidFeeTiers ?? s.onlineBidFeeTiers) as object[],
           fixedFees: real?.fixedFees ?? s.fixedFees,
           sourceUrl: real?.sourceUrl ?? null,
-          verifiedAt: real ? new Date(real.verifiedAt) : null,
+          verifiedAt: real?.verifiedAt ? new Date(real.verifiedAt) : null,
           isPlaceholder: true,
           active: true,
         },

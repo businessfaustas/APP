@@ -1,4 +1,5 @@
-import type { FeeSchedule, FeeTier } from "./types";
+import { tiersFromRows, withPercentTail, type ReferenceFees } from "./feeTables";
+import type { FeeTier } from "./types";
 
 /**
  * Copart's published "CrashedToys Licensed Fees — Preferred Pricing" table, copied by the site owner from
@@ -79,21 +80,15 @@ const VIRTUAL_BID_ROWS: readonly (readonly [number, number, number])[] = [
   [8000, 129, 149],
 ];
 
-function toTiers(rows: readonly (readonly [number, number, number])[], column: 1 | 2): FeeTier[] {
-  return rows.map((row, i) => ({ min: row[0], max: rows[i + 1]?.[0] ?? null, amount: row[column] }));
-}
-
 export type CopartPayment = "secured" | "unsecured";
 export type CopartBidType = "live" | "pre";
 
 export function copartCrashedToysBuyerFeeTiers(payment: CopartPayment = "secured"): FeeTier[] {
-  const tiers = toTiers(BUYER_FEE_ROWS, payment === "secured" ? 1 : 2);
-  tiers[tiers.length - 1]!.max = BUYER_FEE_PERCENT_FROM;
-  return [...tiers, { min: BUYER_FEE_PERCENT_FROM, max: null, bps: BUYER_FEE_BPS[payment] }];
+  return withPercentTail(tiersFromRows(BUYER_FEE_ROWS, payment === "secured" ? 1 : 2), BUYER_FEE_PERCENT_FROM, BUYER_FEE_BPS[payment]);
 }
 
 export function copartCrashedToysVirtualBidTiers(bid: CopartBidType = "live"): FeeTier[] {
-  return toTiers(VIRTUAL_BID_ROWS, bid === "pre" ? 1 : 2);
+  return tiersFromRows(VIRTUAL_BID_ROWS, bid === "pre" ? 1 : 2);
 }
 
 export const COPART_FIXED_FEES: { label: string; amount: number }[] = [
@@ -102,7 +97,7 @@ export const COPART_FIXED_FEES: { label: string; amount: number }[] = [
 ];
 
 /** The fee tables as they go into a stored schedule (name, tiers, fixed fees, source and date). */
-export function copartCrashedToysLicensedFees(payment: CopartPayment = "secured", bid: CopartBidType = "live") {
+export function copartCrashedToysLicensedFees(payment: CopartPayment = "secured", bid: CopartBidType = "live"): ReferenceFees {
   return {
     name: `Copart CrashedToys licensed, Preferred Pricing (${payment} payment, ${bid === "live" ? "live" : "pre"} bid)`,
     buyerFeeTiers: copartCrashedToysBuyerFeeTiers(payment),
@@ -110,24 +105,5 @@ export function copartCrashedToysLicensedFees(payment: CopartPayment = "secured"
     fixedFees: COPART_FIXED_FEES.map((f) => ({ ...f })),
     sourceUrl: COPART_CRASHEDTOYS_LICENSED_URL,
     verifiedAt: COPART_CRASHEDTOYS_LICENSED_VERIFIED_ON,
-  } satisfies Pick<FeeSchedule, "name" | "buyerFeeTiers" | "onlineBidFeeTiers" | "fixedFees" | "sourceUrl" | "verifiedAt">;
-}
-
-type FeeTables = Pick<FeeSchedule, "buyerFeeTiers" | "onlineBidFeeTiers" | "fixedFees">;
-
-const sameTier = (a: FeeTier, b: FeeTier) => a.min === b.min && a.max === b.max && a.amount === b.amount && a.bps === b.bps && a.minAmount === b.minAmount;
-const sameTiers = (a: readonly FeeTier[], b: readonly FeeTier[]) => a.length === b.length && a.every((t, i) => sameTier(t, b[i]!));
-
-/**
- * True when a stored schedule still holds exactly the tables it was seeded with, so nobody has edited it. The seed
- * only replaces schedules like that, never one an admin has touched. Compares values, not JSON text, because the
- * database returns JSON with its keys in a different order.
- */
-export function sameFeeTables(a: FeeTables, b: FeeTables): boolean {
-  return (
-    sameTiers(a.buyerFeeTiers, b.buyerFeeTiers) &&
-    sameTiers(a.onlineBidFeeTiers, b.onlineBidFeeTiers) &&
-    a.fixedFees.length === b.fixedFees.length &&
-    a.fixedFees.every((f, i) => f.label === b.fixedFees[i]!.label && f.amount === b.fixedFees[i]!.amount)
-  );
+  };
 }

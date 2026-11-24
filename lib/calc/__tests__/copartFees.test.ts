@@ -5,8 +5,8 @@ import {
   copartCrashedToysLicensedFees,
   copartCrashedToysVirtualBidTiers,
   COPART_CRASHEDTOYS_LICENSED_URL,
-  sameFeeTables,
 } from "../copartFees";
+import { sameFeeTables } from "../feeTables";
 import { auctionFees, tierAmount, validateFeeSchedule } from "../fees";
 import { placeholderFeeSchedule } from "../placeholderFees";
 import type { FeeSchedule } from "../types";
