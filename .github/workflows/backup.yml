@@ -47,7 +47,7 @@ jobs:
           DIRECT_URL: ${{ secrets.BACKUP_DATABASE_URL }}
           BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
         run: node scripts/db-backup.mjs "flagbid-$(date -u +%F).dump"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: env.HAS_SECRETS == 'true'
         with:
           name: db-backup-${{ github.run_id }}

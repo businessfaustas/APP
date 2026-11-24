@@ -95,7 +95,7 @@ jobs:
           export PATH="/usr/lib/postgresql/16/bin:$PATH"
           pnpm exec tsx scripts/db-restore-test.mjs
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: playwright-report
@@ -137,7 +137,7 @@ jobs:
         env:
           E2E_ALL_BROWSERS: "1"
           E2E_DEMO_ADMIN: "1"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: cross-browser-report
@@ -177,7 +177,7 @@ jobs:
       - run: pnpm build
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:visual
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: visual-diffs
