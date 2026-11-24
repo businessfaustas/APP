@@ -89,6 +89,7 @@ model User {
   id               String             @id // Supabase auth user id (or the demo user id)
   email            String             @unique
   name             String?
+  phone            String? // E.164 ("+37060012345"), given at sign-up
   role             Role               @default(USER)
   plan             Plan               @default(FREE)
   stripeCustomerId String?            @unique

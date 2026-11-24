@@ -46,6 +46,10 @@ const POLICY: Record<string, { policy: Policy; why?: string }> = {
   "app/api/vitals/route.ts": { policy: "public", why: "anonymous web-vitals beacon; rate limited and size capped" },
   "app/api/watchlist/route.ts": { policy: "user" },
   "app/auth/callback/route.ts": { policy: "public", why: "exchanges a one-time Supabase code for a session" },
+  "app/auth/complete/route.ts": {
+    policy: "public",
+    why: "reads the Supabase session cookie after a password sign-in; signed-out callers are sent to /login, and it only redirects to a path on this site",
+  },
 };
 
 const ROOT = process.cwd();

@@ -17,7 +17,7 @@ export default function PrivacyPage() {
       <h2>What we collect</h2>
       <ul>
         <li>
-          <strong className="text-foreground">Account data</strong> — your email address, name if you give one, plan and credit balance, the date you confirmed
+          <strong className="text-foreground">Account data</strong> — your name, email address and phone number, plan and credit balance, the date you confirmed
           you are 18 or older and accepted these terms, and whether you unsubscribed from email.
         </li>
         <li>

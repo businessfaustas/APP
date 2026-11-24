@@ -77,16 +77,23 @@ test.describe("@regression", () => {
     await ctx.close();
   });
 
-  test("sign-in is gated by the 18+ and terms checkbox when real sign-in is on, and never collects anything without it", async ({ page }) => {
+  test("creating an account needs the 18+ and terms tick, and sends nothing to Supabase without it", async ({ page }) => {
     await open(page, "/login");
-    const checkbox = page.getByRole("checkbox");
-    if ((await checkbox.count()) === 0) test.skip(true, "Supabase sign-in is not configured in this environment (demo only).");
-    await expect(page.getByRole("button", { name: /email me a sign-in link/i })).toBeDisabled();
-    await checkbox.check();
-    await expect(page.getByRole("button", { name: /email me a sign-in link/i })).toBeEnabled();
+    const createTab = page.getByRole("tab", { name: "Create account" });
+    if ((await createTab.count()) === 0) test.skip(true, "Supabase sign-in is not configured in this environment (demo only).");
+    const authCalls: string[] = [];
+    page.on("request", (r) => r.url().includes("/auth/v1/") && authCalls.push(r.url()));
+    await createTab.click();
+    await page.getByLabel("Full name").fill("Jonas Jonaitis");
+    await page.getByLabel("Email", { exact: true }).fill("jonas@example.com");
+    await page.getByLabel("Phone number").fill("+37060012345");
+    await page.getByLabel("Password", { exact: true }).fill("correct horse");
+    await page.getByRole("button", { name: "Create account", exact: true }).last().click();
+    await expect(page.getByText("Tick the box above to continue.")).toBeVisible();
+    expect(authCalls, "nothing is sent before the box is ticked").toEqual([]);
   });
 
-  test("an expired magic link lands on sign-in with a plain message, never a raw error", async ({ page }) => {
+  test("an expired emailed link lands on sign-in with a plain message, never a raw error", async ({ page }) => {
     await page.goto("/auth/callback?code=expired-or-reused");
     await expect(page).toHaveURL(/\/login/);
     const alert = page.getByRole("alert").first();

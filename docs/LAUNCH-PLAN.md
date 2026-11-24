@@ -25,7 +25,7 @@ Anything pasted into a chat, a screenshot or a document should be treated as lea
 
 ## 1. Real accounts: Supabase (45 minutes) — *required for launch*
 
-**Unlocks:** sign-up and sign-in for your customers (email link + Google), a real database, durable photo storage.
+**Unlocks:** sign-up (name, email, phone, password) and sign-in (email + password) for your customers, with Google as an option, a real database, durable photo storage.
 **Until then:** only the shared demo account can sign in.
 
 1. supabase.com → New project (pick the EU region closest to your customers). Save the database password in a password manager.
@@ -35,9 +35,9 @@ Anything pasted into a chat, a screenshot or a document should be treated as lea
    `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` (server only, never `NEXT_PUBLIC_`),
    `DATABASE_URL` (pooled), `DIRECT_URL` (direct), `ADMIN_EMAILS` (your email, so you become admin),
    `DEMO_MODE=false` (a real site should not share one demo account).
-5. **Authentication → URL Configuration:** *Site URL* = your final address (step 3 below); add `https://<your-domain>/auth/callback` to *Redirect URLs*.
-6. **Authentication → Providers → Google (optional):** create OAuth credentials in Google Cloud Console, paste the client id and secret into Supabase, then set `AUTH_GOOGLE=true` in Vercel and redeploy to show the "Continue with Google" button. Until then the button is hidden and customers sign in with the emailed link.
-7. **Authentication → Providers → Email:** keep *Confirm email* on, set *OTP expiry* to 3600 seconds or less.
+5. **Authentication → URL Configuration:** *Site URL* = your live address, e.g. `https://auctionpulse-ai.vercel.app` (not `http://localhost:3000`, which makes every emailed link open localhost). Under *Redirect URLs* add `https://<your-domain>/auth/callback` and `https://<your-domain>/**`. Change both again when you move to your own domain.
+6. **Authentication → Providers → Google (optional):** create OAuth credentials in Google Cloud Console, paste the client id and secret into Supabase, then set `AUTH_GOOGLE=true` in Vercel and redeploy to show the "Continue with Google" button. Until then the button is hidden and customers use email and password.
+7. **Authentication → Providers → Email:** keep *Confirm email* on (a new customer clicks one link to confirm; after that they sign in with email and password only), set *OTP expiry* to 3600 seconds or less, and under **Authentication → Sign In / Providers → Email** set the minimum password length to 8. Supabase's built-in sender only delivers to your own team's addresses and is rate limited, so real customers will not get the confirmation email until you finish step 4 of the email section (Resend SMTP).
 8. Redeploy. The build applies every database migration automatically, including **row-level security on every table** (so the public Supabase API can't read your data even though the anon key is public).
 9. Verify: `DATABASE_URL=<direct string> pnpm db:check-rls` prints `ok`. Then, in the Supabase dashboard → Table Editor, every table shows *RLS enabled* and no policies.
 
@@ -73,14 +73,14 @@ Set `LEGAL_ENTITY` (registered name), `LEGAL_ADDRESS` (a postal address, not a P
 
 ## 4. Email that reaches the inbox: Resend + SPF/DKIM/DMARC (30 minutes)
 
-**Unlocks:** sale reminders, payment-failed notices, sign-in emails from your own domain.
+**Unlocks:** sale reminders, payment-failed notices, account-confirmation and password-reset emails from your own domain (needed before anyone outside your team can sign up).
 **Until then:** no email is sent (the app still works; reminders just show in the app).
 
 1. resend.com → Domains → add `yourdomain.com` (or `mail.yourdomain.com`). Resend shows 3 to 4 DNS records: **SPF** (TXT), **DKIM** (TXT/CNAME) and MX for bounces. Add them at your DNS host.
 2. Add a **DMARC** record: TXT on `_dmarc.yourdomain.com` = `v=DMARC1; p=none; rua=mailto:dmarc@yourdomain.com`. After 2 to 4 weeks of clean reports change `p=none` to `p=quarantine`.
 3. Check it: `pnpm email:check-dns yourdomain.com` (prints PASS or FAIL for SPF, DKIM, DMARC).
 4. Set `RESEND_API_KEY` and `EMAIL_FROM="FlagBid <alerts@yourdomain.com>"`.
-5. **Sign-in emails:** Supabase → Authentication → SMTP Settings → use Resend's SMTP (host `smtp.resend.com`, user `resend`, password = your API key) so the magic link comes from your domain instead of Supabase's shared sender.
+5. **Sign-in emails:** Supabase → Authentication → SMTP Settings → use Resend's SMTP (host `smtp.resend.com`, user `resend`, password = your API key) so the confirmation and password-reset emails come from your domain instead of Supabase's shared sender.
 6. Send a test to a Gmail and an Outlook address; both should land in the inbox with a working *Unsubscribe* link and your postal address in the footer.
 
 ---

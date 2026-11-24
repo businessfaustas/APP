@@ -122,7 +122,7 @@ export const features = {
 export function integrationStatus(): { key: string; label: string; enabled: boolean; note: string }[] {
   return [
     { key: "demo", label: "Demo mode", enabled: features.demoMode(), note: "Sample lots and fixture data" },
-    { key: "auth", label: "Supabase Auth", enabled: features.supabaseAuth(), note: "Email sign-in link; Google when AUTH_GOOGLE=true" },
+    { key: "auth", label: "Supabase Auth", enabled: features.supabaseAuth(), note: "Email + password accounts; Google when AUTH_GOOGLE=true" },
     {
       key: "storage",
       label: "Supabase Storage",

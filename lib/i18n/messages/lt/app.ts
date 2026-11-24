@@ -282,7 +282,7 @@ export const app: Pick<
     on: "įjungta",
     int: {
       demo: { label: "Demo režimas", note: "Pavyzdiniai lotai ir demonstraciniai duomenys" },
-      auth: { label: "Supabase Auth", note: "Prisijungimas el. pašto nuoroda ir Google" },
+      auth: { label: "Supabase Auth", note: "Paskyros su el. paštu ir slaptažodžiu bei Google" },
       storage: { label: "Supabase Storage", note: "Kitaip nuotraukos saugomos vietiniame diske" },
       ai: { label: "DI", note: "Pažeidimų analizė iš nuotraukų, teksto nuskaitymas, santrauka" },
       scraping: { label: "Skelbimų nuskaitymas", note: "ScrapingBee arba Apify — įklijuotas tekstas veikia ir be jo" },

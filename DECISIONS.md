@@ -71,6 +71,13 @@ Left on the old name on purpose, because they are identifiers rather than brandi
 
   Fetches also have timeouts.
 
+- **Sign-up and sign-in.** New customers create an account with name, email, phone and a password (`components/auth/supabase-login.tsx`, Supabase `signUp`), and confirm their email once; after that they sign in with email and password only. The earlier passwordless email-link flow was dropped: it asked returning customers to open their inbox every time and gave us no name or phone. Details:
+  - The form sends the name, a phone number normalized to E.164 (`+37060012345`, country code required, no guessing) and the 18+/terms tick (with its time) as Supabase user metadata. The server re-cleans all of it (`lib/auth/signup.ts`) before copying it into our `User` row, because metadata is client-supplied.
+  - The tick travels with the account, so it still counts when the confirmation link is opened on a phone while the form was filled in on a laptop (a browser cookie would be missing there). The cookie remains as a fallback.
+  - Both ways in end at the same server step (`finishSignIn`): `/auth/callback` for emailed links and Google, `/auth/complete` after a password sign-in. It creates the app user, records consent and redirects to a same-site path only.
+  - A sign-up for an address that already has an account is answered in plain words (Supabase returns a user with no identities in that case); a password-reset request always says "if there is an account…".
+  - A link that lands on `/?code=…` (Supabase does this when our callback is not in its allowed Redirect URLs) is forwarded to `/auth/callback` by the proxy instead of being dropped.
+  - Passwords are 8 to 72 bytes (bcrypt ignores the rest). We never see or store them; Supabase does. Phone numbers are not verified by SMS: it is a contact detail, not a login factor.
 - **Credits.** One credit is charged when an analysis is created and refunded automatically if it fails. Monthly allowances reset lazily (every 30 days, on the next request) to `max(balance, allowance)`, so purchased packs aren't wiped.
 - **Photos** are stored privately (Supabase Storage, or `.data/photos` locally) and served through an authenticated route. The maintenance job deletes stored auction photos after 90 days.
 

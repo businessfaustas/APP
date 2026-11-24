@@ -42,6 +42,14 @@ export async function proxy(req: NextRequest) {
 
   if (maintenanceOn() && !MAINTENANCE_ALLOWED.some((re) => re.test(path))) return maintenanceResponse(isApi);
 
+  // A sign-in or confirmation link that came back to the home page (Supabase does that when our /auth/callback isn't
+  // on its allowed list yet) still carries its one-time code: hand it to the callback instead of dropping it.
+  if (!isApi && path === "/" && req.nextUrl.searchParams.has("code") && supabaseUrl() && supabaseAnonKey()) {
+    const callback = req.nextUrl.clone();
+    callback.pathname = "/auth/callback";
+    return NextResponse.redirect(callback);
+  }
+
   const requestId = req.headers.get("x-request-id") || crypto.randomUUID();
   const headers = new Headers(req.headers);
   headers.set("x-request-id", requestId);

@@ -20,7 +20,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 export const dynamic = "force-dynamic";
 
-export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string; error?: string }> }) {
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string; error?: string; mode?: string }> }) {
   const sp = await searchParams;
   const next = sp.next && sp.next.startsWith("/") && !sp.next.startsWith("//") ? sp.next : "/app";
   if (await getSessionUser()) redirect(next);
@@ -65,7 +65,11 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           <CardContent className="space-y-4">
             {sp.error && (
               <p role="alert" className="bg-stop-soft text-stop rounded-md px-3 py-2 text-sm">
-                {sp.error === "expired" ? t("auth.linkExpired") : t("auth.failed", { reason: sp.error })}
+                {sp.error === "expired"
+                  ? t("auth.linkExpired")
+                  : sp.error === "unconfirmed"
+                    ? t("auth.err.unconfirmed")
+                    : t("auth.failed", { reason: sp.error })}
               </p>
             )}
             {supa && (
@@ -74,6 +78,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
                 anonKey={env().NEXT_PUBLIC_SUPABASE_ANON_KEY!}
                 next={next}
                 google={features.googleAuth()}
+                initialMode={sp.mode === "signup" ? "signup" : "signin"}
               />
             )}
             {supa && demo && (

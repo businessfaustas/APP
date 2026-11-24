@@ -276,7 +276,7 @@ export const app = {
     on: "on",
     int: {
       demo: { label: "Demo mode", note: "Sample lots and fixture data" },
-      auth: { label: "Supabase Auth", note: "Email magic link + Google sign-in" },
+      auth: { label: "Supabase Auth", note: "Email + password accounts and Google sign-in" },
       storage: { label: "Supabase Storage", note: "Otherwise photos are stored on local disk" },
       ai: { label: "AI", note: "Vision damage audit, text extraction, narrative" },
       scraping: { label: "Listing fetcher", note: "ScrapingBee or Apify — paste-text works without it" },

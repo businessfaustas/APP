@@ -55,7 +55,8 @@ export function integrations(): Integration[] {
       name: "Supabase Auth (sign-in)",
       priority: "required",
       enabled: features.supabaseAuth(),
-      unlocks: "Real accounts: an emailed sign-in link for your customers, and Google sign-in once you enable it (AUTH_GOOGLE=true).",
+      unlocks:
+        "Real accounts: customers create an account with name, email, phone and a password (confirmed once by email) and then sign in with email and password; Google sign-in once you enable it (AUTH_GOOGLE=true).",
       without: "Only the shared demo account can sign in.",
       vars: [
         { name: "NEXT_PUBLIC_SUPABASE_URL", set: isSet(e.NEXT_PUBLIC_SUPABASE_URL) },

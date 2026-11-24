@@ -7,6 +7,7 @@ import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 
+import { profileFromMetadata } from "@/lib/auth/signup";
 import { ensureMonthlyCredits } from "@/lib/billing/credits";
 import { DEMO_COOKIE, DEMO_USER } from "@/lib/config/demo";
 import { env, features } from "@/lib/config/env";
@@ -58,11 +59,18 @@ function isAdminEmail(email: string): boolean {
     .includes(email.toLowerCase());
 }
 
-/** Creates the app user (with default settings) on first sign-in. */
-export async function ensureUser(id: string, email: string, name: string | null, role?: "USER" | "ADMIN"): Promise<void> {
-  const existing = await prisma.user.findUnique({ where: { id }, select: { id: true, role: true } });
+/**
+ * Creates the app user (with default settings) on first sign-in. For someone who already exists it only fills in
+ * what is still empty (a name or phone given at sign-up), never overwrites what they have since changed.
+ */
+export async function ensureUser(id: string, email: string, name: string | null, role?: "USER" | "ADMIN", phone?: string | null): Promise<void> {
+  const existing = await prisma.user.findUnique({ where: { id }, select: { id: true, role: true, name: true, phone: true } });
   if (existing) {
-    if (role === "ADMIN" && existing.role !== "ADMIN") await prisma.user.update({ where: { id }, data: { role } });
+    const data: { role?: "ADMIN"; name?: string; phone?: string } = {};
+    if (role === "ADMIN" && existing.role !== "ADMIN") data.role = "ADMIN";
+    if (name && !existing.name) data.name = name;
+    if (phone && !existing.phone) data.phone = phone;
+    if (Object.keys(data).length) await prisma.user.update({ where: { id }, data });
     return;
   }
   try {
@@ -71,6 +79,7 @@ export async function ensureUser(id: string, email: string, name: string | null,
         id,
         email,
         name,
+        phone: phone ?? null,
         role: role ?? "USER",
         creditsRemaining: id === DEMO_USER.id ? 500 : 3,
         plan: id === DEMO_USER.id ? "PRO" : "FREE",
@@ -81,7 +90,7 @@ export async function ensureUser(id: string, email: string, name: string | null,
     });
   } catch (err) {
     // Two requests can race to create the same new user (for example the page and an API call
-    // fired together after the magic link). The loser finds the row the winner made.
+    // fired together right after signing in). The loser finds the row the winner made.
     if ((err as { code?: string }).code === "P2002") return;
     throw err;
   }
@@ -98,9 +107,9 @@ async function loadSessionUser(): Promise<SessionUser | null> {
     const sb = await supabaseServer();
     const { data } = await sb.auth.getUser();
     if (data.user?.email) {
-      const name = (data.user.user_metadata?.full_name as string | undefined) ?? null;
+      const { name, phone } = profileFromMetadata(data.user.user_metadata);
       identity = { id: data.user.id, email: data.user.email, name, isDemo: false };
-      await ensureUser(data.user.id, data.user.email, name, isAdminEmail(data.user.email) ? "ADMIN" : undefined);
+      await ensureUser(data.user.id, data.user.email, name, isAdminEmail(data.user.email) ? "ADMIN" : undefined, phone);
     }
   }
   if (!identity) return null;
