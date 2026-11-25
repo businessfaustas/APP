@@ -57,9 +57,12 @@ The logo link is built from Supabase's **Site URL**, so when you move to your ow
 
 ## Good to know
 
-- Gmail ignores web fonts, so the emails use the reader's system font. The pictures are PNG and JPEG files in `public/email/` (Gmail shows no SVG and strips CSS gradients), so they only appear once the site has them deployed:
+- Gmail ignores web fonts, so the headings are pictures of text set in **Bricolage Grotesque** (a free, open-licence font; the body text stays in the reader's own system font, which is what keeps the emails readable and out of spam). Every heading has alt text, so with pictures blocked the words still show.
+- The pictures are PNG and JPEG files in `public/email/` (Gmail shows no SVG and strips CSS gradients), so they only appear once the site has them deployed. Supabase's **Preview** box does not fill in `{{ … }}` variables, which is why the picture addresses are written out in full (`https://auctionpulse-ai.vercel.app/email/...`) instead of using `{{ .SiteURL }}`.
+- **When you move to your own domain,** replace `https://auctionpulse-ai.vercel.app` with `https://flagbid.com` in both HTML files (a find-and-replace; the test checks that only one address is used), or ask me to. Re-paste both into Supabase.
+- Regenerate the pictures:
   - `flagbid-logo.png`: `pnpm exec tsx scripts/make-email-logo.ts`
-  - `hero.jpg`, `icon-*.png`, `car-disc.png`: `pnpm dev`, then `pnpm exec tsx scripts/make-email-art.ts`. The hero is a screenshot of the landing page's product card, so run this again whenever that card changes.
+  - `h-*.png` (headings), `icon-*.png`, `car-disc.png` and `hero.jpg`: `pnpm exec tsx scripts/make-email-art.ts` (start `pnpm dev` first; the hero is a screenshot of the landing page's product card, so run it again whenever that card changes). `... make-email-art.ts headings` redraws only the headings and needs no server. To change a heading's wording or the font, edit `HEADINGS` in that script and the matching `alt` and `width` in the HTML.
 - The "get started" cards link to the site's own pages (`/app`, `/#sample`, `/#how-it-works`, `/pricing`, `/#faq`) through Supabase's Site URL. Before a customer has confirmed they can only read the pages that don't need a login.
 - Left out of the reference layout on purpose: social-media icons (there are no accounts yet), a postal address (add the real one from `LEGAL_ADDRESS` before launch), and an unsubscribe link (this is a transactional email; marketing email would need one).
 - The text is two languages in one email because Supabase sends one template per project. If you later want each customer's own language, the app would have to store it with the account and the template would use it; ask before changing this, because a template that refers to a missing value stops the email being sent.

@@ -40,11 +40,21 @@ describe.each(TEMPLATES)("email template $file", ({ file, needs }) => {
     const images = html.match(/<img\b[^>]*>/g) ?? [];
     expect(images.length).toBeGreaterThan(0);
     for (const img of images) {
-      const name = img.match(/src="\{\{ \.SiteURL \}\}\/email\/([a-z0-9-]+\.(?:png|jpg))"/)?.[1];
+      // A full address, not {{ .SiteURL }}: Supabase's own preview does not fill variables in, and the pictures would look broken there.
+      const name = img.match(/src="https:\/\/[a-z0-9.-]+\/email\/([a-z0-9-]+\.(?:png|jpg))"/)?.[1];
       expect(name, img).toBeTruthy();
       expect(existsSync(join(process.cwd(), "public", "email", name!)), `public/email/${name} is missing`).toBe(true);
       expect(img).toMatch(/\balt="[^"]*"/); // empty is fine for a decorative icon, but the attribute must be there
       expect(img).toMatch(/\bwidth="\d+"/);
+    }
+  });
+
+  it("every picture is stored at least twice as wide as it is shown, so it stays sharp on phones", async () => {
+    for (const img of html.match(/<img\b[^>]*>/g) ?? []) {
+      const name = img.match(/\/email\/([a-z0-9-]+\.(?:png|jpg))"/)![1]!;
+      const shown = Number(img.match(/\bwidth="(\d+)"/)![1]);
+      const stored = (await sharp(readFileSync(join(process.cwd(), "public", "email", name))).metadata()).width!;
+      expect(stored, `${name} is ${stored}px wide but shown at ${shown}px`).toBeGreaterThanOrEqual(shown * 2);
     }
   });
 
@@ -65,6 +75,15 @@ describe.each(TEMPLATES)("email template $file", ({ file, needs }) => {
   it("links the page's own legal pages through the site address", () => {
     expect(html).toContain('href="{{ .SiteURL }}/privacy"');
     expect(html).toContain('href="{{ .SiteURL }}/terms"');
+  });
+});
+
+describe("all the emails", () => {
+  it("load their pictures from one address, so moving to a new domain is one find-and-replace", () => {
+    const hosts = new Set(
+      TEMPLATES.flatMap(({ file }) => [...readFileSync(join(DIR, file), "utf8").matchAll(/src="(https:\/\/[a-z0-9.-]+)\/email\//g)].map((m) => m[1]!)),
+    );
+    expect([...hosts]).toHaveLength(1);
   });
 });
 
