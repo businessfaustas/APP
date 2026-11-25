@@ -71,9 +71,6 @@ export const states: Pick<
   visual: {
     noPreview: "Peržiūra nepasiekiama",
     lobbyLabel: "Automobiliai, laukiantys nuskaitymo",
-    lobbyPause: "Sustabdyti automobilių kaitą",
-    lobbyPlay: "Paleisti automobilių kaitą",
-    lobbyShow: "Rodyti automobilį {n} iš {total}",
   },
   legalFooter: {
     dmca: "Autorių teisės (DMCA)",

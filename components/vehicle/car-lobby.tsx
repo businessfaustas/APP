@@ -1,6 +1,5 @@
 "use client";
 
-import { PauseIcon, PlayIcon } from "lucide-react";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 
 import type { DamageZone } from "@/lib/domain/schemas";
@@ -33,8 +32,8 @@ function useReducedMotion(): boolean {
  *
  *  - Damage markers only ever go on the wrecked showcase sedan (or on `lock`): a clean car is never marked.
  *  - `lock` stops the show on one car, with its markers, for when the scan has found the real lot's damage.
- *  - It never moves for people who asked for reduced motion, it pauses while the mouse or keyboard is on it, and
- *    there is a pause button and a dot for every car. The cars beyond the first load a moment after the page does.
+ *  - It never moves for people who asked for reduced motion, and it holds still while the mouse is on it. The cars
+ *    beyond the first load a moment after the page does.
  */
 export function CarLobby({
   first,
@@ -44,7 +43,6 @@ export function CarLobby({
   tone = "neutral",
   scanning = true,
   intervalMs = INTERVAL_MS,
-  controls = "center",
   className,
   label,
 }: {
@@ -57,8 +55,6 @@ export function CarLobby({
   tone?: Tone;
   scanning?: boolean;
   intervalMs?: number;
-  /** Where the pause button and dots sit along the top edge, for when something else floats at the centre. */
-  controls?: "center" | "end";
   className?: string;
   label?: string;
 }) {
@@ -66,7 +62,6 @@ export function CarLobby({
   const order = useMemo(() => lobbyOrder(first), [first]);
   const [index, setIndex] = useState(0);
   const [loaded, setLoaded] = useState(false);
-  const [paused, setPaused] = useState(false);
   const [engaged, setEngaged] = useState(false);
   const reduced = useReducedMotion();
 
@@ -82,11 +77,11 @@ export function CarLobby({
   }, []);
 
   useEffect(() => {
-    if (locked || !loaded || paused || engaged || reduced || n < 2) return;
-    // Restarts after every change (a dot, or the timer itself), so a car always gets its full turn.
+    if (locked || !loaded || engaged || reduced || n < 2) return;
+    // Restarts after every change, so a car always gets its full turn.
     const timer = window.setTimeout(() => setIndex((i) => (i + 1) % n), intervalMs);
     return () => window.clearTimeout(timer);
-  }, [locked, loaded, paused, engaged, reduced, n, active, intervalMs]);
+  }, [locked, loaded, engaged, reduced, n, active, intervalMs]);
 
   return (
     <div
@@ -94,8 +89,6 @@ export function CarLobby({
       data-testid="car-lobby"
       onMouseEnter={() => setEngaged(true)}
       onMouseLeave={() => setEngaged(false)}
-      onFocus={() => setEngaged(true)}
-      onBlur={() => setEngaged(false)}
     >
       <div role="img" aria-label={label ?? t("visual.lobbyLabel")} className="absolute inset-0">
         {cars.map((car, k) => {
@@ -119,43 +112,6 @@ export function CarLobby({
           );
         })}
       </div>
-
-      {n > 1 && (
-        <div
-          role="group"
-          aria-label={t("visual.lobbyLabel")}
-          className={cn("absolute inset-x-0 -top-2 z-10 flex", controls === "end" ? "justify-end" : "justify-center")}
-        >
-          <div className="bg-background/70 flex items-center rounded-full border px-1 backdrop-blur-sm">
-            <button
-              type="button"
-              onClick={() => setPaused((p) => !p)}
-              aria-label={paused ? t("visual.lobbyPlay") : t("visual.lobbyPause")}
-              className="text-muted-foreground hover:text-foreground focus-visible:ring-ring grid size-6 place-items-center rounded-full outline-none focus-visible:ring-2"
-            >
-              {paused ? <PlayIcon className="size-3" aria-hidden="true" /> : <PauseIcon className="size-3" aria-hidden="true" />}
-            </button>
-            {cars.map((car, k) => (
-              <button
-                key={car.src}
-                type="button"
-                onClick={() => setIndex(k)}
-                aria-label={t("visual.lobbyShow", { n: k + 1, total: n })}
-                aria-current={k === active ? "true" : undefined}
-                className="focus-visible:ring-ring group grid size-6 place-items-center rounded-full outline-none focus-visible:ring-2"
-              >
-                <span
-                  aria-hidden="true"
-                  className={cn(
-                    "h-1.5 rounded-full transition-all duration-300",
-                    k === active ? "bg-primary w-4" : "bg-foreground/30 group-hover:bg-foreground/55 w-1.5",
-                  )}
-                />
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

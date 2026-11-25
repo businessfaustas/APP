@@ -66,9 +66,6 @@ export const states = {
   visual: {
     noPreview: "No preview available",
     lobbyLabel: "Cars waiting to be scanned",
-    lobbyPause: "Pause the cars",
-    lobbyPlay: "Play the cars",
-    lobbyShow: "Show car {n} of {total}",
   },
   legalFooter: {
     dmca: "Copyright (DMCA)",

@@ -25,7 +25,6 @@ export function HeroScan({ photo, label }: { photo?: string | null; label?: stri
       ) : (
         <div className="absolute inset-0 grid place-items-center">
           <CarLobby
-            controls="end"
             body="sedan"
             tone="neutral"
             zones={[
