@@ -80,7 +80,7 @@ Set `LEGAL_ENTITY` (registered name), `LEGAL_ADDRESS` (a postal address, not a P
 2. Add a **DMARC** record: TXT on `_dmarc.yourdomain.com` = `v=DMARC1; p=none; rua=mailto:dmarc@yourdomain.com`. After 2 to 4 weeks of clean reports change `p=none` to `p=quarantine`.
 3. Check it: `pnpm email:check-dns yourdomain.com` (prints PASS or FAIL for SPF, DKIM, DMARC).
 4. Set `RESEND_API_KEY` and `EMAIL_FROM="FlagBid <alerts@yourdomain.com>"`.
-5. **Sign-in emails:** Supabase → Authentication → SMTP Settings → use Resend's SMTP (host `smtp.resend.com`, user `resend`, password = your API key) so the confirmation and password-reset emails come from your domain instead of Supabase's shared sender. Set the sender name to `FlagBid`, then paste the branded designs from `docs/email-templates/` into Authentication → Emails (**Confirm sign up** and **Reset password**; the README there has the exact steps and subject lines).
+5. **Sign-in emails:** Supabase → Authentication → SMTP Settings → use Resend's SMTP (host `smtp.resend.com`, user `resend`, password = your API key) so the confirmation and password-reset emails come from your domain instead of Supabase's shared sender. This is also what unlocks Supabase's template editor, which is read-only on the Free plan until custom SMTP is on. Set the sender name to `FlagBid`, then paste the branded designs from `docs/email-templates/` into Authentication → Emails (**Confirm sign up** and **Reset password**; the README there has the exact steps, subject lines and a Gmail stopgap if you have no domain yet).
 6. Send a test to a Gmail and an Outlook address; both should land in the inbox with a working *Unsubscribe* link and your postal address in the footer.
 
 ---
