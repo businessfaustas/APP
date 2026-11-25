@@ -32,19 +32,27 @@ describe.each(TEMPLATES)("email template $file", ({ file, needs }) => {
     expect(html).not.toMatch(/\son[a-z]+\s*=/i); // no inline event handlers
   });
 
-  it("is small enough for Gmail not to clip it", () => {
-    expect(statSync(join(DIR, file)).size).toBeLessThan(40_000);
+  it("is small enough for Gmail not to clip it (it cuts messages off at about 100 KB)", () => {
+    expect(statSync(join(DIR, file)).size).toBeLessThan(60_000);
   });
 
-  it("every image is on our own site, has a size and alt text, and the button is an ordinary link", () => {
+  it("every picture is a file we host in public/email, with a size and an alt attribute", () => {
     const images = html.match(/<img\b[^>]*>/g) ?? [];
-    expect(images.length).toBe(1);
+    expect(images.length).toBeGreaterThan(0);
     for (const img of images) {
-      expect(img).toMatch(/src="\{\{ \.SiteURL \}\}\/email\/[a-z-]+\.png"/);
-      expect(img).toMatch(/\balt="[^"]+"/);
+      const name = img.match(/src="\{\{ \.SiteURL \}\}\/email\/([a-z0-9-]+\.(?:png|jpg))"/)?.[1];
+      expect(name, img).toBeTruthy();
+      expect(existsSync(join(process.cwd(), "public", "email", name!)), `public/email/${name} is missing`).toBe(true);
+      expect(img).toMatch(/\balt="[^"]*"/); // empty is fine for a decorative icon, but the attribute must be there
       expect(img).toMatch(/\bwidth="\d+"/);
     }
+  });
+
+  it("the main button is an ordinary link to the confirmation address, and every other link stays on our own site", () => {
     expect(html).toMatch(/<a\s+href="\{\{ \.ConfirmationURL \}\}"/);
+    const links = [...html.matchAll(/\bhref="([^"]*)"/g)].map((m) => m[1]!);
+    expect(links.length).toBeGreaterThan(0);
+    for (const href of links) expect(href === "{{ .ConfirmationURL }}" || href.startsWith("{{ .SiteURL }}"), `unexpected link: ${href}`).toBe(true);
   });
 
   it("has the preview text, a page title, and both languages", () => {
@@ -60,8 +68,23 @@ describe.each(TEMPLATES)("email template $file", ({ file, needs }) => {
   });
 });
 
-describe("email logo", () => {
-  it("exists as a transparent PNG at 2x of the size the templates display it", async () => {
+describe("email pictures", () => {
+  it("the hero ends in a flat strip of the colour the button's cell uses, so the two join seamlessly", async () => {
+    const { data, info } = await sharp(readFileSync(join(process.cwd(), "public", "email", "hero.jpg")))
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+    const html = readFileSync(join(DIR, "confirm-signup.html"), "utf8");
+    const cell = html.match(/<td[^>]*bgcolor="(#[0-9a-f]{6})"[^>]*>\s*<table[^>]*>\s*<tr>\s*<td[^>]*bgcolor="#13141c"/i)?.[1];
+    expect(cell, "the button's cell colour").toBeTruthy();
+    const want = [1, 3, 5].map((i) => parseInt(cell!.slice(i, i + 2), 16));
+    const y = info.height - 4;
+    for (let x = 0; x < info.width; x += 97) {
+      const at = (y * info.width + x) * info.channels;
+      for (let c = 0; c < 3; c++) expect(Math.abs(data[at + c]! - want[c]!), `pixel ${x},${y} channel ${c}`).toBeLessThanOrEqual(3);
+    }
+  });
+
+  it("the logo exists as a transparent PNG at 2x of the size the templates display it", async () => {
     const file = join(process.cwd(), "public", "email", "flagbid-logo.png");
     expect(existsSync(file)).toBe(true);
     const meta = await sharp(readFileSync(file)).metadata();
