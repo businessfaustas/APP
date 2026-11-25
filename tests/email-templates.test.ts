@@ -62,7 +62,8 @@ describe.each(TEMPLATES)("email template $file", ({ file, needs }) => {
     expect(html).toMatch(/<a\s+href="\{\{ \.ConfirmationURL \}\}"/);
     const links = [...html.matchAll(/\bhref="([^"]*)"/g)].map((m) => m[1]!);
     expect(links.length).toBeGreaterThan(0);
-    for (const href of links) expect(href === "{{ .ConfirmationURL }}" || href.startsWith("{{ .SiteURL }}"), `unexpected link: ${href}`).toBe(true);
+    for (const href of links)
+      expect(href === "{{ .ConfirmationURL }}" || href === "mailto:{{ .Email }}" || href.startsWith("{{ .SiteURL }}"), `unexpected link: ${href}`).toBe(true);
   });
 
   it("has the preview text, a page title, and both languages", () => {

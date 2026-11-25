@@ -44,7 +44,7 @@
             <tr>
               <td align="center" style="padding: 14px 32px 24px 32px">
                 <p style="margin: 0; font-size: 16px; line-height: 1.55; color: #3d4054">
-                  Confirm that <strong style="color: #13141c">{{ .Email }}</strong> is yours and your account is ready. Know your max bid before you bid.
+                  Confirm that <strong style="color: #13141c"><a href="mailto:{{ .Email }}" style="color: inherit; text-decoration: none">{{ .Email }}</a></strong> is yours and your account is ready. Know your max bid before you bid.
                 </p>
               </td>
             </tr>
@@ -250,7 +250,7 @@
               <td align="center" style="padding: 34px 24px 34px 24px; font-size: 12px; line-height: 1.7; color: #8a8da3">
                 <img src="https://auctionpulse-ai.vercel.app/email/flagbid-logo.png" width="84" height="27" alt="FlagBid" style="display: block; border: 0; width: 84px; height: auto; margin: 0 auto 12px auto" />
                 &copy; 2026 FlagBid. All rights reserved.<br />
-                You're getting this email because {{ .Email }} was used to sign up for FlagBid.<br />
+                You're getting this email because <a href="mailto:{{ .Email }}" style="color: inherit; text-decoration: none">{{ .Email }}</a> was used to sign up for FlagBid.<br />
                 <a href="{{ .SiteURL }}/privacy" style="color: #8a8da3; text-decoration: underline">Privacy</a>
                 &nbsp;·&nbsp;
                 <a href="{{ .SiteURL }}/terms" style="color: #8a8da3; text-decoration: underline">Terms</a>

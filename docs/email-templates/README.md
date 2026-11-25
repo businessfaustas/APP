@@ -38,6 +38,8 @@ After either option, open **Authentication → Rate Limits** and raise the email
 
 ## 2. Put the designs into Supabase (5 minutes, once step 1 is done)
 
+**Each file goes into its own template.** Supabase has a separate page for each kind of email; paste `confirm-signup.html` only into **Confirm sign up** and `reset-password.html` only into **Reset password**. If both end up in the same box, every email will contain both designs one after the other.
+
 Supabase dashboard → **Authentication → Emails**.
 
 1. Open **Confirm sign up**.
