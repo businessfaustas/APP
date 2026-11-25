@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <meta name="supported-color-schemes" content="light" />
+    <title>Confirm your FlagBid account</title>
+  </head>
+  <body style="margin: 0; padding: 0; background-color: #f3f4fa">
+    <!-- Preview text shown next to the subject in the inbox -->
+    <div style="display: none; max-height: 0; overflow: hidden; opacity: 0; color: #f3f4fa; font-size: 1px; line-height: 1px">
+      One click to finish creating your FlagBid account. · Vienas paspaudimas, ir FlagBid paskyra paruošta.
+    </div>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f3f4fa">
+      <tr>
+        <td align="center" style="padding: 32px 16px">
+          <table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0" style="width: 100%; max-width: 560px">
+            <!-- Logo -->
+            <tr>
+              <td align="left" style="padding: 0 4px 20px 4px">
+                <a href="{{ .SiteURL }}" style="text-decoration: none">
+                  <img src="{{ .SiteURL }}/email/flagbid-logo.png" width="140" height="44" alt="FlagBid" style="display: block; border: 0; width: 140px; height: auto" />
+                </a>
+              </td>
+            </tr>
+
+            <!-- Card -->
+            <tr>
+              <td
+                style="
+                  background-color: #ffffff;
+                  border: 1px solid #e3e5f1;
+                  border-top: 4px solid #545ce1;
+                  border-radius: 16px;
+                  padding: 36px 32px;
+                  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+                  color: #13141c;
+                "
+              >
+                <h1 style="margin: 0 0 12px 0; font-size: 24px; line-height: 1.25; font-weight: 700; color: #13141c">Confirm your email address</h1>
+                <p style="margin: 0 0 24px 0; font-size: 16px; line-height: 1.55; color: #3d4054">
+                  Welcome to FlagBid. Confirm that <strong style="color: #13141c">{{ .Email }}</strong> is yours to finish creating your account, so you can start checking lots before you bid.
+                </p>
+
+                <!-- Button -->
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 24px 0">
+                  <tr>
+                    <td align="center" bgcolor="#545ce1" style="background-color: #545ce1; border-radius: 12px">
+                      <a
+                        href="{{ .ConfirmationURL }}"
+                        style="
+                          display: block;
+                          padding: 15px 30px;
+                          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+                          font-size: 16px;
+                          line-height: 1.2;
+                          font-weight: 600;
+                          color: #ffffff;
+                          text-decoration: none;
+                          border-radius: 12px;
+                        "
+                        >Confirm email address</a
+                      >
+                    </td>
+                  </tr>
+                </table>
+
+                <p style="margin: 0 0 6px 0; font-size: 13px; line-height: 1.5; color: #6b6f85">Button not working? Copy this link into your browser:</p>
+                <p style="margin: 0 0 20px 0; font-size: 12px; line-height: 1.5; color: #545ce1; word-break: break-all">{{ .ConfirmationURL }}</p>
+                <p style="margin: 0; font-size: 13px; line-height: 1.5; color: #6b6f85">
+                  The link works once and expires after a short time. If you didn't sign up for FlagBid, ignore this email and nothing will happen.
+                </p>
+
+                <!-- Lithuanian -->
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 28px 0 0 0">
+                  <tr>
+                    <td style="border-top: 1px solid #e3e5f1; padding-top: 24px">
+                      <h2 style="margin: 0 0 8px 0; font-size: 18px; line-height: 1.3; font-weight: 700; color: #13141c">Patvirtinkite savo el. pašto adresą</h2>
+                      <p style="margin: 0 0 12px 0; font-size: 15px; line-height: 1.55; color: #3d4054">
+                        Sveiki atvykę į FlagBid. Patvirtinkite, kad <strong style="color: #13141c">{{ .Email }}</strong> yra jūsų, ir baikite kurti paskyrą:
+                        <a href="{{ .ConfirmationURL }}" style="color: #545ce1; font-weight: 600">patvirtinti el. paštą</a>.
+                      </p>
+                      <p style="margin: 0; font-size: 13px; line-height: 1.5; color: #6b6f85">
+                        Nuoroda veikia vieną kartą ir greitai nustoja galioti. Jei FlagBid paskyros nekūrėte, tiesiog ignoruokite šį laišką.
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Footer -->
+            <tr>
+              <td
+                align="center"
+                style="
+                  padding: 24px 12px 0 12px;
+                  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+                  font-size: 12px;
+                  line-height: 1.6;
+                  color: #8a8da3;
+                "
+              >
+                <strong style="color: #6b6f85">FlagBid</strong> · Know your max bid before you bid.<br />
+                You're getting this email because {{ .Email }} was used to create a FlagBid account.<br />
+                <a href="{{ .SiteURL }}/privacy" style="color: #8a8da3; text-decoration: underline">Privacy</a>
+                &nbsp;·&nbsp;
+                <a href="{{ .SiteURL }}/terms" style="color: #8a8da3; text-decoration: underline">Terms</a>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
