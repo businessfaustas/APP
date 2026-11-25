@@ -9,32 +9,43 @@ These are the emails Supabase sends for your customers' accounts, styled as Flag
 
 Each one has the FlagBid wordmark, a rounded white card with a blue top edge, one big button, the plain link underneath in case the button is blocked, and the same text in Lithuanian below the English. The other Supabase templates (magic link, invite, change email, reauthentication) are not used by the app, so they can stay as they are.
 
-## 1. Put the designs into Supabase (5 minutes)
+## 1. First, turn on custom SMTP (Supabase locks the templates until you do)
 
-Supabase dashboard → your project → **Authentication → Emails** (called **Email Templates** in older dashboards).
+On the Supabase **Free** plan the **Subject** and **Body** boxes are read-only and the page says _"Set up custom SMTP to edit templates"_. Setting up your own sending service is the key that unlocks them, and it is also what makes the email come **from FlagBid** instead of "Supabase Auth <noreply@mail.app.supabase.io>" (the built-in sender also only delivers to your own team's addresses). Pick one:
 
-1. Open **Confirm sign up**.
-   - **Subject:** `Confirm your FlagBid account`
-   - **Message body:** delete everything and paste the whole of `confirm-signup.html`. Save.
-2. Open **Reset password**.
-   - **Subject:** `Reset your FlagBid password`
-   - **Message body:** paste the whole of `reset-password.html`. Save.
-3. Use the **Preview** tab to look at each one. The logo only appears once the live site has the `public/email/flagbid-logo.png` file (it does after the next Vercel deploy) and **Site URL** is set correctly (Authentication → URL Configuration).
+**A. The proper way: your own domain + Resend (about 30 minutes, about EUR 1 a year for the domain).**
 
-Only the variables `{{ .ConfirmationURL }}`, `{{ .SiteURL }}` and `{{ .Email }}` are used. Don't add any other `{{ … }}`: Supabase refuses to send an email whose template it can't fill in.
-
-## 2. Make it come from FlagBid, not from Supabase
-
-The design above fixes what the email looks like. Who it comes from ("Supabase Auth <noreply@mail.app.supabase.io>") is a separate setting, and it needs your own domain:
-
-1. Finish the **Resend** step in `docs/LAUNCH-PLAN.md` (add your domain, put its SPF, DKIM and DMARC records at your DNS host, run `pnpm email:check-dns yourdomain.com`).
-2. Supabase → **Authentication → Emails → SMTP Settings** → turn on **Enable custom SMTP**:
+1. Finish the **Resend** step in `docs/LAUNCH-PLAN.md`: add your domain, put its SPF, DKIM and DMARC records at your DNS host, run `pnpm email:check-dns yourdomain.com`.
+2. Supabase → **Authentication → Emails → SMTP Settings** (or the **Set up SMTP** button on a template page) → **Enable custom SMTP**:
    - **Sender email:** `noreply@yourdomain.com` (an address on the domain you verified in Resend)
    - **Sender name:** `FlagBid`
    - **Host:** `smtp.resend.com` · **Port:** `465` · **Username:** `resend` · **Password:** your Resend API key
-3. Send yourself a test: create an account with a Gmail address that is not on your Supabase team. It should arrive from **FlagBid**, with the design above, and not land in spam.
 
-Until then Supabase's own sender is used: it only delivers to your own team's addresses, and the emails still carry the new design but say "Supabase Auth" as the sender.
+**B. A stopgap while you have no domain: your Gmail account (10 minutes, fine for testing and a first trickle of customers, not for scale).**
+
+1. Google Account → **Security** → turn on **2-Step Verification**, then **App passwords** → create one called "FlagBid". Google shows a 16-letter password once.
+2. Supabase → SMTP Settings → **Enable custom SMTP**:
+   - **Sender email:** your Gmail address (it must be the same account)
+   - **Sender name:** `FlagBid`
+   - **Host:** `smtp.gmail.com` · **Port:** `465` · **Username:** your Gmail address · **Password:** the 16-letter app password
+3. Gmail allows roughly 500 emails a day, and the email shows as "FlagBid <your.address@gmail.com>". Move to option A before you take real traffic. Never type the app password anywhere but Supabase's form; if it leaks, delete it in your Google account.
+
+After either option, open **Authentication → Rate Limits** and raise the emails-per-hour limit if you expect more than a few sign-ups an hour (Supabase starts custom SMTP at a low number).
+
+## 2. Put the designs into Supabase (5 minutes, once step 1 is done)
+
+Supabase dashboard → **Authentication → Emails**.
+
+1. Open **Confirm sign up**.
+   - **Subject:** `Confirm your FlagBid account`
+   - **Body:** delete everything, switch to the **Source** tab, and paste the whole of `confirm-signup.html`. **Save changes.**
+2. Open **Reset password**.
+   - **Subject:** `Reset your FlagBid password`
+   - **Body:** paste the whole of `reset-password.html`. **Save changes.**
+3. Look at each one in the **Preview** tab. The logo only appears once the live site has `public/email/flagbid-logo.png` (it does after the Vercel deploy of this commit) and **Site URL** is set correctly (Authentication → URL Configuration).
+4. Test: create an account with an address that is not yours, or use **Forgot your password?** on the sign-in page, and check the inbox and the spam folder.
+
+Only the variables `{{ .ConfirmationURL }}`, `{{ .SiteURL }}` and `{{ .Email }}` are used. Don't add any other `{{ … }}`: Supabase refuses to send an email whose template it can't fill in.
 
 ## 3. When the address changes
 
