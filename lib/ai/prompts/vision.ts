@@ -9,6 +9,9 @@ import { generateStructured } from "../client";
 import { oneLine } from "../guard";
 import { languageNote } from "../language";
 
+/** Bump when the rules change in a way that should re-read photos that were already analysed (it is part of the cache key). */
+export const VISION_PROMPT_VERSION = 2;
+
 export const VISION_SYSTEM_PROMPT = `You are a senior collision damage appraiser and salvage-auction buyer with 20 years of experience.
 You are reviewing auction photos for a professional car flipper deciding how much to bid.
 Return ONLY data matching the provided JSON schema. Do NOT estimate prices.
@@ -28,8 +31,11 @@ RULES
    REFINISH (paint only), INSPECT (cannot determine).
 5. Structural indicators: buckled/kinked frame rails or aprons, shifted strut towers, uneven door/hood/fender gaps,
    radiator support displaced beyond the bumper area, wheel pushed back or visibly wrong camber/toe,
-   pillar/roof deformation, windshield cracked from body flex, B-pillar intrusion. If present, set
-   frame_damage_suspected=true and explain in frame_evidence.
+   pillar/roof deformation, windshield cracked from body flex, B-pillar intrusion. Set frame_damage_suspected=true
+   ONLY when at least one of these is visible in a photo, and cite the photo numbers in frame_evidence.
+   If you merely suspect hidden structural damage (rails, floor or aprons are not visible, or only bolt-on or outer
+   panels are damaged), set it to false, say in frame_evidence what could not be seen, and list the unseen parts in
+   likely_hidden_damage with a probability. Never set it true while frame_evidence says the damage is "not confirmed".
 6. Airbags: visible bag fabric, open steering-wheel cover, split dash, hanging curtain bags, deployed knee bag.
    List each deployed airbag. If any deployed, add seat belt pretensioners and SRS control module to likely_hidden_damage.
 7. Flood: water line or silt on door panels/seats, mud in seat tracks or footwells, corrosion on seat rails/under-dash
@@ -45,7 +51,9 @@ RULES
     photos show rear damage; visible odometer reading differs from the listing).
 12. EV/hybrid: damage near the high-voltage battery, underbody impact, or orange HV cables damaged
     → red flag level "high".
-13. Be concise. No marketing language.`;
+13. odometer_reading_visible: the number shown on the odometer, in miles, only when a photo shows the display clearly
+    (digits you can read, not a guess); otherwise null.
+14. Be concise. No marketing language.`;
 
 /** Listing metadata for the vision prompt. Every value came from a web page, so each is flattened to one clean line. */
 /** The vision prompt, with the language paragraph appended for non-English reports (English is exactly VISION_SYSTEM_PROMPT). */

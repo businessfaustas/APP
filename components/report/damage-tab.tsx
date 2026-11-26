@@ -18,7 +18,7 @@ import { useReport } from "./report-context";
 const ANGLES = ["front", "rear", "left", "right", "engine_bay", "interior_front", "undercarriage", "dashboard_odometer"] as const;
 
 export function DamageTab() {
-  const { view, lineItems } = useReport();
+  const { view, lineItems, assumptions } = useReport();
   const t = useT();
   const d = view.damage;
   const [zone, setZone] = useState<DamageZone | null>(null);
@@ -27,6 +27,7 @@ export function DamageTab() {
   const zoneLines = lineItems.filter((l) => zone === null || l.zone === zone);
   const highlight = useMemo(() => (zone === null ? null : new Set(lineItems.filter((l) => l.zone === zone).flatMap((l) => l.photoRefs))), [zone, lineItems]);
   if (!d) return null;
+  const frameSuspected = d.frame_damage_suspected && !assumptions.frameDismissed;
   const present = new Set(
     d.photo_coverage.angles_present.map((a) => (a === "front_left" || a === "front_right" ? "front" : a === "rear_left" || a === "rear_right" ? "rear" : a)),
   );
@@ -78,8 +79,8 @@ export function DamageTab() {
               <Badge variant={d.airbag_deployed ? "caution" : "outline"}>
                 {d.airbag_deployed ? t("report.airbags", { list: d.airbags_deployed_list.join(", ") || t("report.deployed") }) : t("report.airbagsIntact")}
               </Badge>
-              <Badge variant={d.frame_damage_suspected ? "stop" : "outline"}>
-                {d.frame_damage_suspected ? t("report.frameSuspected") : t("report.noFrame")}
+              <Badge variant={frameSuspected ? "stop" : "outline"}>
+                {frameSuspected ? t("report.frameSuspected") : d.frame_damage_suspected ? t("report.frameDismissedBadge") : t("report.noFrame")}
               </Badge>
               {d.flood_indicators.length > 0 && <Badge variant="stop">{t("report.floodIndicators")}</Badge>}
               {d.engine_bay_intact === false && <Badge variant="stop">{t("report.engineBayDamaged")}</Badge>}

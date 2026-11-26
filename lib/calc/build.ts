@@ -61,6 +61,27 @@ export interface Assumptions extends Omit<CalcSettings, "exitStrategy"> {
   currentBidOverride: number | null;
   /** Expected-case export resale override (USD); best/worst scale proportionally. */
   destinationResaleOverride: number | null;
+  /** The buyer checked and the AI's frame-damage suspicion is wrong: no warning, no verdict penalty, no frame-pull line. */
+  frameDismissed: boolean;
+}
+
+export const FRAME_FLAG_CODE = "FRAME_DAMAGE_SUSPECTED";
+/** The rule line the estimator adds when the AI suspects frame damage (see lib/estimate/rules.ts). */
+export const FRAME_LINE_KEY = "sublet_frame_measure";
+
+/** True for the repair line that exists only because frame damage is suspected. */
+export function isFrameRuleLine(l: Pick<RepairLineItem, "partKey" | "origin">): boolean {
+  return l.partKey === FRAME_LINE_KEY && l.origin === "RULE";
+}
+
+/** Risk flags as the buyer sees them: the frame warning disappears once they have dismissed it. */
+export function visibleFlags<F extends { code: string }>(flags: readonly F[], a: Pick<Assumptions, "frameDismissed">): F[] {
+  return a.frameDismissed ? flags.filter((f) => f.code !== FRAME_FLAG_CODE) : [...flags];
+}
+
+/** Whether the frame-damage suspicion still counts, after the buyer's say. */
+export function frameStillSuspected(base: Pick<VerdictSignals, "frameSuspected">, a: Pick<Assumptions, "frameDismissed">): boolean {
+  return base.frameSuspected && !a.frameDismissed;
 }
 
 /** Shape of the persisted user settings that feed the default assumptions. */
@@ -143,6 +164,7 @@ export function assumptionsFromSettings(s: SettingsLike): Assumptions {
     distanceOverride: null,
     currentBidOverride: null,
     destinationResaleOverride: null,
+    frameDismissed: false,
   };
 }
 
@@ -230,7 +252,7 @@ export function buildCalc(base: AnalysisBase, a: Assumptions): { input: CalcInpu
     ...(exportMode && base.exportProfile ? { exportCosts: exportCostsFrom(base.exportProfile, base.milesToPort ?? base.distanceMiles, a) } : {}),
     extraFixedCosts: base.extraFixedCosts,
     currentBid: a.currentBidOverride ?? base.currentBid,
-    signals: base.signals,
+    signals: a.frameDismissed ? { ...base.signals, frameSuspected: false, flags: visibleFlags(base.signals.flags, a) } : base.signals,
   };
 
   const settings = settingsFromAssumptions(a, exportMode);

@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Disclosure } from "@/components/ui/misc";
+import { visibleFlags } from "@/lib/calc/build";
 import type { DamageZone, RiskFlag } from "@/lib/domain/schemas";
 import { useT } from "@/lib/i18n/client";
 import { trFlag, trText } from "@/lib/i18n/generated";
@@ -279,7 +280,7 @@ function DamageCard({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
 }
 
 export function OverviewTab({ onOpenTab }: { onOpenTab?: (tab: string) => void }) {
-  const { view, calc, marketMissing } = useReport();
+  const { view, calc, marketMissing, assumptions } = useReport();
   const t = useT();
   // The AI's own summary (English only) is kept while the numbers still match it.
   const aiNarrative =
@@ -294,7 +295,8 @@ export function OverviewTab({ onOpenTab }: { onOpenTab?: (tab: string) => void }
         .map((l) => l.replace(/^[•\-*]\s*/, "").trim())
         .filter(Boolean)
     : [];
-  const serious = view.flags.filter((f) => f.level !== "INFO").length;
+  const flags = visibleFlags(view.flags, assumptions);
+  const serious = flags.filter((f) => f.level !== "INFO").length;
 
   return (
     <div className="space-y-6">
@@ -312,7 +314,7 @@ export function OverviewTab({ onOpenTab }: { onOpenTab?: (tab: string) => void }
             {serious > 0 && <Badge variant="caution">{t("report.toCheckN", { n: serious })}</Badge>}
           </CardHeader>
           <CardContent>
-            <RiskFlagsList flags={view.flags} />
+            <RiskFlagsList flags={flags} />
           </CardContent>
         </Card>
       </div>

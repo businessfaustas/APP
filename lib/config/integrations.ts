@@ -300,7 +300,35 @@ async function probe(url: string, init: RequestInit, okMessage: string): Promise
   }
 }
 
-/** Makes one small read-only request with the saved key. Never sends anything that costs credits. */
+/** The Anthropic key, then web search on it: without web search the market price is the AI's estimate from memory instead of real listings. */
+async function checkAnthropic(apiKey: string): Promise<CheckResult> {
+  const keyCheck = await probe(
+    "https://api.anthropic.com/v1/models",
+    { headers: { "x-api-key": apiKey, "anthropic-version": "2023-06-01" } },
+    "Key accepted by Anthropic.",
+  );
+  if (!keyCheck.ok) return keyCheck;
+  const { generateWebResearch } = await import("@/lib/ai/client");
+  const { webSearchProblem } = await import("@/lib/ai/errors");
+  try {
+    const r = await generateWebResearch({
+      purpose: "MARKET_ESTIMATE",
+      instructions: "Answer in one short sentence.",
+      prompt: "Search the web for the typical asking price of a used 2018 Audi S3 in the US and answer in one sentence.",
+      maxSearches: 1,
+    });
+    return r.searches > 0
+      ? { ok: true, message: "Key accepted by Anthropic, and live web search works: market prices come from real listings." }
+      : { ok: false, message: "Key accepted, but the model didn't run a web search. Market prices fall back to the AI's estimate from memory." };
+  } catch (err) {
+    return {
+      ok: false,
+      message: `Key accepted, but live web search is off: ${webSearchProblem(err)}. Until it is on, market prices are the AI's estimate from memory. Switch it on in the Anthropic Console → Settings → Privacy (an organization admin does this).`,
+    };
+  }
+}
+
+/** Makes one small read-only request with the saved key. The one exception: the AI check also runs a single real web search (about a cent). */
 export async function checkIntegration(key: string): Promise<CheckResult> {
   const e = env();
   switch (key) {
@@ -322,13 +350,9 @@ export async function checkIntegration(key: string): Promise<CheckResult> {
       );
     case "ai":
       if (!features.ai()) return { ok: false, message: "Not configured." };
-      return e.AI_PROVIDER === "openai"
-        ? probe("https://api.openai.com/v1/models", { headers: { authorization: `Bearer ${e.OPENAI_API_KEY}` } }, "Key accepted by OpenAI.")
-        : probe(
-            "https://api.anthropic.com/v1/models",
-            { headers: { "x-api-key": e.ANTHROPIC_API_KEY!, "anthropic-version": "2023-06-01" } },
-            "Key accepted by Anthropic.",
-          );
+      if (e.AI_PROVIDER === "openai")
+        return probe("https://api.openai.com/v1/models", { headers: { authorization: `Bearer ${e.OPENAI_API_KEY}` } }, "Key accepted by OpenAI.");
+      return checkAnthropic(e.ANTHROPIC_API_KEY!);
     case "scraping":
       if (!e.SCRAPINGBEE_API_KEY) return { ok: false, message: "Not configured." };
       return probe(`https://app.scrapingbee.com/api/v1/usage?api_key=${encodeURIComponent(e.SCRAPINGBEE_API_KEY)}`, {}, "Key accepted by ScrapingBee.");

@@ -168,7 +168,7 @@ export function WhatIfActions() {
 }
 
 export function WhatIfControls({ compact = false, actions = true }: { compact?: boolean; actions?: boolean }) {
-  const { assumptions: a, setAssumption, view } = useReport();
+  const { assumptions: a, setAssumption, setFrameDismissed, view } = useReport();
   const t = useT();
   const set =
     <K extends keyof Assumptions>(k: K) =>
@@ -179,6 +179,19 @@ export function WhatIfControls({ compact = false, actions = true }: { compact?: 
     <div className="space-y-4">
       {!compact && <LiveResult />}
       <div className="space-y-1">
+        {view.damage?.frame_damage_suspected && !view.readOnly && (
+          <Section title={t("report.secRisk")} open>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-3">
+                <Label htmlFor="wi-frame" className="text-sm font-medium">
+                  {t("report.frameDismiss")}
+                </Label>
+                <Switch id="wi-frame" checked={a.frameDismissed} onCheckedChange={setFrameDismissed} data-testid="frame-dismiss" />
+              </div>
+              <p className="text-muted-foreground text-xs">{t("report.frameDismissHint")}</p>
+            </div>
+          </Section>
+        )}
         <Section title={t("report.secRepair")} open>
           <SliderRow
             label={t("report.laborRate")}

@@ -83,6 +83,11 @@ export const report = {
     secRepair: "Repair costs",
     secProfit: "Profit & resale",
     secPurchase: "Purchase & transport",
+    secRisk: "Risk checks",
+    frameDismiss: "I checked: no frame damage",
+    frameDismissHint:
+      "The AI suspects frame damage but did not see it for certain. Turn this on once you have seen the photos or had it measured: the warning, the verdict penalty and the frame-pull cost are removed.",
+    frameDismissedBadge: "Frame damage ruled out by you",
     tabOverview: "Overview",
     tabDamage: "Damage",
     tabRepair: "Repair",

@@ -82,6 +82,11 @@ export const report: Pick<Messages, "report"> = {
     secRepair: "Remonto išlaidos",
     secProfit: "Pelnas ir perpardavimas",
     secPurchase: "Pirkimas ir transportas",
+    secRisk: "Rizikos patikra",
+    frameDismiss: "Patikrinau: rėmas nepažeistas",
+    frameDismissHint:
+      "DI įtaria rėmo pažeidimą, bet jo tikrai nematė. Įjunkite, kai pamatysite nuotraukas arba rėmas bus išmatuotas: pašalinamas įspėjimas, verdikto nuolaida ir rėmo ištiesinimo kaina.",
+    frameDismissedBadge: "Rėmo pažeidimą atmetėte jūs",
     tabOverview: "Apžvalga",
     tabDamage: "Pažeidimai",
     tabRepair: "Remontas",

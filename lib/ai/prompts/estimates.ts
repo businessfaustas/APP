@@ -4,7 +4,10 @@ import { z } from "zod";
 
 import type { Locale } from "@/lib/i18n/locales";
 
+import { log } from "@/lib/observability/log";
+
 import { generateStructured, generateWebResearch } from "../client";
+import { webSearchProblem } from "../errors";
 import { oneLine } from "../guard";
 import { languageNote } from "../language";
 
@@ -158,7 +161,8 @@ export async function llmEstimateMarket(args: {
       if (sane(out)) return { ...out, listings, grounded: false, searches: research.searches };
     }
   } catch (err) {
-    console.error("Web market research unavailable, using the model's own knowledge", err);
+    // Customers just see the AI-estimate note; the reason goes to the logs and to the admin "Test" button on the AI row.
+    log.warn("market.web_search_unavailable", { reason: webSearchProblem(err) });
   }
 
   const out = await generateStructured({

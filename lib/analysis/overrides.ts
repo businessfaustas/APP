@@ -36,6 +36,7 @@ export const AssumptionsPatchSchema = z
     distanceOverride: z.number().int().min(0).max(20000).nullable(),
     currentBidOverride: money.nullable(),
     destinationResaleOverride: money.nullable(),
+    frameDismissed: z.boolean(),
   })
   .partial();
 

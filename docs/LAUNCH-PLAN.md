@@ -121,8 +121,8 @@ Do all of it in **test mode** first, then repeat with live keys.
 
 1. console.anthropic.com → create a **workspace just for production**, create a key in it.
 2. **Set a spend limit** on that workspace (Settings → Limits) at roughly twice what you expect to spend.
-3. Settings → Privacy → turn on **web search** for the organisation (needed for live market prices).
-4. Set `ANTHROPIC_API_KEY`. Leave `AI_PROVIDER=anthropic`.
+3. Settings → Privacy → turn on **web search** for the organisation (needed for live market prices; an organisation admin does this, at platform.claude.com/settings/privacy). Without it the market price is only the AI's memory of the car, which is why a bid can look far too low.
+4. Set `ANTHROPIC_API_KEY`. Leave `AI_PROVIDER=anthropic`. Then open **Admin → Setup → AI → Test**: it checks the key and runs one real web search (about a cent) and tells you in plain words if web search is still off.
 5. Keep the in-app caps: `AI_DAILY_BUDGET_USD` (default 25) and `AI_MONTHLY_BUDGET_USD` (default 250). At the cap the app quietly falls back to the no-AI path and alerts you; at 80% it warns first.
 6. Rough cost: about US$0.25 to $0.45 per report with photos (see the pricing section of `DECISIONS.md`). Your lowest pack is €2.90 per car.
 

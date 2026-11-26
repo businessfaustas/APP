@@ -5,7 +5,7 @@ import { toast } from "sonner";
 
 import { applyAssumptionPatch, type UserOverrides } from "@/lib/analysis/overrides";
 import type { AnalysisView } from "@/lib/analysis/view";
-import { assumptionsFromSettings, runAnalysisCalc, type Assumptions } from "@/lib/calc/build";
+import { assumptionsFromSettings, isFrameRuleLine, runAnalysisCalc, type Assumptions } from "@/lib/calc/build";
 import type { CalculationResult } from "@/lib/calc/types";
 import type { RepairLineItem } from "@/lib/domain/schemas";
 import { useT } from "@/lib/i18n/client";
@@ -23,6 +23,8 @@ interface ReportState {
   updateLine: (id: string, patch: Partial<RepairLineItem>) => void;
   addLine: (line: RepairLineItem) => void;
   removeLine: (id: string) => void;
+  /** The buyer says the AI's frame-damage suspicion is wrong (or takes that back): flag, verdict and the frame-pull line follow. */
+  setFrameDismissed: (on: boolean) => void;
   reset: () => void;
   save: () => Promise<void>;
   saveDefaults: () => Promise<void>;
@@ -100,6 +102,11 @@ export function ReportProvider({ view, children }: { view: AnalysisView; childre
   const addLine = useCallback((line: RepairLineItem) => setLineItems((items) => [...items, line]), []);
   const removeLine = useCallback((id: string) => setLineItems((items) => items.filter((l) => l.id !== id)), []);
 
+  const setFrameDismissed = useCallback((on: boolean) => {
+    setAssumptions((a) => ({ ...a, frameDismissed: on }));
+    setLineItems((items) => items.map((l) => (isFrameRuleLine(l) ? { ...l, included: !on } : l)));
+  }, []);
+
   const reset = useCallback(() => {
     setAssumptions(defaults);
     setLineItems(originalLines);
@@ -158,6 +165,7 @@ export function ReportProvider({ view, children }: { view: AnalysisView; childre
     updateLine,
     addLine,
     removeLine,
+    setFrameDismissed,
     reset,
     save,
     saveDefaults,

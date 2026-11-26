@@ -7,7 +7,7 @@ import { vehicleDetails } from "@/lib/providers/market/details";
 import { marketPartPrices } from "@/lib/providers/parts";
 import { writeNarrative } from "@/lib/ai/prompts/narrative";
 import { asLocale, languageCacheSuffix } from "@/lib/ai/language";
-import { runVisionAudit } from "@/lib/ai/prompts/vision";
+import { runVisionAudit, VISION_PROMPT_VERSION } from "@/lib/ai/prompts/vision";
 import { analysisAiCost } from "@/lib/ai/usage";
 import { modelId } from "@/lib/ai/client";
 import { refundAnalysis } from "@/lib/billing/credits";
@@ -44,6 +44,7 @@ import { llmClassifyTitle } from "@/lib/ai/prompts/extractListing";
 
 import { assemble } from "./assemble";
 import { cached, cacheGet, cacheSet, TTL } from "./cache";
+import { usableOdometer } from "./odometer";
 import { InputPayloadSchema } from "./types";
 
 export interface StepRunner {
@@ -67,11 +68,12 @@ function vehicleLabel(l: NormalizedListing): string {
  * memoized Inngest steps. Optional steps degrade to fallbacks instead of failing.
  */
 /**
- * Market values are cached for a day per car, except the "nothing available" and "auction's own
- * guess" answers: those come from a missing key, so they must not outlive adding one.
+ * Market values are cached for a day per car, except the "nothing available", "auction's own
+ * guess" and "AI estimate from memory" answers: those come from a missing key or a switched-off web
+ * search, so they must not outlive turning it on.
  */
 async function cachedMarket(key: string, fn: () => Promise<MarketValuation>): Promise<MarketValuation> {
-  const weak = (m: MarketValuation) => m.provider === "NONE" || m.provider.startsWith("Auction ACV");
+  const weak = (m: MarketValuation) => m.provider === "NONE" || m.provider.startsWith("Auction ACV") || m.provider.startsWith("AI estimate");
   const hit = await cacheGet<MarketValuation>(key);
   if (hit && !weak(hit)) return hit;
   const fresh = await fn();
@@ -244,9 +246,11 @@ export async function runAnalysis(analysisId: string, step: StepRunner, now: Dat
     const history: HistoryReport | null = vehicleResult.history;
     await prisma.analysis.update({ where: { id: analysisId }, data: { vehicleInfo: json(vehicle), history: json(history), progress: 30 } });
 
-    // ── 3. Vision audit + market + logistics (parallel) ─────────────────────
+    // ── 3. Vision audit + market + logistics ───────────────────────────
     const exportProfile = snapshot.exitStrategy === "EXPORT" ? await loadExportProfile(snapshot.exportProfileId) : null;
-    const [visionResult, marketResult] = await Promise.all([
+    // The market value depends on the mileage. When the listing gives none, the odometer the AI reads off the photos is
+    // used, so the market step then waits for the photo audit; otherwise both run side by side.
+    const runVision = () =>
       step.run("vision-audit", async () => {
         await progress(analysisId, "vision-audit", 40);
         if (demoFixture) return { damage: demoFixture.damage, fromPhotos: true, provider: "Demo fixture", isDemo: true, note: null as string | null };
@@ -270,7 +274,7 @@ export async function runAnalysis(analysisId: string, step: StepRunner, now: Dat
           };
         }
         try {
-          const key = `vision:${modelId("vision")}:${createHash("sha256")
+          const key = `vision:v${VISION_PROMPT_VERSION}:${modelId("vision")}:${createHash("sha256")
             .update(photos.map((p) => p.sha256).join(","))
             .digest("hex")}${languageCacheSuffix(locale)}`;
           const damage = await cached(key, TTL.days(30), () => runVisionAudit({ listing, photos, analysisId, locale }));
@@ -285,13 +289,15 @@ export async function runAnalysis(analysisId: string, step: StepRunner, now: Dat
             note: "Vision failed",
           };
         }
-      }),
+      });
+    const runMarket = (photoOdometer: number | null) =>
       step.run("market-valuation", async () => {
         await progress(analysisId, "market-valuation", 45);
+        const mileage = listing.odometer || photoOdometer || null; // a listing odometer of 0 means "not given"
         const market: MarketValuation = demoFixture
           ? demoFixture.market
           : await cachedMarket(
-              `market:${[listing.make, listing.model, listing.year, listing.trim, snapshot.homeZip, Math.round((listing.odometer ?? 0) / 5000), snapshot.listToSaleBps].join(":")}${languageCacheSuffix(locale)}`,
+              `market:${[listing.make, listing.model, listing.year, listing.trim, snapshot.homeZip, Math.round((mileage ?? 0) / 5000), snapshot.listToSaleBps].join(":")}${languageCacheSuffix(locale)}`,
               () =>
                 valueMarket({
                   vin: listing.vin,
@@ -299,11 +305,14 @@ export async function runAnalysis(analysisId: string, step: StepRunner, now: Dat
                   make: listing.make,
                   model: listing.model,
                   trim: listing.trim,
-                  mileage: listing.odometer,
+                  mileage,
                   zip: snapshot.homeZip,
                   listToSaleBps: snapshot.listToSaleBps ?? 9600,
                   listedRetailValue: listing.listedRetailValue,
-                  details: vehicleDetails(listing, vehicle),
+                  details: vehicleDetails(
+                    !listing.odometer && mileage ? { ...listing, odometer: mileage, odometerUnit: "mi", odometerBrand: "ACTUAL" } : listing,
+                    vehicle,
+                  ),
                   analysisId,
                   locale,
                 }),
@@ -322,8 +331,15 @@ export async function runAnalysis(analysisId: string, step: StepRunner, now: Dat
           milesToPort,
         };
         return { market, logistics };
-      }),
-    ]);
+      });
+    let visionResult: Awaited<ReturnType<typeof runVision>>;
+    let marketResult: Awaited<ReturnType<typeof runMarket>>;
+    if (!demoFixture && !listing.odometer && features.ai()) {
+      visionResult = await runVision();
+      marketResult = await runMarket(usableOdometer(visionResult.damage.odometer_reading_visible));
+    } else {
+      [visionResult, marketResult] = await Promise.all([runVision(), runMarket(null)]);
+    }
     const damage: DamageAssessment = visionResult.damage;
     sources.vision = { provider: visionResult.provider, isDemo: visionResult.isDemo, ok: visionResult.fromPhotos, note: visionResult.note };
     sources.market = { provider: marketResult.market.provider, isDemo: marketResult.market.isDemo, ok: marketResult.market.provider !== "NONE", note: null };

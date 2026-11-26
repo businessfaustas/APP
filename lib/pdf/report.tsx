@@ -4,7 +4,7 @@ import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 
 import type { AnalysisView } from "@/lib/analysis/view";
 import { linePrice } from "@/lib/calc/repair";
-import type { Assumptions } from "@/lib/calc/build";
+import { visibleFlags, type Assumptions } from "@/lib/calc/build";
 import type { CalculationResult } from "@/lib/calc/types";
 
 // Built-in Helvetica only supports WinAnsi, so use ASCII minus signs.
@@ -141,7 +141,7 @@ export function ReportPdf({ view, calc, assumptions }: { view: AnalysisView; cal
         </Text>
 
         <Text style={s.h2}>Risk flags</Text>
-        {view.flags.map((f) => (
+        {visibleFlags(view.flags, assumptions).map((f) => (
           <Text key={f.code} style={{ marginBottom: 2 }}>
             [{f.level}] {f.title} - <Text style={s.muted}>{f.detail}</Text>
           </Text>

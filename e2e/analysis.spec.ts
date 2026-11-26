@@ -93,6 +93,22 @@ test("raising the labor rate to $100/h recalculates to BE CAUTIOUS at $2,375", a
   await expect(dealVerdict(page)).toHaveText(/BE CAUTIOUS/);
 });
 
+test("a suspected frame damage can be ruled out, and the report follows", async ({ page }) => {
+  await analyze(page, "https://www.copart.com/lot/90000004"); // the Tesla: the AI suspects frame damage
+  const risks = page.getByTestId("risk-flags");
+  await expect(risks).toContainText(/frame/i);
+  const before = Number((await page.getByTestId("max-bid").textContent())!.replace(/[^\d]/g, ""));
+
+  await page.getByTestId("frame-dismiss").click();
+  await expect(risks).not.toContainText(/frame/i);
+  // the frame-pull line is no longer paid for, so the bid can only go up
+  await expect.poll(async () => Number((await page.getByTestId("max-bid").textContent())!.replace(/[^\d]/g, ""))).toBeGreaterThan(before);
+
+  await page.getByTestId("frame-dismiss").click(); // taking it back restores everything
+  await expect(risks).toContainText(/frame/i);
+  await expect.poll(async () => Number((await page.getByTestId("max-bid").textContent())!.replace(/[^\d]/g, ""))).toBe(before);
+});
+
 test("non-repairable Civic is a hard WALK AWAY", async ({ page }) => {
   await analyze(page, LOTS.civic);
   await expect(dealVerdict(page)).toHaveText(/WALK AWAY/);
