@@ -88,7 +88,7 @@ export function integrations(): Integration[] {
       priority: "required",
       enabled: features.ai(),
       unlocks:
-        "Reads the damage from the photos part by part, researches the car's clean market value on the web from its exact model, trim and mileage, extracts pasted listing text and writes the summary. For the web research, turn on web search in the Anthropic console (Settings → Privacy).",
+        "Reads the damage from the photos part by part, researches the car's clean market value on the web from its exact model, trim and mileage, extracts pasted listing text and writes the summary. For the web research, web search must not be switched off in the Anthropic console (Settings → Capabilities; it is on by default).",
       without:
         "The photos aren't analyzed (damage comes from the listing's damage type with built-in rules) and the market value isn't estimated: the report asks you to type it.",
       vars: [
@@ -323,7 +323,7 @@ async function checkAnthropic(apiKey: string): Promise<CheckResult> {
   } catch (err) {
     return {
       ok: false,
-      message: `Key accepted, but live web search is off: ${webSearchProblem(err)}. Until it is on, market prices are the AI's estimate from memory. Switch it on in the Anthropic Console → Settings → Privacy (an organization admin does this).`,
+      message: `Key accepted, but live web search is off: ${webSearchProblem(err)}. Until it is on, market prices are the AI's estimate from memory. Check Anthropic Console → Settings → Capabilities: web search is on unless an organization admin switched it off there.`,
     };
   }
 }
