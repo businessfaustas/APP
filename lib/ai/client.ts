@@ -192,7 +192,9 @@ export async function generateWebResearch(args: {
       model: anthropic(modelId("text")),
       instructions: `${args.instructions}\n${UNTRUSTED_NOTICE}`,
       prompt,
-      tools: { web_search: anthropic.tools.webSearch_20260318({ maxUses: args.maxSearches ?? 4, userLocation: { type: "approximate", country: "US" } }) },
+      // The basic tool version, on purpose: the newer ones (20260209, 20260318) call tools programmatically, which
+      // Haiku 4.5 (the default text model) rejects with "does not support programmatic tool calling".
+      tools: { web_search: anthropic.tools.webSearch_20250305({ maxUses: args.maxSearches ?? 4, userLocation: { type: "approximate", country: "US" } }) },
       maxOutputTokens: 2500,
       temperature: 0.1,
       maxRetries: 1,

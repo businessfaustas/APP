@@ -28,12 +28,12 @@ export function TestButton({ integration }: { integration: string }) {
     }
   }
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex max-w-sm flex-col items-start gap-2 md:items-end">
       <Button size="sm" variant="outline" onClick={() => void run()} disabled={busy} data-testid={`test-${integration}`}>
         {busy ? <Loader2Icon className="animate-spin" /> : <PlugZapIcon />} Test
       </Button>
       {result && (
-        <span className={cn("text-xs", result.ok ? "text-go" : "text-stop")} role="status">
+        <span className={cn("text-xs leading-snug break-words md:text-right", result.ok ? "text-go" : "text-stop")} role="status">
           {result.message}
         </span>
       )}

@@ -16,6 +16,7 @@ export function webSearchProblem(err: unknown): string {
   const msg = raw.replace(/\s+/g, " ").trim();
   if (/web.?search/i.test(msg) && /(not (been )?enabled|disabled|not allowed|permission|organi[sz]ation)/i.test(msg))
     return "web search isn't switched on for this Anthropic organization";
+  if (/programmatic tool calling|allowed_callers/i.test(msg)) return "the selected AI model can't run this web-search tool version";
   if (/\b(401|403)\b|unauthori[sz]ed|forbidden|invalid x-api-key/i.test(msg)) return "Anthropic rejected the request (key or permissions)";
   if (/\b429\b|rate.?limit|overloaded/i.test(msg)) return "Anthropic is rate-limiting or overloaded right now";
   if (/abort|timed? ?out|timeout/i.test(msg)) return "the search didn't answer in time";
