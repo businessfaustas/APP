@@ -61,13 +61,36 @@ export function databaseCa(url: string, e: EnvLike = process.env): string | unde
  * string override explicit TLS settings, so when a CA applies the `sslmode` is removed and the settings are given
  * explicitly: always encrypted, certificate and host name always checked.
  */
-export function nodePgConfig(url: string, e: EnvLike = process.env): { connectionString: string; ssl?: { ca: string; rejectUnauthorized: true } } {
+export interface NodePgConfig {
+  connectionString: string;
+  ssl?: { ca: string; rejectUnauthorized: true };
+  /** Most connections one running copy of the app may hold. */
+  max?: number;
+  /** Give an idle connection back after this long, so a quiet copy of the app holds none. */
+  idleTimeoutMillis?: number;
+}
+
+/**
+ * How many database connections one copy of the app may keep open. On Vercel every running instance has its own
+ * pool, and the database's connection pooler allows about 200 clients in total, so a burst of requests (49 web-vitals
+ * beacons at once did it) with the library's default of 10 each used them all up: "max client connections reached".
+ * Three each leaves room for dozens of instances. `DATABASE_POOL_MAX` overrides it; off Vercel the default stays.
+ */
+export function databasePoolMax(e: EnvLike = process.env): number | undefined {
+  const raw = e.DATABASE_POOL_MAX?.trim();
+  if (raw && /^\d+$/.test(raw) && Number(raw) >= 1) return Number(raw);
+  return e.VERCEL ? 3 : undefined;
+}
+
+export function nodePgConfig(url: string, e: EnvLike = process.env): NodePgConfig {
+  const max = databasePoolMax(e);
+  const pool = max === undefined ? {} : { max, idleTimeoutMillis: 10_000 };
   const ca = databaseCa(url, e);
-  if (!ca) return { connectionString: url };
+  if (!ca) return { connectionString: url, ...pool };
   const u = new URL(url);
   u.searchParams.delete("sslmode");
   u.searchParams.delete("sslrootcert");
-  return { connectionString: u.toString(), ssl: { ca, rejectUnauthorized: true } };
+  return { connectionString: u.toString(), ssl: { ca, rejectUnauthorized: true }, ...pool };
 }
 
 /** Connection string for Prisma's migration engine: points it at a file holding the CA to check the server against. */

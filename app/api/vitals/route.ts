@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import { json, limited } from "@/lib/api";
 import { prisma } from "@/lib/db/prisma";
+import { log } from "@/lib/observability/log";
 import { analyticsAllowed } from "@/lib/privacy/consent";
 
 const Body = z.object({
@@ -19,6 +20,11 @@ export async function POST(req: Request) {
   if (blocked) return blocked;
   const parsed = Body.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return json({ error: "Bad request." }, { status: 400 });
-  await prisma.webVital.create({ data: { ...parsed.data, path: parsed.data.path.split("?")[0]!.replace(/\/[0-9a-z]{20,}/gi, "/:id") } });
+  try {
+    await prisma.webVital.create({ data: { ...parsed.data, path: parsed.data.path.split("?")[0]!.replace(/\/[0-9a-z]{20,}/gi, "/:id") } });
+  } catch (err) {
+    // A page-speed beacon is not worth an error alert: if the database is busy, drop this one reading.
+    log.warn("vitals.store_failed", { reason: err instanceof Error ? err.message.slice(0, 160) : "unknown" });
+  }
   return new Response(null, { status: 204 });
 }

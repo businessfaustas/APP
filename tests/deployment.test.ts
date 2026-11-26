@@ -9,6 +9,7 @@ import {
   demoModeEnabled,
   directDatabaseUrl,
   isSupabaseUrl,
+  databasePoolMax,
   nodePgConfig,
   prismaMigrateUrl,
   supabaseAnonKey,
@@ -81,6 +82,20 @@ describe("deployment defaults", () => {
       expect(databaseCa(neon, { DATABASE_SSL_CA: "PEM" })).toBe("PEM");
       expect(databaseCa(pooler, { DATABASE_SSL_CA: "line1\\nline2" })).toBe("line1\nline2");
       expect(nodePgConfig(neon, { DATABASE_SSL_CA: "PEM" }).ssl).toEqual({ ca: "PEM", rejectUnauthorized: true });
+    });
+
+    it("keeps each serverless instance to a few connections, so a burst of requests cannot use up the pooler's 200", () => {
+      expect(databasePoolMax({})).toBeUndefined(); // local development and CI keep the library's default
+      expect(databasePoolMax({ VERCEL: "1" })).toBe(3);
+      expect(databasePoolMax({ VERCEL: "1", DATABASE_POOL_MAX: "5" })).toBe(5);
+      expect(databasePoolMax({ DATABASE_POOL_MAX: "2" })).toBe(2);
+      expect(databasePoolMax({ VERCEL: "1", DATABASE_POOL_MAX: "0" })).toBe(3); // nonsense is ignored
+      expect(databasePoolMax({ VERCEL: "1", DATABASE_POOL_MAX: "lots" })).toBe(3);
+      const c = nodePgConfig(pooler, { VERCEL: "1" });
+      expect(c.max).toBe(3);
+      expect(c.idleTimeoutMillis).toBe(10_000);
+      expect(c.ssl).toEqual({ ca: SUPABASE_ROOT_CA, rejectUnauthorized: true }); // the pool limit does not change the TLS settings
+      expect(nodePgConfig(neon, { VERCEL: "1" })).toEqual({ connectionString: neon, max: 3, idleTimeoutMillis: 10_000 });
     });
 
     it("every place that opens its own database connection goes through nodePgConfig (the seed script once did not, and a deploy failed)", () => {
