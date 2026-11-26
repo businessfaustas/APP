@@ -2,6 +2,7 @@ import { createAnalysis } from "@/lib/analysis/create";
 import { consentRequired, handleApiError, json, limited, unauthorized } from "@/lib/api";
 import { userFromBearer } from "@/lib/auth/session";
 import { env } from "@/lib/config/env";
+import { getLocale } from "@/lib/i18n/server";
 import { ExtensionCaptureSchema } from "@/lib/pipeline/types";
 
 export const runtime = "nodejs";
@@ -38,7 +39,7 @@ export async function POST(req: Request) {
   if (blocked) return withCors(blocked);
   try {
     const capture = ExtensionCaptureSchema.parse(await req.json());
-    const { id } = await createAnalysis(user, { input: capture.url, mode: "EXTENSION", extension: capture });
+    const { id } = await createAnalysis(user, { input: capture.url, mode: "EXTENSION", extension: capture, locale: await getLocale() });
     return json({ id, url: `${env().NEXT_PUBLIC_APP_URL}/app/analyses/${id}` }, { status: 201, headers: CORS });
   } catch (err) {
     return withCors(handleApiError(err));

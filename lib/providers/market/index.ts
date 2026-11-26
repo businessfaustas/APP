@@ -4,6 +4,7 @@ import { llmEstimateMarket } from "@/lib/ai/prompts/estimates";
 import { applyBps } from "@/lib/calc/money";
 import { env, features } from "@/lib/config/env";
 import type { Comp, MarketValuation } from "@/lib/domain/schemas";
+import type { Locale } from "@/lib/i18n/locales";
 
 import { fetchJson } from "../http";
 import { adjustComps, compsConfidence, median, mileageSlope, scenarioValues } from "./stats";
@@ -21,6 +22,8 @@ export interface MarketRequest {
   /** Other facts about the car for the AI (see vehicleDetails). */
   details?: string;
   analysisId: string;
+  /** Language of the AI's written reasoning (default English). */
+  locale?: Locale;
 }
 
 type Json = Record<string, unknown>;
@@ -199,6 +202,7 @@ export async function valueMarket(req: MarketRequest): Promise<MarketValuation> 
         mileage: req.mileage,
         zip: req.zip,
         analysisId: req.analysisId,
+        locale: req.locale,
       });
       const comps = est.listings.map(aiListingToComp(req.year));
       return {

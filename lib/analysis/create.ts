@@ -7,6 +7,8 @@ import { chargeForAnalysis, checkRateLimit } from "@/lib/billing/credits";
 import { prisma } from "@/lib/db/prisma";
 import type { AuctionSource } from "@/lib/domain/schemas";
 import type { Prisma } from "@/lib/generated/prisma/client";
+import type { Locale } from "@/lib/i18n/locales";
+import { asLocale } from "@/lib/ai/language";
 import { parseInput } from "@/lib/input/parseInput";
 import { detectAuctionUrl } from "@/lib/input/urls";
 import { normalizeVin } from "@/lib/input/vin";
@@ -30,6 +32,8 @@ export interface CreateAnalysisInput {
   batchId?: string | null;
   /** when the user pastes text, they can also give the URL it came from */
   url?: string | null;
+  /** The language the AI writes its text in: the UI language at the time (default English). */
+  locale?: Locale;
 }
 
 function shortHash(s: string): string {
@@ -114,6 +118,7 @@ export async function createAnalysis(user: SessionUser, req: CreateAnalysisInput
       inputType: parsedType,
       inputValue,
       inputPayload: payload as unknown as Prisma.InputJsonValue,
+      locale: asLocale(req.locale),
       settingsSnapshot: snapshot as unknown as Prisma.InputJsonValue,
       status: "QUEUED",
       currentStep: "QUEUED",

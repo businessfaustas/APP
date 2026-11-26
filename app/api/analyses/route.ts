@@ -4,6 +4,7 @@ import { createAnalysis } from "@/lib/analysis/create";
 import { handleApiError, json, unauthorized, consentRequired } from "@/lib/api";
 import { getSessionUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/prisma";
+import { getLocale } from "@/lib/i18n/server";
 import { ManualListingSchema } from "@/lib/pipeline/types";
 
 const CreateSchema = z.object({
@@ -26,6 +27,7 @@ export async function POST(req: Request) {
       manual: body.manual ?? null,
       photos: body.photos,
       url: body.url ?? null,
+      locale: await getLocale(),
     });
     return json({ id }, { status: 201 });
   } catch (err) {

@@ -2,6 +2,7 @@ import { createAnalysis } from "@/lib/analysis/create";
 import { handleApiError, json, notFound, unauthorized } from "@/lib/api";
 import { getSessionUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/prisma";
+import { getLocale } from "@/lib/i18n/server";
 import { InputPayloadSchema } from "@/lib/pipeline/types";
 
 /** Starts a fresh analysis with the same input (re-fetches the listing, re-runs every step). */
@@ -22,6 +23,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
       photos: p.photos,
       extension: p.extension,
       url: p.parsed.url,
+      locale: await getLocale(), // a re-run is how an older report gets its text in the language now selected
     });
     return json({ id: newId }, { status: 201 });
   } catch (err) {

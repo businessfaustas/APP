@@ -2,8 +2,11 @@ import "server-only";
 
 import { z } from "zod";
 
+import type { Locale } from "@/lib/i18n/locales";
+
 import { generateStructured, generateWebResearch } from "../client";
 import { oneLine } from "../guard";
+import { languageNote } from "../language";
 
 const RangeSchema = z.object({ low: z.number().int().min(0), high: z.number().int().min(0) }).nullable();
 
@@ -102,6 +105,11 @@ vehicle described, in the US today. Use every detail given (year, trim, engine, 
 and 75th percentile. Leave "listings" empty: you have no listings to cite. Be conservative; this is used to cap a bid. In
 "reasoning", say what you based it on and how sure you are (you may not know very recent models well).`;
 
+function withLanguage(instructions: string, locale?: Locale): string {
+  const note = languageNote(locale);
+  return note ? `${instructions}\n\n${note}` : instructions;
+}
+
 function sane(e: { p25: number; p50: number; p75: number }): boolean {
   return e.p50 >= 500 && e.p25 <= e.p50 && e.p50 <= e.p75 && e.p75 <= e.p50 * 2.5 && e.p25 >= e.p50 * 0.4;
 }
@@ -120,6 +128,8 @@ export async function llmEstimateMarket(args: {
   mileage: number | null;
   zip: string | null;
   analysisId: string;
+  /** Language of the "reasoning" text (default English). */
+  locale?: Locale;
 }): Promise<MarketEstimate> {
   const subject = `Vehicle: ${args.vehicle}\n${args.details}\nMileage: ${args.mileage ?? "unknown"}\nBuyer ZIP: ${args.zip ?? "unknown"}`;
 
@@ -137,7 +147,7 @@ export async function llmEstimateMarket(args: {
         kind: "text",
         schema: MarketEstimateSchema,
         schemaName: "market_estimate",
-        instructions: ESTIMATE_INSTRUCTIONS,
+        instructions: withLanguage(ESTIMATE_INSTRUCTIONS, args.locale),
         messages: [{ role: "user", content: `${subject}\n\nResearch notes:\n${research.text}` }],
         analysisId: args.analysisId,
         maxOutputTokens: 1800,
@@ -156,7 +166,7 @@ export async function llmEstimateMarket(args: {
     kind: "text",
     schema: MarketEstimateSchema,
     schemaName: "market_estimate",
-    instructions: KNOWLEDGE_INSTRUCTIONS,
+    instructions: withLanguage(KNOWLEDGE_INSTRUCTIONS, args.locale),
     messages: [{ role: "user", content: subject }],
     analysisId: args.analysisId,
     maxOutputTokens: 800,

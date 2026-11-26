@@ -3,9 +3,11 @@ import "server-only";
 import type { ModelMessage } from "ai";
 
 import { DamageAssessmentSchema, type DamageAssessment, type NormalizedListing } from "@/lib/domain/schemas";
+import type { Locale } from "@/lib/i18n/locales";
 
 import { generateStructured } from "../client";
 import { oneLine } from "../guard";
+import { languageNote } from "../language";
 
 export const VISION_SYSTEM_PROMPT = `You are a senior collision damage appraiser and salvage-auction buyer with 20 years of experience.
 You are reviewing auction photos for a professional car flipper deciding how much to bid.
@@ -46,6 +48,12 @@ RULES
 13. Be concise. No marketing language.`;
 
 /** Listing metadata for the vision prompt. Every value came from a web page, so each is flattened to one clean line. */
+/** The vision prompt, with the language paragraph appended for non-English reports (English is exactly VISION_SYSTEM_PROMPT). */
+export function visionInstructions(locale?: Locale): string {
+  const note = languageNote(locale);
+  return note ? `${VISION_SYSTEM_PROMPT}\n\n${note}` : VISION_SYSTEM_PROMPT;
+}
+
 export function listingContext(l: NormalizedListing): string {
   return [
     `Vehicle: ${oneLine([l.year, l.make, l.model, l.trim].filter(Boolean).join(" ")) || "unknown"}`,
@@ -62,6 +70,8 @@ export async function runVisionAudit(args: {
   listing: NormalizedListing;
   photos: { index: number; bytes: Uint8Array; mediaType: string }[];
   analysisId: string;
+  /** Language of the free-text fields (default English). */
+  locale?: Locale;
 }): Promise<DamageAssessment> {
   const content: Extract<ModelMessage, { role: "user" }>["content"] = [
     { type: "text", text: `Listing metadata:\n${listingContext(args.listing)}\n\nThere are ${args.photos.length} photos.` },
@@ -76,7 +86,7 @@ export async function runVisionAudit(args: {
     kind: "vision",
     schema: DamageAssessmentSchema,
     schemaName: "damage_assessment",
-    instructions: VISION_SYSTEM_PROMPT,
+    instructions: visionInstructions(args.locale),
     messages: [{ role: "user", content }],
     analysisId: args.analysisId,
     maxOutputTokens: 12000,

@@ -241,6 +241,7 @@ model Analysis {
   inputType        InputType
   inputValue       String
   inputPayload     Json? // pasted text, manual form, extension capture, uploaded photo paths
+  locale           String             @default("en") // language the AI-written text is requested in (the UI language when the analysis was created)
   status           AnalysisStatus     @default(QUEUED)
   currentStep      String?
   progress         Int                @default(0)

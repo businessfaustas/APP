@@ -6,6 +6,7 @@ import { getSessionUser } from "@/lib/auth/session";
 import { checkRateLimit } from "@/lib/billing/credits";
 import { RATE_LIMITS } from "@/lib/billing/plans";
 import { prisma } from "@/lib/db/prisma";
+import { getLocale } from "@/lib/i18n/server";
 
 const BatchSchema = z.object({
   name: z.string().max(80).nullish(),
@@ -22,9 +23,10 @@ export async function POST(req: Request) {
     await checkRateLimit(user.id, inputs.length);
     const batch = await prisma.batch.create({ data: { userId: user.id, name: body.name ?? null } });
     const created: { input: string; id: string | null; error: string | null }[] = [];
+    const locale = await getLocale();
     for (const input of inputs) {
       try {
-        const { id } = await createAnalysis(user, { input, batchId: batch.id }, { skipRateLimit: true });
+        const { id } = await createAnalysis(user, { input, batchId: batch.id, locale }, { skipRateLimit: true });
         created.push({ input, id, error: null });
       } catch (err) {
         created.push({ input, id: null, error: err instanceof Error ? err.message : "Failed" });

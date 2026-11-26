@@ -6,6 +6,7 @@ import { llmEstimatePartPrices } from "@/lib/ai/prompts/estimates";
 import { vehicleDetails } from "@/lib/providers/market/details";
 import { marketPartPrices } from "@/lib/providers/parts";
 import { writeNarrative } from "@/lib/ai/prompts/narrative";
+import { asLocale, languageCacheSuffix } from "@/lib/ai/language";
 import { runVisionAudit } from "@/lib/ai/prompts/vision";
 import { analysisAiCost } from "@/lib/ai/usage";
 import { modelId } from "@/lib/ai/client";
@@ -90,6 +91,7 @@ export async function runAnalysis(analysisId: string, step: StepRunner, now: Dat
       ? (findDemoFixture(payload.parsed.source, payload.parsed.lotNumber) ??
         (payload.parsed.type === "VIN" && payload.parsed.vin ? findDemoFixtureByVin(payload.parsed.vin) : null))
       : null;
+    const locale = asLocale(a.locale); // the AI writes its free text in the language the report was requested in
     const sources: DataSources = {};
 
     // ── 1. Listing ──────────────────────────────────────────────────────────
@@ -270,8 +272,8 @@ export async function runAnalysis(analysisId: string, step: StepRunner, now: Dat
         try {
           const key = `vision:${modelId("vision")}:${createHash("sha256")
             .update(photos.map((p) => p.sha256).join(","))
-            .digest("hex")}`;
-          const damage = await cached(key, TTL.days(30), () => runVisionAudit({ listing, photos, analysisId }));
+            .digest("hex")}${languageCacheSuffix(locale)}`;
+          const damage = await cached(key, TTL.days(30), () => runVisionAudit({ listing, photos, analysisId, locale }));
           return { damage, fromPhotos: true, provider: `AI vision (${modelId("vision")})`, isDemo: false, note: `${photos.length} photos` };
         } catch (err) {
           console.error("Vision audit failed", err);
@@ -289,7 +291,7 @@ export async function runAnalysis(analysisId: string, step: StepRunner, now: Dat
         const market: MarketValuation = demoFixture
           ? demoFixture.market
           : await cachedMarket(
-              `market:${[listing.make, listing.model, listing.year, listing.trim, snapshot.homeZip, Math.round((listing.odometer ?? 0) / 5000), snapshot.listToSaleBps].join(":")}`,
+              `market:${[listing.make, listing.model, listing.year, listing.trim, snapshot.homeZip, Math.round((listing.odometer ?? 0) / 5000), snapshot.listToSaleBps].join(":")}${languageCacheSuffix(locale)}`,
               () =>
                 valueMarket({
                   vin: listing.vin,
@@ -303,6 +305,7 @@ export async function runAnalysis(analysisId: string, step: StepRunner, now: Dat
                   listedRetailValue: listing.listedRetailValue,
                   details: vehicleDetails(listing, vehicle),
                   analysisId,
+                  locale,
                 }),
             );
         const dist = demoFixture
@@ -408,7 +411,7 @@ export async function runAnalysis(analysisId: string, step: StepRunner, now: Dat
       await progress(analysisId, "narrate", 95);
       const args = { calc: calcOut.calc, currentBid: listing.currentBid, flags: calcOut.flags, checklist: calcOut.checklist };
       if (demoFixture || !features.ai()) return { text: templateNarrative(args), source: "TEMPLATE" as const };
-      return writeNarrative({ ...args, vehicle: vehicleLabel(listing), analysisId });
+      return writeNarrative({ ...args, vehicle: vehicleLabel(listing), analysisId, locale });
     });
     sources.narrative = { provider: narrative.source === "AI" ? "AI summary" : "Template", isDemo: Boolean(demoFixture), ok: true, note: null };
 

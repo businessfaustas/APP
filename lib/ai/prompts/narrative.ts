@@ -3,16 +3,23 @@ import "server-only";
 import type { CalculationResult } from "@/lib/calc/types";
 import type { RiskFlag } from "@/lib/domain/schemas";
 import { templateNarrative } from "@/lib/flags/narrative";
+import type { Locale } from "@/lib/i18n/locales";
 
 import { generatePlainText } from "../client";
+import { languageNote } from "../language";
 import { checkNarrative } from "../narrativeGuard";
 
 const INSTRUCTIONS = `You write the summary of a salvage-car deal report for a car flipper.
-Write 5–8 short bullet points (start each with "• "), plain English, no hype.
+Write 5–8 short bullet points (start each with "• "), in plain everyday language, no hype.
 Cover: the verdict and max bid, expected profit and the range, the biggest cost drivers, the top risks,
 and what to inspect or ask the yard before bidding.
 Use ONLY numbers that appear in the provided JSON. Do not compute or invent new numbers.
 Format money like $3,100.`;
+
+export function narrativeInstructions(locale?: Locale): string {
+  const note = languageNote(locale);
+  return note ? `${INSTRUCTIONS}\n\n${note}` : `${INSTRUCTIONS}\nWrite in English.`;
+}
 
 export async function writeNarrative(args: {
   calc: CalculationResult;
@@ -21,6 +28,8 @@ export async function writeNarrative(args: {
   checklist: string[];
   vehicle: string;
   analysisId: string;
+  /** Language the summary is written in (default English). */
+  locale?: Locale;
 }): Promise<{ text: string; source: "AI" | "TEMPLATE" }> {
   const facts = {
     vehicle: args.vehicle,
@@ -47,7 +56,7 @@ export async function writeNarrative(args: {
       const text = await generatePlainText({
         purpose: "NARRATIVE",
         kind: "text",
-        instructions: INSTRUCTIONS,
+        instructions: narrativeInstructions(args.locale),
         prompt: JSON.stringify(facts),
         analysisId: args.analysisId,
       });
