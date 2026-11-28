@@ -2,8 +2,10 @@
  * Checks for the sign-up and sign-in forms. Pure (no I/O) so the browser form and the server use the same rules.
  * They return an i18n key suffix (under `auth.err.*`) instead of a sentence, so each side can translate it.
  */
+import { normalizeCountry } from "@/lib/geo/countries";
 
-export type FieldError = "nameRequired" | "nameTooLong" | "emailInvalid" | "phoneInvalid" | "passwordShort" | "passwordLong" | "passwordSameAsEmail";
+export type FieldError =
+  "nameRequired" | "nameTooLong" | "emailInvalid" | "phoneInvalid" | "countryRequired" | "passwordShort" | "passwordLong" | "passwordSameAsEmail";
 
 export const NAME_MAX = 80;
 export const PASSWORD_MIN = 8;
@@ -47,6 +49,10 @@ export function validatePhone(raw: string): FieldError | null {
   return normalizePhone(raw) ? null : "phoneInvalid";
 }
 
+export function validateCountry(raw: string): FieldError | null {
+  return normalizeCountry(raw) ? null : "countryRequired";
+}
+
 export function validatePassword(password: string, email = ""): FieldError | null {
   if (password.length < PASSWORD_MIN) return "passwordShort";
   if (new TextEncoder().encode(password).length > PASSWORD_MAX) return "passwordLong";
@@ -58,6 +64,7 @@ export interface SignUpInput {
   name: string;
   email: string;
   phone: string;
+  country: string;
   password: string;
 }
 
@@ -70,15 +77,21 @@ export function validateSignUp(input: SignUpInput): Partial<Record<keyof SignUpI
   if (email) errors.email = email;
   const phone = validatePhone(input.phone);
   if (phone) errors.phone = phone;
+  const country = validateCountry(input.country);
+  if (country) errors.country = country;
   const password = validatePassword(input.password, input.email);
   if (password) errors.password = password;
   return errors;
 }
 
-/** What to keep from the profile Supabase hands back at sign-in: a clean name and a normalized phone, or null for each. */
-export function profileFromMetadata(meta: Record<string, unknown> | null | undefined): { name: string | null; phone: string | null } {
+/** What to keep from the profile Supabase hands back at sign-in: a clean name, a normalized phone and an ISO country, or null for each. */
+export function profileFromMetadata(meta: Record<string, unknown> | null | undefined): {
+  name: string | null;
+  phone: string | null;
+  country: string | null;
+} {
   const name = cleanName(meta?.full_name).slice(0, NAME_MAX);
-  return { name: name || null, phone: normalizePhone(meta?.phone_number) };
+  return { name: name || null, phone: normalizePhone(meta?.phone_number), country: normalizeCountry(meta?.country) };
 }
 
 /**

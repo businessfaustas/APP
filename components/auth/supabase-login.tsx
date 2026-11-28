@@ -7,14 +7,16 @@ import { useId, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
 import { authFailure, cleanName, normalizePhone, validateEmail, validateSignUp, type AuthFailure, type FieldError } from "@/lib/auth/signup";
+import { countryOptions, normalizeCountry } from "@/lib/geo/countries";
 import { useT } from "@/lib/i18n/client";
 import { rich } from "@/lib/i18n/rich";
 import { AGE_COOKIE } from "@/lib/privacy/consent";
 import { cn } from "@/lib/utils";
 
 type Mode = "signin" | "signup" | "forgot";
-type Fields = "name" | "email" | "phone" | "password";
+type Fields = "name" | "email" | "phone" | "country" | "password";
 
 function PasswordInput({
   id,
@@ -80,10 +82,12 @@ export function SupabaseLogin({
   const supabase = useMemo(() => createBrowserClient(supabaseUrl, anonKey), [supabaseUrl, anonKey]);
   const t = useT();
   const uid = useId();
+  const countries = useMemo(() => countryOptions(t.locale), [t.locale]);
   const [mode, setMode] = useState<Mode>(initialMode);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [country, setCountry] = useState("");
   const [password, setPassword] = useState("");
   // Age gate: no account is created, and no sign-up starts, until this is ticked.
   const [adult, setAdult] = useState(false);
@@ -96,7 +100,7 @@ export function SupabaseLogin({
   const [resent, setResent] = useState(false);
 
   const origin = () => window.location.origin;
-  const after = () => `/auth/complete?next=${encodeURIComponent(next)}`;
+  const after = (to = next) => `/auth/complete?next=${encodeURIComponent(to)}`;
   const emailLink = (to: string) => `${origin()}/auth/callback?next=${encodeURIComponent(to)}`;
 
   function rememberAdult() {
@@ -117,7 +121,7 @@ export function SupabaseLogin({
   async function signUp(e: React.FormEvent) {
     e.preventDefault();
     setFailure(null);
-    const found = validateSignUp({ name, email, phone, password });
+    const found = validateSignUp({ name, email, phone, country, password });
     setErrors(found);
     const ticked = adult;
     setNeedsAdult(!ticked);
@@ -125,12 +129,20 @@ export function SupabaseLogin({
 
     rememberAdult();
     setBusy(true);
+    // A new customer lands on the one-time setup (where they resell, VAT number, licence) before the dashboard.
+    const landing = next === "/app" ? "/app/setup" : next;
     const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
       password,
       options: {
-        emailRedirectTo: emailLink(next),
-        data: { full_name: cleanName(name), phone_number: normalizePhone(phone), age_confirmed: true, consent_at: new Date().toISOString() },
+        emailRedirectTo: emailLink(landing),
+        data: {
+          full_name: cleanName(name),
+          phone_number: normalizePhone(phone),
+          country: normalizeCountry(country),
+          age_confirmed: true,
+          consent_at: new Date().toISOString(),
+        },
       },
     });
     setBusy(false);
@@ -139,7 +151,7 @@ export function SupabaseLogin({
     // but with no identities on the returned user. Tell the person plainly instead of promising an email.
     if (data.user && (data.user.identities?.length ?? 0) === 0) return setFailure("alreadyRegistered");
     // With "Confirm email" switched off in Supabase there is a session already, so go straight in.
-    if (data.session) return window.location.assign(after());
+    if (data.session) return window.location.assign(after(landing));
     setSentTo({ kind: "confirm", email: email.trim() });
   }
 
@@ -470,6 +482,46 @@ export function SupabaseLogin({
               ) : (
                 <p id={`${uid}-phone-hint`} className="text-muted-foreground text-xs">
                   {t("auth.phoneHint")}
+                </p>
+              )}
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor={`${uid}-country`}>{t("auth.country")}</Label>
+              <NativeSelect
+                id={`${uid}-country`}
+                name="country"
+                autoComplete="country"
+                value={country}
+                onChange={(e) => {
+                  setCountry(e.target.value);
+                  clear("country");
+                }}
+                aria-invalid={errors.country ? true : undefined}
+                aria-describedby={field("country", `${uid}-country-hint`)}
+              >
+                <option value="">{t("auth.countryPlaceholder")}</option>
+                <optgroup label={t("auth.countryFeatured")}>
+                  {countries.featured.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.name}
+                    </option>
+                  ))}
+                </optgroup>
+                <optgroup label={t("auth.countryOthers")}>
+                  {countries.others.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.name}
+                    </option>
+                  ))}
+                </optgroup>
+              </NativeSelect>
+              {errors.country ? (
+                <p id={errId("country")} className="text-stop text-xs">
+                  {err("country")}
+                </p>
+              ) : (
+                <p id={`${uid}-country-hint`} className="text-muted-foreground text-xs">
+                  {t("auth.countryHint")}
                 </p>
               )}
             </div>

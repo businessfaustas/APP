@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { PageContainer, PageHeader } from "@/components/page-header";
 import { SettingsForm } from "@/components/settings/settings-form";
+import { Button } from "@/components/ui/button";
 import { requireUser } from "@/lib/auth/session";
 import { integrationStatus } from "@/lib/config/env";
 import { prisma } from "@/lib/db/prisma";
@@ -22,7 +24,15 @@ export default async function SettingsPage() {
   ]);
   return (
     <PageContainer className="max-w-4xl">
-      <PageHeader title={t("settings.title")} description={t("settings.body")} />
+      <PageHeader
+        title={t("settings.title")}
+        description={t("settings.body")}
+        actions={
+          <Button asChild variant="outline" size="sm">
+            <Link href="/app/setup">{t("setup.again")}</Link>
+          </Button>
+        }
+      />
       <SettingsForm
         initial={{
           homeZip: row.homeZip,

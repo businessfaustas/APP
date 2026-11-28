@@ -63,13 +63,21 @@ function isAdminEmail(email: string): boolean {
  * Creates the app user (with default settings) on first sign-in. For someone who already exists it only fills in
  * what is still empty (a name or phone given at sign-up), never overwrites what they have since changed.
  */
-export async function ensureUser(id: string, email: string, name: string | null, role?: "USER" | "ADMIN", phone?: string | null): Promise<void> {
-  const existing = await prisma.user.findUnique({ where: { id }, select: { id: true, role: true, name: true, phone: true } });
+export async function ensureUser(
+  id: string,
+  email: string,
+  name: string | null,
+  role?: "USER" | "ADMIN",
+  phone?: string | null,
+  country?: string | null,
+): Promise<void> {
+  const existing = await prisma.user.findUnique({ where: { id }, select: { id: true, role: true, name: true, phone: true, country: true } });
   if (existing) {
-    const data: { role?: "ADMIN"; name?: string; phone?: string } = {};
+    const data: { role?: "ADMIN"; name?: string; phone?: string; country?: string } = {};
     if (role === "ADMIN" && existing.role !== "ADMIN") data.role = "ADMIN";
     if (name && !existing.name) data.name = name;
     if (phone && !existing.phone) data.phone = phone;
+    if (country && !existing.country) data.country = country;
     if (Object.keys(data).length) await prisma.user.update({ where: { id }, data });
     return;
   }
@@ -80,6 +88,7 @@ export async function ensureUser(id: string, email: string, name: string | null,
         email,
         name,
         phone: phone ?? null,
+        country: country ?? null,
         role: role ?? "USER",
         creditsRemaining: id === DEMO_USER.id ? 500 : 3,
         plan: id === DEMO_USER.id ? "PRO" : "FREE",
@@ -107,9 +116,9 @@ async function loadSessionUser(): Promise<SessionUser | null> {
     const sb = await supabaseServer();
     const { data } = await sb.auth.getUser();
     if (data.user?.email) {
-      const { name, phone } = profileFromMetadata(data.user.user_metadata);
+      const { name, phone, country } = profileFromMetadata(data.user.user_metadata);
       identity = { id: data.user.id, email: data.user.email, name, isDemo: false };
-      await ensureUser(data.user.id, data.user.email, name, isAdminEmail(data.user.email) ? "ADMIN" : undefined, phone);
+      await ensureUser(data.user.id, data.user.email, name, isAdminEmail(data.user.email) ? "ADMIN" : undefined, phone, country);
     }
   }
   if (!identity) return null;

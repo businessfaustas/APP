@@ -67,29 +67,36 @@ describe("validators", () => {
   });
 
   it("reports every problem in a sign-up form at once", () => {
-    expect(validateSignUp({ name: "", email: "nope", phone: "123", password: "short" })).toEqual({
+    expect(validateSignUp({ name: "", email: "nope", phone: "123", country: "", password: "short" })).toEqual({
       name: "nameRequired",
       email: "emailInvalid",
       phone: "phoneInvalid",
+      country: "countryRequired",
       password: "passwordShort",
     });
-    expect(validateSignUp({ name: "Jonas", email: "j@example.com", phone: "+37060012345", password: "correct horse" })).toEqual({});
+    expect(validateSignUp({ name: "Jonas", email: "j@example.com", phone: "+37060012345", country: "LT", password: "correct horse" })).toEqual({});
+    expect(validateSignUp({ name: "Jonas", email: "j@example.com", phone: "+37060012345", country: "XX", password: "correct horse" }).country).toBe(
+      "countryRequired",
+    );
   });
 });
 
 describe("profileFromMetadata", () => {
   it("keeps a clean name and a normalized phone", () => {
-    expect(profileFromMetadata({ full_name: "  Jonas   Jonaitis ", phone_number: "+370 600 12345" })).toEqual({
+    expect(profileFromMetadata({ full_name: "  Jonas   Jonaitis ", phone_number: "+370 600 12345", country: " lt " })).toEqual({
       name: "Jonas Jonaitis",
       phone: "+37060012345",
+      country: "LT",
     });
   });
 
   it("drops anything unusable instead of storing it", () => {
     expect(profileFromMetadata({ full_name: "x".repeat(500), phone_number: "<script>" }).phone).toBeNull();
     expect(profileFromMetadata({ full_name: "x".repeat(500) }).name).toHaveLength(80);
-    expect(profileFromMetadata(null)).toEqual({ name: null, phone: null });
-    expect(profileFromMetadata({ full_name: 7, phone_number: {} })).toEqual({ name: null, phone: null });
+    expect(profileFromMetadata({ country: "Lithuania" }).country).toBeNull();
+    expect(profileFromMetadata({ country: 7 }).country).toBeNull();
+    expect(profileFromMetadata(null)).toEqual({ name: null, phone: null, country: null });
+    expect(profileFromMetadata({ full_name: 7, phone_number: {} })).toEqual({ name: null, phone: null, country: null });
   });
 });
 

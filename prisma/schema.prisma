@@ -90,6 +90,7 @@ model User {
   email            String             @unique
   name             String?
   phone            String? // E.164 ("+37060012345"), given at sign-up
+  country          String? // ISO 3166-1 alpha-2 ("LT"), given at sign-up
   role             Role               @default(USER)
   plan             Plan               @default(FREE)
   stripeCustomerId String?            @unique
@@ -137,7 +138,8 @@ model UserSettings {
   contingencyOverrideBps Int?
   exitStrategy           ExitStrategy @default(RETAIL_REBUILT)
   exportProfileId        String?
-  vatRecoverable         Boolean      @default(false)
+  vatRecoverable         Boolean      @default(false) // has a VAT number: import VAT is recoverable and resale is counted net of VAT
+  onboardedAt            DateTime? // finished the one-time setup (where they resell, VAT number, licence)
   updatedAt              DateTime     @updatedAt
 }
 
@@ -254,6 +256,7 @@ model Analysis {
   damageFromPhotos Boolean            @default(false)
   repairEstimate   Json?
   market           Json?
+  destinationMarket Json? // clean price in the export destination country (EXPORT strategy only)
   logistics        Json?
   calcInput        Json?
   calc             Json?

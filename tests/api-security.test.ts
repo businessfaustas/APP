@@ -37,6 +37,7 @@ const POLICY: Record<string, { policy: Policy; why?: string }> = {
   "app/api/journal/route.ts": { policy: "user" },
   "app/api/photos/[id]/route.ts": { policy: "user" },
   "app/api/settings/route.ts": { policy: "user" },
+  "app/api/setup/route.ts": { policy: "user" },
   "app/api/stripe/checkout/route.ts": { policy: "user" },
   "app/api/stripe/portal/route.ts": { policy: "user" },
   "app/api/stripe/webhook/route.ts": { policy: "webhook" },

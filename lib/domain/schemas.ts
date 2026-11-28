@@ -318,6 +318,38 @@ export const MarketValuationSchema = z.object({
 });
 export type MarketValuation = z.infer<typeof MarketValuationSchema>;
 
+// ── Destination market (EXPORT strategy) ────────────────────────────────────
+
+export const DestinationListingSchema = z.object({
+  /** As advertised in the destination country: local currency, VAT included. */
+  price: z.number().int(),
+  priceUsd: z.number().int(),
+  mileageKm: z.number().int().nullable(),
+  trim: z.string().nullable(),
+  location: z.string().nullable(),
+  url: z.string().nullable(),
+});
+export type DestinationListing = z.infer<typeof DestinationListingSchema>;
+
+/** What an undamaged copy of the car sells for in the country the buyer exports to, researched per analysis. */
+export const DestinationMarketSchema = z.object({
+  countryCode: z.string(),
+  currency: z.string(),
+  usdPerUnit: z.number(),
+  /** False when the fixed fallback exchange rate was used. */
+  fxLive: z.boolean(),
+  /** The destination's standard VAT rate, in basis points. */
+  vatBps: z.number().int(),
+  provider: z.string(),
+  grounded: z.boolean(),
+  confidence: z.number().min(0).max(1),
+  /** Undamaged retail in dollars, VAT included as advertised, after the list-to-sale ratio: worst = 25th percentile, expected = median, best = 75th. */
+  grossClean: ScenarioValuesSchema,
+  listings: z.array(DestinationListingSchema),
+  notes: z.array(z.string()),
+});
+export type DestinationMarket = z.infer<typeof DestinationMarketSchema>;
+
 // ── Vehicle info / history ───────────────────────────────────────────────────
 
 export const RecallSchema = z.object({

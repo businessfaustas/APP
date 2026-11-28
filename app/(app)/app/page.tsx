@@ -6,6 +6,7 @@ import { HeroScan } from "@/components/dashboard/hero-scan";
 import { ActivityChart, KpiTile, LotCard, VerdictMix, type LotCardData } from "@/components/dashboard/widgets";
 import { AnalyzeBar } from "@/components/input/analyze-bar";
 import { EmptyState, PageContainer } from "@/components/page-header";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { lotPhoto, lotVisual } from "@/lib/analysis/visual";
 import { requireUser } from "@/lib/auth/session";
@@ -70,6 +71,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     prisma.analysis.aggregate({ where: { ...completed, verdict: "GO" }, _sum: { expectedProfit: true } }),
     prisma.analysis.findMany({ where: { userId: user.id, createdAt: { gte: since } }, select: { createdAt: true } }),
   ]);
+  // Until they answer the three setup questions, reports are built on US defaults: say so, once, with a way to fix it.
+  const settingsRow = await prisma.userSettings.findUnique({ where: { userId: user.id }, select: { onboardedAt: true } });
+  const needsSetup = !user.isDemo && settingsRow?.onboardedAt == null;
   const total = counts.reduce((a, c) => a + c._count, 0);
   const byVerdict = Object.fromEntries(counts.filter((c) => c.verdict).map((c) => [c.verdict, c._count])) as Partial<
     Record<"GO" | "BE_CAUTIOUS" | "WALK_AWAY", number>
@@ -125,6 +129,20 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           <HeroScan photo={heroLot?.visual.photo ?? null} label={heroLot?.title} />
         </div>
       </section>
+
+      {needsSetup && (
+        <Card data-testid="setup-card" className="border-primary/40 bg-primary/5">
+          <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="font-semibold">{t("setup.cardTitle")}</p>
+              <p className="text-muted-foreground text-sm">{t("setup.cardBody")}</p>
+            </div>
+            <Button asChild>
+              <Link href="/app/setup">{t("setup.cardButton")}</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <KpiTile index={1} icon={<FileTextIcon />} label={t("dash.reports")} value={total} sub={t("dash.recentN", { n: recentDays })} href="/app/history" />

@@ -361,7 +361,7 @@ export function WhatIfControls({ compact = false, actions = true }: { compact?: 
                   </Label>
                   <Switch id="wi-vat" checked={a.vatRecoverable} onCheckedChange={set("vatRecoverable")} />
                 </div>
-                {a.destinationResaleOverride === null && !view.base?.destinationResale && (
+                {a.destinationResaleOverride === null && !view.base?.destinationResale && !view.base?.destinationClean && (
                   <p className="text-caution text-xs">{t("report.destinationMissing")}</p>
                 )}
               </div>

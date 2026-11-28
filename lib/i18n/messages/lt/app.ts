@@ -2,7 +2,7 @@ import type { Messages } from "..";
 
 export const app: Pick<
   Messages,
-  "dash" | "analyze" | "parse" | "demoLots" | "fields" | "photos" | "compare" | "watch" | "history" | "journal" | "settings" | "billing" | "calc"
+  "dash" | "analyze" | "parse" | "demoLots" | "fields" | "photos" | "compare" | "watch" | "history" | "journal" | "setup" | "settings" | "billing" | "calc"
 > = {
   dash: {
     title: "Pradžia",
@@ -212,6 +212,40 @@ export const app: Pick<
     chartTitle: "Įvertinta ir faktinė remonto kaina",
     estimated: "Įvertinta",
     actual: "Faktinė",
+  },
+  setup: {
+    title: "Nustatykite savo skaičiavimus",
+    intro:
+      "Trys greiti klausimai, kad kiekviena ataskaita remtųsi jūsų situacija, o ne JAV numatytosiomis reikšmėmis. Viską vėliau galėsite pakeisti nustatymuose.",
+    q1: "Kur perparduodate automobilius?",
+    resaleUs: "JAV: čia sutaisau ir parduodu",
+    resaleExport: "Eksportas į {country}",
+    countryUnsupported:
+      "Eksporto į {country} dar neskaičiuojame. Pasirinkite JAV arba artimiausią šalį, o perpardavimo kainą įveskite kiekvienoje ataskaitoje.",
+    zip: "Jūsų JAV pašto kodas (transportui iš aikštelės)",
+    zipInvalid: "Įveskite 5 skaitmenų JAV pašto kodą.",
+    q2: "Ar turite PVM kodą?",
+    vatYes: "Taip, esu PVM mokėtojas",
+    vatYesHint: "Importo PVM atsiimamas, o perpardavimo kaina skaičiuojama be PVM.",
+    vatNo: "Ne",
+    vatNoHint: "Importo PVM yra išlaida, o perpardavimo kaina skaičiuojama kaip skelbiama, su PVM.",
+    taxNote: "Mokesčių taisyklės skiriasi pagal šalį ir pardavimo būdą. Pasitikslinkite pas buhalterį.",
+    q3: "Kaip perkate Copart ir IAA aukcionuose?",
+    licenceYes: "Su savo licencija",
+    licenceYesHint: "Taikomi licencijuoto pirkėjo aukciono mokesčiai.",
+    licenceNo: "Per tarpininką",
+    licenceNoHint: "Taikomi viešo pirkėjo mokesčiai ir tarpininko mokestis.",
+    brokerFee: "Tarpininko mokestis už automobilį, USD (nebūtina)",
+    save: "Išsaugoti ir tęsti",
+    saving: "Saugoma…",
+    skip: "Praleisti dabar",
+    saved: "Išsaugota. Naujos ataskaitos naudos šiuos nustatymus.",
+    failed: "Nepavyko išsaugoti. Bandykite dar kartą.",
+    chooseResale: "Pasirinkite, kur perparduodate automobilius.",
+    cardTitle: "Užbaikite nustatymus",
+    cardBody: "Pasakykite, kur perparduodate ir ar turite PVM kodą. Kol to nepadarysite, ataskaitos naudoja JAV numatytąsias reikšmes.",
+    cardButton: "Nustatyti",
+    again: "Paleisti nustatymą iš naujo",
   },
   settings: {
     title: "Nustatymai",

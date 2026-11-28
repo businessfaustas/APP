@@ -5,8 +5,10 @@ import { ExternalLinkIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { countryName } from "@/lib/geo/countries";
 import { useT } from "@/lib/i18n/client";
 import { trText } from "@/lib/i18n/generated";
+import { INTL_LOCALE } from "@/lib/i18n/locales";
 import { median } from "@/lib/providers/market/stats";
 import { formatBps, formatNumber, formatUsd } from "@/lib/utils";
 
@@ -20,6 +22,89 @@ function Stat({ label, value, sub }: { label: string; value: string; sub?: strin
       <div className="text-lg font-semibold">{value}</div>
       {sub && <div className="text-muted-foreground text-xs">{sub}</div>}
     </div>
+  );
+}
+
+/** What the car sells for undamaged in the export destination, and how the report turns that into its resale. */
+function DestinationCard() {
+  const { view, calc, assumptions } = useReport();
+  const t = useT();
+  const d = view.destinationMarket;
+  if (!d || assumptions.exitStrategy !== "EXPORT") return null;
+  const country = countryName(d.countryCode, t.locale);
+  const local = new Intl.NumberFormat(INTL_LOCALE[t.locale], { style: "currency", currency: d.currency, maximumFractionDigits: 0 });
+  const vat = formatBps(d.vatBps, d.vatBps % 100 === 0 ? 0 : 1);
+  return (
+    <Card data-testid="destination-card">
+      <CardHeader className="flex-row items-center justify-between gap-2">
+        <div>
+          <CardTitle className="text-base">{t("report.destTitle", { country })}</CardTitle>
+          <p className="text-muted-foreground text-xs">{t("report.destSubtitle")}</p>
+        </div>
+        <Badge variant="outline">{trText(t, d.provider)}</Badge>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+          <Stat
+            label={t("report.destClean", { country })}
+            value={formatUsd(d.grossClean.expected)}
+            sub={t("report.range", { low: formatUsd(d.grossClean.worst), high: formatUsd(d.grossClean.best) })}
+          />
+          <Stat
+            label={t("report.destVatLabel", { country })}
+            value={vat}
+            sub={t(assumptions.vatRecoverable ? "report.destVatNet" : "report.destVatGross", { pct: vat })}
+          />
+          <Stat
+            label={t("report.destAfterRepair")}
+            value={formatUsd(calc?.scenarios.expected.resale)}
+            sub={t("report.destAfterSub", { pct: formatBps(assumptions.rebuiltFactorBps, 0) })}
+          />
+        </div>
+        {d.listings.length > 0 && (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-right">{t("report.destAdvertised")}</TableHead>
+                <TableHead className="text-right">USD</TableHead>
+                <TableHead className="text-right">{t("report.destKm")}</TableHead>
+                <TableHead>{t("report.location")}</TableHead>
+                <TableHead />
+              </TableRow>
+            </TableHeader>
+            <TableBody className="num">
+              {d.listings.map((l, i) => (
+                <TableRow key={`${l.price}-${l.mileageKm}-${i}`}>
+                  <TableCell className="text-right">{local.format(l.price)}</TableCell>
+                  <TableCell className="text-muted-foreground text-right">{formatUsd(l.priceUsd)}</TableCell>
+                  <TableCell className="text-right">{formatNumber(l.mileageKm)}</TableCell>
+                  <TableCell>{l.location || "—"}</TableCell>
+                  <TableCell>
+                    {l.url && (
+                      <a
+                        href={l.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={t("report.openListing")}
+                        className="text-muted-foreground hover:text-foreground"
+                      >
+                        <ExternalLinkIcon className="size-3.5" />
+                      </a>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+        <ul className="text-muted-foreground space-y-1 text-xs">
+          {d.notes.map((n) => (
+            <li key={n}>{trText(t, n)}</li>
+          ))}
+          <li>{t("report.destFx", { currency: d.currency, rate: d.usdPerUnit.toFixed(3) })}</li>
+        </ul>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -112,6 +197,7 @@ export function MarketTab() {
           </ul>
         </CardContent>
       </Card>
+      <DestinationCard />
     </div>
   );
 }

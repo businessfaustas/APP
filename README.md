@@ -171,7 +171,9 @@ Auction fees change often and differ by buyer type and payment method, so treat 
   The editor validates that tiers are contiguous and previews fees at sample bids. Set the **Verified** date and the official fee page URL, switch off **Placeholder**, and save. Reports flag tables last verified more than 90 days ago.
 
 - Users set their buyer type, broker fee and sales tax in **Settings**. The buyer type can also be switched per report in the What-if panel.
-- **Admin → Parts & labor** calibrates the price and labor-hour references the estimator uses (CSV import supported). **Admin → Export profiles** holds the per-destination landed-cost settings.
+- **Admin → Parts & labor** calibrates the price and labor-hour references the estimator uses (CSV import supported). **Admin → Export profiles** holds the per-destination landed-cost settings (seeded for Lithuania, Latvia, Estonia, Poland and Germany; all placeholders until verified).
+- **Country and setup.** The sign-up form asks for a country (stored on the user, ISO code). After the first sign-in a one-time setup (`/app/setup`, also reachable from Settings) asks where the buyer resells (USA or an export country), whether they have a VAT number, and whether they buy with their own licence or through a broker; `lib/setup/derive.ts` turns the answers into the exit strategy, export profile, VAT-recoverable switch, buyer type, broker fee and rebuilt value. Until it is done, the dashboard shows a "Finish your setup" card and reports use the US defaults.
+- **Export resale.** For the EXPORT strategy the AI searches local car sites in the destination country (AutoScout24, mobile.de, Autoplius, Otomoto and so on) for the same car undamaged, with VAT as advertised, converts it to dollars (ECB rate via Frankfurter, with a fixed fallback) and stores it with the analysis. The report derives the resale from it live: VAT removed if the buyer has a VAT number, then the rebuilt value (80% by default for an export, 70% for the US). The Market tab shows the listings, the VAT and the resulting resale.
 
 ---
 

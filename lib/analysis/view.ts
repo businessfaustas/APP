@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db/prisma";
 import type {
   DamageAssessment,
   DataSources,
+  DestinationMarket,
   HistoryReport,
   LogisticsInfo,
   MarketValuation,
@@ -55,6 +56,8 @@ export interface AnalysisView {
   damageFromPhotos: boolean;
   repair: RepairEstimate | null;
   market: MarketValuation | null;
+  /** The undamaged price in the export destination (EXPORT strategy only). */
+  destinationMarket: DestinationMarket | null;
   logistics: LogisticsInfo | null;
   base: AnalysisBase | null;
   calc: CalculationResult | null;
@@ -122,6 +125,7 @@ export async function getAnalysisView(id: string, access: { userId: string } | {
     damageFromPhotos: a.damageFromPhotos,
     repair: (a.repairEstimate as RepairEstimate | null) ?? null,
     market: (a.market as MarketValuation | null) ?? null,
+    destinationMarket: (a.destinationMarket as DestinationMarket | null) ?? null,
     logistics: redactLogistics((a.logistics as LogisticsInfo | null) ?? null, shared),
     base: (a.calcInput as AnalysisBase | null) ?? null,
     calc: (a.calc as CalculationResult | null) ?? null,

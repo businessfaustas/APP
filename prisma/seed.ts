@@ -138,6 +138,60 @@ async function seedExportProfiles() {
       complianceConversion: 600,
       deliveryFromPort: 200,
     },
+    // Placeholders like the two above: the freight, port and registration figures are rough starting points to check with
+    // a forwarder, and each country's own car taxes (e.g. Poland's excise, Latvia's and Estonia's registration fees) are not
+    // modelled beyond the flat "registrationTax". VAT rates are the standard ones: LV 21%, EE 24% (since July 2025), PL 23%.
+    {
+      name: "Latvia via Riga (container)",
+      countryCode: "LV",
+      currency: "EUR",
+      departurePortZip: "07114",
+      inlandToPortCentsPerMile: 100,
+      portAndLoading: 350,
+      oceanFreight: 1500,
+      marineInsuranceBps: 150,
+      destinationPortFees: 450,
+      customsBrokerFee: 250,
+      dutyBps: 1000,
+      vatBps: 2100,
+      registrationTax: 250,
+      complianceConversion: 450,
+      deliveryFromPort: 150,
+    },
+    {
+      name: "Estonia via Tallinn (container)",
+      countryCode: "EE",
+      currency: "EUR",
+      departurePortZip: "07114",
+      inlandToPortCentsPerMile: 100,
+      portAndLoading: 350,
+      oceanFreight: 1550,
+      marineInsuranceBps: 150,
+      destinationPortFees: 450,
+      customsBrokerFee: 250,
+      dutyBps: 1000,
+      vatBps: 2400,
+      registrationTax: 250,
+      complianceConversion: 450,
+      deliveryFromPort: 150,
+    },
+    {
+      name: "Poland via Gdańsk (container)",
+      countryCode: "PL",
+      currency: "PLN",
+      departurePortZip: "07114",
+      inlandToPortCentsPerMile: 100,
+      portAndLoading: 350,
+      oceanFreight: 1400,
+      marineInsuranceBps: 150,
+      destinationPortFees: 450,
+      customsBrokerFee: 250,
+      dutyBps: 1000,
+      vatBps: 2300,
+      registrationTax: 300,
+      complianceConversion: 450,
+      deliveryFromPort: 200,
+    },
   ];
   for (const p of profiles) {
     const existing = await prisma.exportProfile.findFirst({ where: { name: p.name } });
@@ -156,10 +210,11 @@ async function seedDemoUser() {
       role: "ADMIN",
       plan: "PRO",
       creditsRemaining: 500,
-      settings: { create: {} },
+      settings: { create: { onboardedAt: new Date() } }, // the shared demo account is never sent through the setup
       ledger: { create: { delta: 500, reason: "SIGNUP" } },
     },
   });
+  await prisma.userSettings.updateMany({ where: { userId: DEMO_USER.id, onboardedAt: null }, data: { onboardedAt: new Date() } });
 }
 
 async function main() {

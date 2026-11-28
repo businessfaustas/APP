@@ -194,6 +194,8 @@ The app caps itself, but each provider can also cut you off. Set every one:
 - [ ] `pnpm test:smoke` against production: `E2E_BASE_URL=https://yourdomain.com pnpm test:smoke`.
 - [ ] A real card payment of the smallest pack, then refunded; credits arrive and are taken back.
 - [ ] Rollback rehearsed once (`docs/RUNBOOK.md`): promote the previous deployment, then promote the new one again.
+- [ ] **Admin → Export profiles**: the five destinations (Lithuania, Latvia, Estonia, Poland, Germany) are placeholders. Check each one with a freight forwarder or customs broker (ocean freight, port and broker fees, duty, registration and compliance costs, and each country's own car taxes, e.g. Poland's excise) and the standard VAT rate, then switch off **Placeholder**.
+- [ ] An accountant has confirmed how a VAT-registered importer and one without a VAT number are taxed on a repaired US car in the countries you sell to. The app counts import VAT as recoverable and the resale as net of VAT for a VAT-registered buyer, and the opposite otherwise; it does not model the margin scheme.
 - [ ] A lawyer has read the Terms and Privacy Policy; DMCA agent registered.
 - [ ] The car pictures in `public/cars/` are ones you may use commercially (your own, licensed, or open licence). Replace any you cannot show a licence for. The wrecked white sedan in the landing-page picture (`public/cars/sedan-wrecked.webp`) still has a Vecteezy watermark: buy the clean download and save it under the same name.
 - [ ] Email test lands in Gmail and Outlook inboxes; SPF, DKIM and DMARC pass.

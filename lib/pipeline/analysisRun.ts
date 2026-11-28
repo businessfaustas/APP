@@ -3,6 +3,7 @@ import "server-only";
 import { createHash } from "node:crypto";
 
 import { llmEstimatePartPrices } from "@/lib/ai/prompts/estimates";
+import { valueDestinationMarket } from "@/lib/providers/market/destination";
 import { vehicleDetails } from "@/lib/providers/market/details";
 import { marketPartPrices } from "@/lib/providers/parts";
 import { writeNarrative } from "@/lib/ai/prompts/narrative";
@@ -18,6 +19,7 @@ import { findDemoFixture, findDemoFixtureByVin } from "@/lib/demo/fixtures";
 import type {
   DamageAssessment,
   DataSources,
+  DestinationMarket,
   HistoryReport,
   LogisticsInfo,
   MarketValuation,
@@ -355,6 +357,31 @@ export async function runAnalysis(analysisId: string, step: StepRunner, now: Dat
       },
     });
 
+    // ── 3b. What the car sells for undamaged in the export destination (EXPORT strategy only) ─────
+    // Started now and awaited after the repair estimate, so an export report costs no extra waiting.
+    const destinationStarted = step.run("destination-market", async (): Promise<DestinationMarket | null> => {
+      if (demoFixture || !exportProfile || !features.ai()) return null;
+      const mileage = listing.odometer || usableOdometer(damage.odometer_reading_visible) || null;
+      const key = `destination:v1:${exportProfile.countryCode}:${[listing.make, listing.model, listing.year, listing.trim, Math.round((mileage ?? 0) / 5000), snapshot.listToSaleBps ?? 9600].join(":")}${languageCacheSuffix(locale)}`;
+      // Only a result backed by real listings is kept: an estimate from memory must not outlive switching web search on.
+      const hit = await cacheGet<DestinationMarket>(key);
+      if (hit?.grounded) return hit;
+      const fresh = await valueDestinationMarket({
+        profile: exportProfile,
+        vehicle: vehicleLabel(listing),
+        details: vehicleDetails(
+          !listing.odometer && mileage ? { ...listing, odometer: mileage, odometerUnit: "mi", odometerBrand: "ACTUAL" } : listing,
+          vehicle,
+        ),
+        mileageMiles: mileage,
+        listToSaleBps: snapshot.listToSaleBps ?? 9600,
+        analysisId,
+        locale,
+      });
+      if (fresh?.grounded) await cacheSet(key, fresh, TTL.hours(24));
+      return fresh;
+    });
+
     // ── 4. Repair estimate ──────────────────────────────────────────────────
     const repair: RepairEstimate = await step.run("repair-estimate", async () => {
       await progress(analysisId, "repair-estimate", 65);
@@ -382,6 +409,8 @@ export async function runAnalysis(analysisId: string, step: StepRunner, now: Dat
       note: null,
     };
 
+    const destinationMarket = await destinationStarted;
+
     // ── 5. Flags + calculation ──────────────────────────────────────────────
     const calcOut = await step.run("calculate", async () => {
       await progress(analysisId, "calculate", 85);
@@ -399,6 +428,7 @@ export async function runAnalysis(analysisId: string, step: StepRunner, now: Dat
         buyerType: snapshot.buyerType,
         exportProfile,
         destinationResale: null,
+        destinationClean: destinationMarket ? { gross: destinationMarket.grossClean, vatBps: destinationMarket.vatBps } : null,
         now,
       });
       const calc = runAnalysisCalc(assembled.base, assumptionsFromSettings(snapshot));
@@ -406,6 +436,7 @@ export async function runAnalysis(analysisId: string, step: StepRunner, now: Dat
         where: { id: analysisId },
         data: {
           repairEstimate: json(repair),
+          destinationMarket: destinationMarket ? json(destinationMarket) : undefined,
           calcInput: json(assembled.base),
           calc: json(calc),
           flags: json(assembled.flags),

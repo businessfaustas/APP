@@ -178,3 +178,105 @@ export async function llmEstimateMarket(args: {
   if (!sane(out)) throw new Error("The market estimate was not plausible");
   return { ...out, listings: [], grounded: false, searches: 0 };
 }
+
+// ── What the car is worth undamaged in the export destination ─────────────
+
+const DestinationEstimateSchema = z.object({
+  p25: z.number().int().min(0),
+  p50: z.number().int().min(0),
+  p75: z.number().int().min(0),
+  listings: z
+    .array(
+      z.object({
+        price: z.number().int().min(0),
+        mileage_km: z.number().int().min(0).nullable(),
+        trim: z.string().nullable(),
+        location: z.string().nullable(),
+        url: z.string().nullable(),
+      }),
+    )
+    .max(12),
+  reasoning: z.string(),
+});
+
+export interface DestinationEstimate {
+  /** Local currency, VAT included, as advertised. */
+  p25: number;
+  p50: number;
+  p75: number;
+  listings: z.infer<typeof DestinationEstimateSchema>["listings"];
+  reasoning: string;
+  grounded: boolean;
+  searches: number;
+}
+
+const destinationResearch = (country: string, currency: string, sites: string[]) =>
+  `You research used-car prices for a professional car importer who must know what an UNDAMAGED, accident-free copy of a vehicle
+sells for in ${country} before deciding how much to bid on a damaged one at a United States auction. Search the web for current
+asking prices in ${country} for this exact vehicle: same year, make, model and trim or engine, with mileage close to the given
+one${sites.length ? `, on ${sites.join(", ")} or other local sites (dealers first)` : ""}. Prices there are advertised with VAT included;
+report them exactly as advertised, in ${currency}. Skip listings that mention accident damage, repaired damage or a salvage
+history. If the model is not sold there, use the closest equivalent and say so.
+Report: up to 10 comparable listings, one per line, as "price | mileage km | trim | city | url"; then the typical asking range,
+and anything you could not find. Report only what you actually read; never invent a listing or a url.`;
+
+const destinationEstimate = (country: string, currency: string) =>
+  `Turn the research notes into an UNDAMAGED retail price distribution in ${currency}, as advertised in ${country} with VAT included,
+for the vehicle described. Return the 25th, 50th and 75th percentile (p25 <= p50 <= p75) and the comparable listings that appear
+in the notes (price, mileage in km, trim, location, url exactly as written there; null when absent; no listing that is not in the
+notes). Adjust for the subject's mileage when the comparables differ a lot. Be conservative: this caps a bid.
+In "reasoning", say in two sentences what the numbers rest on and how sure you are.`;
+
+const destinationKnowledge = (country: string, currency: string) =>
+  `Estimate the UNDAMAGED retail price distribution (dealer asking prices, VAT included) in ${currency} for the vehicle described,
+in ${country} today. Use every detail given. Return the 25th, 50th and 75th percentile. Leave "listings" empty: you have none to
+cite. Be conservative; this is used to cap a bid. In "reasoning", say what you based it on and how sure you are.`;
+
+/**
+ * The car's undamaged retail price in the country the buyer exports to. Same approach as the US valuation: web research on
+ * local listings first, the model's own knowledge as a labelled fallback.
+ */
+export async function llmEstimateDestinationMarket(args: {
+  vehicle: string;
+  details: string;
+  mileageKm: number | null;
+  country: string;
+  currency: string;
+  sites: string[];
+  analysisId: string;
+  locale?: Locale;
+}): Promise<DestinationEstimate> {
+  const subject = `Vehicle: ${args.vehicle}\n${args.details}\nMileage: ${args.mileageKm !== null ? `${args.mileageKm.toLocaleString("en-US")} km` : "unknown"}\nMarket: ${args.country}`;
+  const estimateOnce = (instructions: string, content: string, maxOutputTokens: number) =>
+    generateStructured({
+      purpose: "MARKET_ESTIMATE",
+      kind: "text",
+      schema: DestinationEstimateSchema,
+      schemaName: "destination_market_estimate",
+      instructions: withLanguage(instructions, args.locale),
+      messages: [{ role: "user", content }],
+      analysisId: args.analysisId,
+      maxOutputTokens,
+    });
+
+  try {
+    const research = await generateWebResearch({
+      purpose: "MARKET_ESTIMATE",
+      instructions: destinationResearch(args.country, args.currency, args.sites),
+      prompt: subject,
+      analysisId: args.analysisId,
+      maxSearches: 4,
+    });
+    if (research.text.trim()) {
+      const out = await estimateOnce(destinationEstimate(args.country, args.currency), `${subject}\n\nResearch notes:\n${research.text}`, 1800);
+      const listings = out.listings.filter((l) => l.price >= 500);
+      if (sane(out)) return { ...out, listings, grounded: listings.length >= 3, searches: research.searches };
+    }
+  } catch (err) {
+    log.warn("market.destination_web_search_unavailable", { reason: webSearchProblem(err) });
+  }
+
+  const out = await estimateOnce(destinationKnowledge(args.country, args.currency), subject, 800);
+  if (!sane(out)) throw new Error("The destination market estimate was not plausible");
+  return { ...out, listings: [], grounded: false, searches: 0 };
+}

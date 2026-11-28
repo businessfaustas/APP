@@ -87,6 +87,7 @@ test.describe("@regression", () => {
     await page.getByLabel("Full name").fill("Jonas Jonaitis");
     await page.getByLabel("Email", { exact: true }).fill("jonas@example.com");
     await page.getByLabel("Phone number").fill("+37060012345");
+    await page.getByLabel("Country").selectOption("LT");
     await page.getByLabel("Password", { exact: true }).fill("correct horse");
     await page.getByRole("button", { name: "Create account", exact: true }).last().click();
     await expect(page.getByText("Tick the box above to continue.")).toBeVisible();

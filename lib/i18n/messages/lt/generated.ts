@@ -326,6 +326,9 @@ export const generated: Pick<Messages, "gen"> = {
       vinauditDown: "VinAudit rinkos vertė nepasiekiama.",
       ai: "Nesukonfigūruotas palyginimų šaltinis — tai DI įvertis. Prieš statydami patikrinkite tikrus skelbimus.",
       aiWeb: "DI perskaitė {n} dabartinių skelbimų internete (nuorodos lentelėje). Prieš statydami juos patikrinkite.",
+      destWeb: "DI perskaitė {n} dabartinių skelbimų paskirties šalyje. Kainos nurodytos su PVM, kaip skelbiama.",
+      destAi: "Paskirties šalyje rasta mažiau nei trys palyginami skelbimai, todėl tai DI įvertis. Prieš statydami patikrinkite tikrus skelbimus ten.",
+      destFx: "Valiutos kursas apytikslis: tiesioginio kurso gauti nepavyko.",
       acv: "Paremta paties aukciono nurodyta rinkos verte (dažnai išpūsta) × 0,85. Tikslumui įveskite tikrą rinkos vertę.",
       none: "Rinkos duomenų šaltinio nėra. Įveskite automobilio su švariu dokumentu rinkos vertę, kad gautumėte maksimalų statymą.",
       demoComps:

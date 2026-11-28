@@ -32,6 +32,8 @@ export interface AssembleInput {
   buyerType: BuyerType;
   exportProfile: ExportProfileData | null;
   destinationResale: ScenarioValues | null;
+  /** The researched price in the export destination (see AnalysisBase.destinationClean). */
+  destinationClean?: AnalysisBase["destinationClean"];
   now: Date;
 }
 
@@ -61,6 +63,7 @@ export function assemble(i: AssembleInput): Assembled {
     baseContingencyBps: i.repair.baseContingencyBps,
     mvClean: i.market.mvClean,
     destinationResale: i.destinationResale,
+    destinationClean: i.destinationClean ?? null,
     distanceMiles: i.logistics.distanceMiles,
     milesToPort: i.logistics.milesToPort,
     currentBid: i.listing.currentBid,

@@ -16,12 +16,12 @@ export function safeNext(raw: string | null | undefined, fallback = "/app"): str
 
 /**
  * The last step of every way in (email confirmation, password reset, password sign-in, Google): they now have a
- * Supabase session, so make sure the app's own user row exists (with the name and phone they gave), record the
+ * Supabase session, so make sure the app's own user row exists (with the name, phone and country they gave), record the
  * 18+/terms tick if they gave it, and send them on. The caller has already checked the email is verified.
  */
 export async function finishSignIn(user: User, req: Request, next: string): Promise<NextResponse> {
-  const { name, phone } = profileFromMetadata(user.user_metadata);
-  await ensureUser(user.id, user.email!, name, undefined, phone);
+  const { name, phone, country } = profileFromMetadata(user.user_metadata);
+  await ensureUser(user.id, user.email!, name, undefined, phone, country);
   const tickedAt = consentFromMetadata(user.user_metadata) ?? (req.headers.get("cookie")?.includes(`${AGE_COOKIE}=1`) ? new Date() : null);
   if (tickedAt) {
     await prisma.user.updateMany({

@@ -7,6 +7,7 @@
 import type { BuyerType, ExitStrategy, PartSource, RepairLineItem, ScenarioValues } from "@/lib/domain/schemas";
 
 import { calculate } from "./calculator";
+import { applyBps } from "./money";
 import { aggregateRepair } from "./repair";
 import type { CalcInput, CalcSettings, CalculationResult, ExportCostInputs, FeeSchedule, ScenarioKey, VerdictSignals } from "./types";
 import { SCENARIO_KEYS } from "./types";
@@ -39,6 +40,11 @@ export interface AnalysisBase {
   mvClean: ScenarioValues;
   /** Export-mode resale (USD) per scenario, if known. */
   destinationResale: ScenarioValues | null;
+  /**
+   * Undamaged retail in the export destination, VAT included as advertised (USD): the resale is derived from it live, so the
+   * VAT switch and the rebuilt-value slider in the report change it. Absent on reports made before it existed.
+   */
+  destinationClean?: { gross: ScenarioValues; vatBps: number } | null;
   distanceMiles: number;
   milesToPort: number | null;
   currentBid: number | null;
@@ -185,6 +191,22 @@ function scaleScenario(values: ScenarioValues, expectedOverride: number | null):
   };
 }
 
+/**
+ * The export resale from the researched destination price: take the VAT out when the buyer is VAT-registered (they charge it
+ * to their customer and keep none of it), then apply the rebuilt value, since the car is repaired and sold with its history.
+ */
+export function destinationResaleFrom(
+  clean: { gross: ScenarioValues; vatBps: number },
+  a: Pick<Assumptions, "vatRecoverable" | "rebuiltFactorBps">,
+): ScenarioValues {
+  const net = (v: number) => (a.vatRecoverable ? Math.round((v * 10000) / (10000 + clean.vatBps)) : v);
+  return {
+    best: applyBps(net(clean.gross.best), a.rebuiltFactorBps),
+    expected: applyBps(net(clean.gross.expected), a.rebuiltFactorBps),
+    worst: applyBps(net(clean.gross.worst), a.rebuiltFactorBps),
+  };
+}
+
 export function exportCostsFrom(profile: ExportProfileData, milesToPort: number, a: Pick<Assumptions, "transportMin" | "vatRecoverable">): ExportCostInputs {
   return {
     inlandToPort: Math.max(a.transportMin, Math.round((milesToPort * profile.inlandToPortCentsPerMile) / 100)),
@@ -228,7 +250,8 @@ export function settingsFromAssumptions(a: Assumptions, exportMode = false): Cal
 export function buildCalc(base: AnalysisBase, a: Assumptions): { input: CalcInput; settings: CalcSettings } {
   const mv = scaleScenario(base.mvClean, a.mvCleanOverride);
   const exportMode = a.exitStrategy === "EXPORT" && base.exportProfile !== null;
-  const destination = base.destinationResale ? scaleScenario(base.destinationResale, a.destinationResaleOverride) : null;
+  const researched = base.destinationResale ?? (base.destinationClean ? destinationResaleFrom(base.destinationClean, a) : null);
+  const destination = researched ? scaleScenario(researched, a.destinationResaleOverride) : null;
   const destinationFromOverride =
     a.destinationResaleOverride !== null && !base.destinationResale
       ? { best: a.destinationResaleOverride, expected: a.destinationResaleOverride, worst: a.destinationResaleOverride }
