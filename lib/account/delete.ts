@@ -2,7 +2,7 @@ import "server-only";
 
 import { createClient } from "@supabase/supabase-js";
 
-import { stripe } from "@/lib/billing/stripe";
+import { isMissingCustomerError, stripe } from "@/lib/billing/stripe";
 import { env, features } from "@/lib/config/env";
 import { prisma } from "@/lib/db/prisma";
 import { log } from "@/lib/observability/log";
@@ -24,9 +24,15 @@ export async function deleteAccount(user: { id: string; stripeCustomerId?: strin
   const customerId = row?.stripeCustomerId ?? user.stripeCustomerId ?? null;
 
   if (customerId && features.stripe()) {
-    const subs = await stripe().subscriptions.list({ customer: customerId, status: "all", limit: 20 });
-    for (const sub of subs.data) if (sub.status !== "canceled") await stripe().subscriptions.cancel(sub.id);
-    await stripe().customers.del(customerId);
+    try {
+      const subs = await stripe().subscriptions.list({ customer: customerId, status: "all", limit: 20 });
+      for (const sub of subs.data) if (sub.status !== "canceled") await stripe().subscriptions.cancel(sub.id);
+      await stripe().customers.del(customerId);
+    } catch (err) {
+      // An id Stripe doesn't know (made with the other mode's keys, or already deleted) has nothing to cancel; anything else stops the deletion.
+      if (!isMissingCustomerError(err)) throw err;
+      log.warn("account.delete_stripe_customer_unknown", { customerId });
+    }
   }
 
   await removePrefix(`uploads/${user.id.replace(/[^\w-]/g, "")}`).catch((err: unknown) => log.warn("account.delete_files_failed", { err }));

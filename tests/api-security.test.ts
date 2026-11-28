@@ -17,6 +17,7 @@ const POLICY: Record<string, { policy: Policy; why?: string }> = {
   "app/api/admin/fees/route.ts": { policy: "admin" },
   "app/api/admin/integrations/route.ts": { policy: "admin" },
   "app/api/admin/references/route.ts": { policy: "admin" },
+  "app/api/admin/stripe/route.ts": { policy: "admin" },
   "app/api/admin/users/route.ts": { policy: "admin" },
   "app/api/analyses/[id]/rerun/route.ts": { policy: "user" },
   "app/api/analyses/[id]/resume/route.ts": { policy: "user" },

@@ -33,7 +33,7 @@ export function TestButton({ integration }: { integration: string }) {
         {busy ? <Loader2Icon className="animate-spin" /> : <PlugZapIcon />} Test
       </Button>
       {result && (
-        <span className={cn("text-xs leading-snug break-words md:text-right", result.ok ? "text-go" : "text-stop")} role="status">
+        <span className={cn("text-xs leading-snug break-words whitespace-pre-line md:text-right", result.ok ? "text-go" : "text-stop")} role="status">
           {result.message}
         </span>
       )}

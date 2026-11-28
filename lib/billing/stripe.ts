@@ -8,7 +8,10 @@ import { sendEmail } from "@/lib/email/send";
 import { log } from "@/lib/observability/log";
 import { sendAlert } from "@/lib/observability/alert";
 
-import { isPackId, PACKS, PLANS, type PackId, type PlanId } from "./plans";
+import { CHECKOUT_ITEMS, entryFor, entryForLookupKey, type CheckoutItem } from "./catalog";
+import { isPackId, PACKS, PLANS, type PlanId } from "./plans";
+
+export { CHECKOUT_ITEMS, type CheckoutItem };
 
 let client: Stripe | null = null;
 
@@ -19,10 +22,7 @@ export function stripe(): Stripe {
   return client;
 }
 
-export type CheckoutItem = "PRO" | "BUSINESS" | PackId;
-export const CHECKOUT_ITEMS = ["PRO", "BUSINESS", "PACK_10", "PACK_30", "PACK_100"] as const;
-
-/** The Stripe price for something we sell. STRIPE_PRICE_CREDITS_10 is the old name of the 10-pack price. */
+/** The Stripe price id set in the environment for something we sell, if any. STRIPE_PRICE_CREDITS_10 is the old name of the 10-pack price. */
 export function priceFor(item: CheckoutItem): string | null {
   const e = env();
   switch (item) {
@@ -39,6 +39,25 @@ export function priceFor(item: CheckoutItem): string | null {
   }
 }
 
+const priceCache = new Map<string, { id: string; at: number }>();
+const PRICE_CACHE_MS = 5 * 60 * 1000;
+
+/**
+ * The Stripe price to charge for something we sell: the id from the environment when one is set, otherwise the active price
+ * with our lookup key (created by Admin → Setup → Stripe → Create prices). Null when neither exists.
+ */
+export async function resolvePriceId(item: CheckoutItem): Promise<string | null> {
+  const fromEnv = priceFor(item);
+  if (fromEnv) return fromEnv;
+  const { lookupKey } = entryFor(item);
+  const hit = priceCache.get(lookupKey);
+  if (hit && Date.now() - hit.at < PRICE_CACHE_MS) return hit.id;
+  const found = await stripe().prices.list({ lookup_keys: [lookupKey], active: true, limit: 1 });
+  const id = found.data[0]?.id ?? null;
+  if (id) priceCache.set(lookupKey, { id, at: Date.now() });
+  return id;
+}
+
 /** Reports to add for a paid checkout session; null when the session isn't a credit purchase. */
 export function creditsForSession(metadata: Record<string, string> | null | undefined): number | null {
   if (metadata?.kind === "PACK" && isPackId(metadata.pack)) return PACKS[metadata.pack].reports;
@@ -46,16 +65,26 @@ export function creditsForSession(metadata: Record<string, string> | null | unde
   return null;
 }
 
-export function planForPrice(priceId: string | null | undefined): PlanId | null {
-  if (!priceId) return null;
-  if (priceId === env().STRIPE_PRICE_PRO) return "PRO";
-  if (priceId === env().STRIPE_PRICE_BUSINESS) return "BUSINESS";
-  return null;
+/** Which plan a subscription's price is for: by the id set in the environment, or by our lookup key. */
+export function planForPrice(price: string | { id: string; lookup_key?: string | null } | null | undefined): PlanId | null {
+  if (!price) return null;
+  const id = typeof price === "string" ? price : price.id;
+  if (id === env().STRIPE_PRICE_PRO) return "PRO";
+  if (id === env().STRIPE_PRICE_BUSINESS) return "BUSINESS";
+  const item = typeof price === "string" ? null : entryForLookupKey(price.lookup_key)?.item;
+  return item === "PRO" || item === "BUSINESS" ? item : null;
 }
 
-export async function ensureCustomer(userId: string): Promise<string> {
+/** Stripe says the customer id we kept doesn't exist: it was made in the other mode (test vs live) or has been deleted. */
+export function isMissingCustomerError(err: unknown): boolean {
+  const e = err as { code?: string; param?: string; message?: string } | null;
+  return e?.code === "resource_missing" && (e.param === "customer" || /no such customer/i.test(e.message ?? ""));
+}
+
+/** The user's Stripe customer id, creating one if needed. `renew` replaces a stored id Stripe no longer knows. */
+export async function ensureCustomer(userId: string, opts: { renew?: boolean } = {}): Promise<string> {
   const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
-  if (user.stripeCustomerId) return user.stripeCustomerId;
+  if (user.stripeCustomerId && !opts.renew) return user.stripeCustomerId;
   const customer = await stripe().customers.create({ email: user.email, name: user.name ?? undefined, metadata: { userId } });
   await prisma.user.update({ where: { id: userId }, data: { stripeCustomerId: customer.id } });
   return customer.id;
@@ -186,7 +215,7 @@ export async function handleStripeEvent(event: Stripe.Event, deps: StripeDeps = 
       const sub = event.data.object;
       const userId = await userIdForCustomer(idOf(sub.customer));
       if (!userId) return;
-      const plan = planForPrice(sub.items.data[0]?.price.id);
+      const plan = planForPrice(sub.items.data[0]?.price);
       if (plan && (sub.status === "active" || sub.status === "trialing")) await setPlan(userId, plan);
       // past_due keeps the plan while Stripe retries the card; these end it.
       if (["canceled", "unpaid", "incomplete_expired", "paused"].includes(sub.status)) await dropToFree(userId);

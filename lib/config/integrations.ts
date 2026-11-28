@@ -155,12 +155,13 @@ export function integrations(): Integration[] {
       name: "Stripe (car packs and plans)",
       priority: "recommended",
       enabled: features.stripe(),
-      unlocks: "Customers pay in euros for packs of 10 / 30 / 100 cars and for monthly plans; the billing portal works.",
+      unlocks:
+        "Customers pay in euros for packs of 10 / 30 / 100 cars and for monthly plans; the billing portal works. Press Create prices and Create webhook below to set up the products in Stripe: the price variables are then optional (the app finds its prices by name), and only STRIPE_WEBHOOK_SECRET has to be added by hand.",
       without: "Plans are shown, but checkout is switched off — credits can be given from Admin › Users.",
       vars: [
         { name: "STRIPE_SECRET_KEY", set: isSet(e.STRIPE_SECRET_KEY) },
         { name: "STRIPE_WEBHOOK_SECRET", set: isSet(e.STRIPE_WEBHOOK_SECRET) },
-        { name: "STRIPE_PRICE_PACK_10", set: isSet(e.STRIPE_PRICE_PACK_10) || isSet(e.STRIPE_PRICE_CREDITS_10) },
+        { name: "STRIPE_PRICE_PACK_10", set: isSet(e.STRIPE_PRICE_PACK_10) || isSet(e.STRIPE_PRICE_CREDITS_10), optional: true },
         { name: "STRIPE_PRICE_PACK_30", set: isSet(e.STRIPE_PRICE_PACK_30), optional: true },
         { name: "STRIPE_PRICE_PACK_100", set: isSet(e.STRIPE_PRICE_PACK_100), optional: true },
         { name: "STRIPE_PRICE_PRO", set: isSet(e.STRIPE_PRICE_PRO), optional: true },
@@ -356,9 +357,27 @@ export async function checkIntegration(key: string): Promise<CheckResult> {
     case "scraping":
       if (!e.SCRAPINGBEE_API_KEY) return { ok: false, message: "Not configured." };
       return probe(`https://app.scrapingbee.com/api/v1/usage?api_key=${encodeURIComponent(e.SCRAPINGBEE_API_KEY)}`, {}, "Key accepted by ScrapingBee.");
-    case "stripe":
+    case "stripe": {
       if (!e.STRIPE_SECRET_KEY) return { ok: false, message: "Not configured." };
-      return probe("https://api.stripe.com/v1/balance", { headers: { authorization: `Bearer ${e.STRIPE_SECRET_KEY}` } }, "Key accepted by Stripe.");
+      const keyCheck = await probe(
+        "https://api.stripe.com/v1/balance",
+        { headers: { authorization: `Bearer ${e.STRIPE_SECRET_KEY}` } },
+        "Key accepted by Stripe.",
+      );
+      if (!keyCheck.ok) return keyCheck;
+      // Then the shop itself: prices, webhook, tax and portal. Plain sentences, problems first.
+      const { diagnoseStripe } = await import("@/lib/billing/stripeSetup");
+      try {
+        const d = await diagnoseStripe(undefined, {
+          key: e.STRIPE_SECRET_KEY,
+          webhookSecretSet: isSet(e.STRIPE_WEBHOOK_SECRET),
+          automaticTax: e.STRIPE_AUTOMATIC_TAX,
+        });
+        return { ok: d.ok, message: d.lines.join("\n") };
+      } catch (err) {
+        return { ok: false, message: `Key accepted, but the shop couldn't be checked: ${err instanceof Error ? err.message.slice(0, 160) : "unknown error"}` };
+      }
+    }
     case "parts": {
       if (!features.partsMarket()) return { ok: false, message: "Not configured." };
       const { checkEbay } = await import("@/lib/providers/parts/ebay");

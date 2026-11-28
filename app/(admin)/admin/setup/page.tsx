@@ -2,6 +2,7 @@ import { CircleCheckIcon, CircleDashedIcon, ExternalLinkIcon, FlaskConicalIcon }
 import type { Metadata } from "next";
 
 import { TestButton, VarChip } from "@/components/admin/setup-client";
+import { StripeTools } from "@/components/admin/stripe-tools";
 import { ScoreRing } from "@/components/report/deal-card";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -39,6 +40,7 @@ function Row({ it }: { it: Integration }) {
                 <VarChip key={v.name} {...v} />
               ))}
             </div>
+            {it.key === "stripe" && it.enabled && <StripeTools />}
           </div>
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-2 md:flex-col md:items-end">
